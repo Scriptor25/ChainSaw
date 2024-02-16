@@ -1,1 +1,1 @@
-# CSaw
+# ChainSaw - A programming language (interpreted)
