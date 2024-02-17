@@ -2,8 +2,6 @@
 
 #include <runtime/Runtime.h>
 
-#include <stb_image_write.h>
-
 namespace csawstd
 {
 	using namespace csaw::runtime;

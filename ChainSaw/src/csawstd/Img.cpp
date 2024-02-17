@@ -1,6 +1,8 @@
 #include <csawstd/Img.h>
 #include <runtime/Const.h>
 
+#include <misc/stb_image_write.h>
+
 using namespace csaw::runtime;
 
 void csawstd::InitImg()
