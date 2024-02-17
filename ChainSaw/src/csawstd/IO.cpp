@@ -5,8 +5,8 @@ using namespace csaw::runtime;
 
 void csawstd::InitIO()
 {
-	Environment::CreateFunction(false, "printf", "", { "str" }, true, "", csawstd::printf);
-	Environment::CreateFunction(false, "readf", "str", { "str" }, true, "", csawstd::readf);
+	Environment::CreateFunction(false, "printf", "", { "str" }, true, "", printf);
+	Environment::CreateFunction(false, "readf", "str", { "str" }, true, "", readf);
 }
 
 ValuePtr csawstd::printf(EnvironmentPtr env, ValuePtr callee, const std::vector<ValuePtr>& args)

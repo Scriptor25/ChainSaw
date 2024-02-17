@@ -15,6 +15,7 @@ namespace csaw::lang
 	struct WhileStmt;
 	struct IfStmt;
 	struct ThingStmt;
+	struct AliasStmt;
 
 	typedef std::shared_ptr<Stmt> StmtPtr;
 	typedef std::shared_ptr<FunStmt> FunStmtPtr;
@@ -26,6 +27,7 @@ namespace csaw::lang
 	typedef std::shared_ptr<WhileStmt> WhileStmtPtr;
 	typedef std::shared_ptr<IfStmt> IfStmtPtr;
 	typedef std::shared_ptr<ThingStmt> ThingStmtPtr;
+	typedef std::shared_ptr<AliasStmt> AliasStmtPtr;
 
 	struct Expr;
 	struct CallExpr;

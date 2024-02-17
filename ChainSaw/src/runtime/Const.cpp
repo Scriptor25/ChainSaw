@@ -105,3 +105,18 @@ csaw::runtime::ValuePtr csaw::runtime::ConstThing::SetElement(const std::string&
 	assert(elem);
 	return elem = value;
 }
+
+csaw::runtime::ConstUndefPtr csaw::runtime::ConstUndef::Ptr(const std::string& type)
+{
+	return std::make_shared<ConstUndef>(type);
+}
+
+csaw::runtime::ConstUndef::ConstUndef(const std::string& type)
+	: Type(type)
+{
+}
+
+std::string csaw::runtime::ConstUndef::GetType() const
+{
+	return Type;
+}

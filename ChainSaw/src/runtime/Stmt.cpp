@@ -28,6 +28,8 @@ csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::
 		return Evaluate(env, s);
 	if (auto s = std::dynamic_pointer_cast<csaw::lang::ThingStmt>(stmt))
 		return Evaluate(env, s);
+	if (auto s = std::dynamic_pointer_cast<csaw::lang::AliasStmt>(stmt))
+		return Evaluate(env, s);
 
 	if (auto expr = std::dynamic_pointer_cast<csaw::lang::Expr>(stmt))
 		return Evaluate(env, expr);
@@ -158,6 +160,12 @@ csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::
 
 csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::lang::ThingStmtPtr stmt)
 {
-	Environment::CreateThing(stmt->Name, stmt->Elements);
+	Environment::CreateThing(stmt->Name, stmt->Group, stmt->Elements);
+	return ValuePtr();
+}
+
+csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::lang::AliasStmtPtr stmt)
+{
+	Environment::CreateAlias(stmt->Name, stmt->Origin);
 	return ValuePtr();
 }

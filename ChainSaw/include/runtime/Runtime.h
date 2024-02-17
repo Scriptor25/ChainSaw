@@ -76,12 +76,20 @@ namespace csaw::runtime
 		static FunctionPtr GetFunction(const std::string& name, const std::string& callee, const std::vector<std::string>& args);
 		static ValuePtr GetAndInvoke(EnvironmentPtr env, const std::string& name, const ValuePtr callee, const std::vector<ValuePtr>& args);
 
-		static void CreateThing(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements);
+		static void CreateThing(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements);
 		static std::vector<std::pair<std::string, std::string>>& GetThing(const std::string& name);
+
+		static void CreateAlias(const std::string& name, const std::string& origin);
+		static std::string GetOrigin(const std::string& name);
+		static bool CheckTypes(const std::string& atype, const std::string& btype);
+
+		static bool IsGroup(const std::string& name);
 
 	private:
 		static std::map<std::string, std::map<std::string, std::vector<FunctionPtr>>> _Functions;
 		static std::map<std::string, std::vector<std::pair<std::string, std::string>>> _Things;
+		static std::map<std::string, std::string> _Alias;
+		static std::map<std::string, std::vector<std::string>> _Groups;
 
 	public:
 		Environment(const std::string& filepath, EnvironmentPtr parent);

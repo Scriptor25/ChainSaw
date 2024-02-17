@@ -97,11 +97,21 @@ namespace csaw::lang
 
 	struct ThingStmt : Stmt
 	{
-		static ThingStmtPtr Ptr(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements);
-		static ThingStmtPtr Ptr(const std::string& name);
-		ThingStmt(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements);
+		static ThingStmtPtr Ptr(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements);
+		static ThingStmtPtr Ptr(const std::string& name, const std::string& group);
+		ThingStmt(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements);
 
 		const std::string Name;
+		const std::string Group;
 		const std::vector<std::pair<std::string, std::string>> Elements;
+	};
+
+	struct AliasStmt : Stmt
+	{
+		static AliasStmtPtr Ptr(const std::string& name, const std::string& origin);
+		AliasStmt(const std::string& name, const std::string& origin);
+
+		const std::string Name;
+		const std::string Origin;
 	};
 }

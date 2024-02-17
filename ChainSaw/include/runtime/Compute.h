@@ -15,6 +15,7 @@ namespace csaw::runtime
 	ValuePtr Evaluate(EnvironmentPtr env, const csaw::lang::WhileStmtPtr stmt);
 	ValuePtr Evaluate(EnvironmentPtr env, const csaw::lang::IfStmtPtr stmt);
 	ValuePtr Evaluate(EnvironmentPtr env, const csaw::lang::ThingStmtPtr stmt);
+	ValuePtr Evaluate(EnvironmentPtr env, const csaw::lang::AliasStmtPtr stmt);
 
 	ValuePtr Assign(EnvironmentPtr env, const csaw::lang::ExprPtr expr, const ValuePtr value);
 

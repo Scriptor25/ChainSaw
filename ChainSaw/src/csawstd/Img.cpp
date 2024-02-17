@@ -5,7 +5,7 @@ using namespace csaw::runtime;
 
 void csawstd::InitImg()
 {
-	Environment::CreateThing("img", { {"ptr", "str"} });
+	Environment::CreateThing("img", "", { {"ptr", "str"} });
 	Environment::CreateFunction(true, "img", "img", { "num", "num" }, false, "", csawstd::img);
 	Environment::CreateFunction(false, "set", "", { "num", "num", "num" }, false, "img", csawstd::img_set);
 	Environment::CreateFunction(false, "write", "", { "str", "str" }, false, "img", csawstd::img_write);

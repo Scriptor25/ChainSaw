@@ -17,21 +17,25 @@ std::ostream& csaw::runtime::operator<<(std::ostream& out, const ValuePtr& ptr)
 
 csaw::runtime::ValuePtr csaw::runtime::Value::DefaultPtr(const std::string& type)
 {
-	if (type == "num")
+	auto orig = Environment::GetOrigin(type);
+	if (orig == "num")
 		return ConstNum::Ptr(0.0);
-	if (type == "chr")
+	if (orig == "chr")
 		return ConstChr::Ptr(0);
-	if (type == "str")
+	if (orig == "str")
 		return ConstStr::Ptr("");
 
-	auto& elements = Environment::GetThing(type);
+	auto& elements = Environment::GetThing(orig);
 	if (!elements.empty())
 	{
 		std::map<std::string, ValuePtr> values;
 		for (auto& e : elements)
 			values[e.first] = DefaultPtr(e.second);
-		return ConstThing::Ptr(type, values);
+		return ConstThing::Ptr(orig, values);
 	}
+
+	if (Environment::IsGroup(orig))
+		return ConstUndef::Ptr(type);
 
 	throw;
 }
@@ -75,7 +79,7 @@ csaw::runtime::VariablePtr csaw::runtime::Variable::Ptr(const std::string& type,
 {
 	if (!value)
 		value = Value::DefaultPtr(type);
-	assert(type == value->GetType());
+	assert(Environment::CheckTypes(value->GetType(), type));
 	return std::make_shared<Variable>(type, value);
 }
 
@@ -121,7 +125,7 @@ csaw::runtime::FunctionPtr csaw::runtime::Environment::GetFunction(const std::st
 
 		size_t i = 0;
 		for (; i < fps; i++)
-			if (function->Params[i] != args[i])
+			if (!CheckTypes(args[i], function->Params[i]))
 				break;
 		if (i < fps)
 			continue;
@@ -143,9 +147,10 @@ csaw::runtime::ValuePtr csaw::runtime::Environment::GetAndInvoke(EnvironmentPtr 
 	return function->Definition(env, callee, args);
 }
 
-void csaw::runtime::Environment::CreateThing(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements)
+void csaw::runtime::Environment::CreateThing(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements)
 {
 	_Things[name] = elements;
+	_Groups[group].push_back(name);
 }
 
 std::vector<std::pair<std::string, std::string>>& csaw::runtime::Environment::GetThing(const std::string& name)
@@ -153,8 +158,48 @@ std::vector<std::pair<std::string, std::string>>& csaw::runtime::Environment::Ge
 	return _Things[name];
 }
 
+void csaw::runtime::Environment::CreateAlias(const std::string& name, const std::string& origin)
+{
+	_Alias[name] = origin;
+}
+
+std::string csaw::runtime::Environment::GetOrigin(const std::string& name)
+{
+	std::string orig = _Alias[name];
+	if (!orig.empty())
+		return GetOrigin(orig);
+	return name;
+}
+
+bool csaw::runtime::Environment::CheckTypes(const std::string& atype, const std::string& btype)
+{
+	if (atype == "" || btype == "" || atype == btype)
+		return true;
+
+	auto aorig = GetOrigin(atype);
+	auto borig = GetOrigin(btype);
+	if (aorig == borig)
+		return true;
+
+	if (!IsGroup(borig))
+		return false;
+
+	for (auto& type : _Groups[borig])
+		if (aorig == type)
+			return true;
+
+	return false;
+}
+
+bool csaw::runtime::Environment::IsGroup(const std::string& name)
+{
+	return !_Groups[name].empty();
+}
+
 std::map<std::string, std::map<std::string, std::vector<csaw::runtime::FunctionPtr>>> csaw::runtime::Environment::_Functions;
 std::map<std::string, std::vector<std::pair<std::string, std::string>>> csaw::runtime::Environment::_Things;
+std::map<std::string, std::string> csaw::runtime::Environment::_Alias;
+std::map<std::string, std::vector<std::string>> csaw::runtime::Environment::_Groups;
 
 csaw::runtime::Environment::Environment(const std::string& filepath, EnvironmentPtr parent)
 	: m_Filepath(filepath), m_Parent(parent)
@@ -196,7 +241,7 @@ csaw::runtime::ValuePtr csaw::runtime::Environment::SetVariable(const std::strin
 {
 	auto entry = GetVarEntry(name);
 	assert(entry);
-	assert(entry->Type == value->GetType());
+	assert(CheckTypes(entry->Type, value->GetType()));
 	return entry->Value = value;
 }
 

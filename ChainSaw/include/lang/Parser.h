@@ -80,6 +80,7 @@ namespace csaw::lang
 		WhileStmtPtr ParseWhileStmt();
 		IfStmtPtr ParseIfStmt();
 		ThingStmtPtr ParseThingStmt(bool end);
+		AliasStmtPtr ParseAliasStmt(bool end);
 
 		ExprPtr ParseExpr();
 		ExprPtr ParseSelExpr(); // x ? y : z
@@ -92,6 +93,7 @@ namespace csaw::lang
 		ExprPtr ParseIndexExpr();
 		ExprPtr ParseCallExpr();
 		ExprPtr ParseMemberExpr();
+		ExprPtr ParseMemberExpr(ExprPtr expr);
 		ExprPtr ParsePrimExpr();
 
 	private:

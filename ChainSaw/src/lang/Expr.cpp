@@ -164,6 +164,9 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseIndexExpr()
 		ExpectAndNext("]");
 
 		expr = IndexExpr::Ptr(expr, index);
+
+		if (At("."))
+			expr = ParseMemberExpr(expr);
 	}
 
 	return expr;
@@ -173,7 +176,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCallExpr()
 {
 	auto expr = ParseMemberExpr();
 
-	if (NextIfAt("("))
+	while (NextIfAt("("))
 	{
 		std::vector<ExprPtr> args;
 		while (!AtEOF() && !At(")"))
@@ -185,6 +188,9 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCallExpr()
 		ExpectAndNext(")");
 
 		expr = CallExpr::Ptr(expr, args);
+
+		if (At("."))
+			expr = ParseMemberExpr(expr);
 	}
 
 	return expr;
@@ -192,8 +198,11 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCallExpr()
 
 csaw::lang::ExprPtr csaw::lang::Parser::ParseMemberExpr()
 {
-	auto expr = ParsePrimExpr();
+	return ParseMemberExpr(ParsePrimExpr());
+}
 
+csaw::lang::ExprPtr csaw::lang::Parser::ParseMemberExpr(ExprPtr expr)
+{
 	while (NextIfAt("."))
 	{
 		std::string id = ExpectAndNext(TK_IDENTIFIER).Value;

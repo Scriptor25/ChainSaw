@@ -10,11 +10,13 @@ namespace csaw::runtime
 	struct ConstChr;
 	struct ConstStr;
 	struct ConstThing;
+	struct ConstUndef;
 
 	typedef std::shared_ptr<ConstNum> ConstNumPtr;
 	typedef std::shared_ptr<ConstChr> ConstChrPtr;
 	typedef std::shared_ptr<ConstStr> ConstStrPtr;
 	typedef std::shared_ptr<ConstThing> ConstThingPtr;
+	typedef std::shared_ptr<ConstUndef> ConstUndefPtr;
 
 	std::ostream& operator<<(std::ostream& out, const ConstNum& c);
 	std::ostream& operator<<(std::ostream& out, const ConstChr& c);
@@ -66,4 +68,13 @@ namespace csaw::runtime
 		std::map<std::string, ValuePtr> Elements;
 	};
 
+	struct ConstUndef : Value
+	{
+		static ConstUndefPtr Ptr(const std::string& type);
+		ConstUndef(const std::string& type);
+
+		std::string GetType() const override;
+
+		const std::string Type;
+	};
 }

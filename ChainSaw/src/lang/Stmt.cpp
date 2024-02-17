@@ -14,6 +14,7 @@ csaw::lang::StmtPtr csaw::lang::Parser::ParseStmt(bool end)
 	if (At("while")) return ParseWhileStmt();
 	if (At("if")) return ParseIfStmt();
 	if (At("thing")) return ParseThingStmt(end);
+	if (At("alias")) return ParseAliasStmt(end);
 
 	auto expr = ParseExpr();
 	if (auto vstmt = ParseVarStmt(expr, end))
@@ -207,14 +208,18 @@ csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
 	ExpectAndNext("thing");
 	ExpectAndNext(":");
 	std::string name = ExpectAndNext(TK_IDENTIFIER).Value;
-	std::vector<std::pair<std::string, std::string>> elements;
+
+	std::string group;
+	if (NextIfAt(":"))
+		group = ExpectAndNext(TK_IDENTIFIER).Value;
 
 	if (!At("{"))
 	{
 		if (end) ExpectAndNext(";");
-		return ThingStmt::Ptr(name);
+		return ThingStmt::Ptr(name, group);
 	}
 
+	std::vector<std::pair<std::string, std::string>> elements;
 	ExpectAndNext("{");
 	while (!AtEOF() && !At("}"))
 	{
@@ -228,7 +233,18 @@ csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
 	}
 	ExpectAndNext("}");
 
-	return ThingStmt::Ptr(name, elements);
+	return ThingStmt::Ptr(name, group, elements);
+}
+
+csaw::lang::AliasStmtPtr csaw::lang::Parser::ParseAliasStmt(bool end)
+{
+	ExpectAndNext("alias");
+	std::string name = ExpectAndNext(TK_IDENTIFIER).Value;
+	ExpectAndNext(":");
+	std::string origin = ExpectAndNext(TK_IDENTIFIER).Value;
+
+	if (end) ExpectAndNext(";");
+	return AliasStmt::Ptr(name, origin);
 }
 
 csaw::lang::EnclosedStmtPtr csaw::lang::EnclosedStmt::Ptr(const std::vector<StmtPtr>& content)
@@ -331,17 +347,27 @@ csaw::lang::IfStmt::IfStmt(const ExprPtr condition, const StmtPtr _true, const S
 {
 }
 
-csaw::lang::ThingStmtPtr csaw::lang::ThingStmt::Ptr(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements)
+csaw::lang::ThingStmtPtr csaw::lang::ThingStmt::Ptr(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements)
 {
-	return std::make_shared<ThingStmt>(name, elements);
+	return std::make_shared<ThingStmt>(name, group, elements);
 }
 
-csaw::lang::ThingStmtPtr csaw::lang::ThingStmt::Ptr(const std::string& name)
+csaw::lang::ThingStmtPtr csaw::lang::ThingStmt::Ptr(const std::string& name, const std::string& group)
 {
-	return std::make_shared<ThingStmt>(name, std::vector<std::pair<std::string, std::string>>());
+	return std::make_shared<ThingStmt>(name, group, std::vector<std::pair<std::string, std::string>>());
 }
 
-csaw::lang::ThingStmt::ThingStmt(const std::string& name, const std::vector<std::pair<std::string, std::string>>& elements)
-	: Name(name), Elements(elements)
+csaw::lang::ThingStmt::ThingStmt(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements)
+	: Name(name), Group(group), Elements(elements)
+{
+}
+
+csaw::lang::AliasStmtPtr csaw::lang::AliasStmt::Ptr(const std::string& name, const std::string& origin)
+{
+	return std::make_shared<AliasStmt>(name, origin);
+}
+
+csaw::lang::AliasStmt::AliasStmt(const std::string& name, const std::string& origin)
+	: Name(name), Origin(origin)
 {
 }

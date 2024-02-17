@@ -79,11 +79,10 @@ csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::
 {
 	auto l = Evaluate(env, expr->Left);
 	auto r = Evaluate(env, expr->Right);
-
 	std::string oop = expr->Operator;
 
 	if (auto function = Environment::GetFunction(oop, "", { l->GetType(), r->GetType() }))
-		return function->Definition(env, ValuePtr(), { l, r });
+		return function->Definition(env->GetGlobal(), ValuePtr(), { l, r });
 
 	if (oop == "=") return Assign(env, expr->Left, r);
 
@@ -95,7 +94,7 @@ csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::
 	if (oop == "!=") return EvalOpNE(env, l, r);
 
 	if (auto function = Environment::GetFunction(oop, l->GetType(), { r->GetType() }))
-		return function->Definition(env, l, { r });
+		return function->Definition(env->GetGlobal(), l, { r });
 
 	size_t assignpos = oop.find('=');
 	bool assign = assignpos != std::string::npos;
@@ -139,7 +138,7 @@ csaw::runtime::ValuePtr csaw::runtime::Evaluate(EnvironmentPtr env, const csaw::
 	}
 
 	if (auto function = Environment::GetFunction(op, r ? value->GetType() : "", type))
-		return function->Definition(env, r ? value : ValuePtr(), arg);
+		return function->Definition(env->GetGlobal(), r ? value : ValuePtr(), arg);
 
 	if (op == "++")
 	{

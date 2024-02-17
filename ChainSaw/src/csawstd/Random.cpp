@@ -13,7 +13,7 @@ void csawstd::InitRandom()
 {
 	RNG.seed(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 
-	Environment::CreateFunction(false, "random", "num", {}, false, "", csawstd::random);
+	Environment::CreateFunction(false, "random", "num", {}, false, "", random);
 }
 
 ValuePtr csawstd::random(EnvironmentPtr env, ValuePtr callee, const std::vector<ValuePtr>& args)

@@ -5,11 +5,11 @@ using namespace csaw::runtime;
 
 void csawstd::InitTypes()
 {
-	Environment::CreateFunction(false, "num", "num", { "str" }, false, "", csawstd::ston);
-	Environment::CreateFunction(false, "num", "num", { "chr" }, false, "", csawstd::cton);
-	Environment::CreateFunction(false, "str", "str", { "num" }, false, "", csawstd::ntos);
-	Environment::CreateFunction(false, "str", "str", { "chr" }, false, "", csawstd::ctos);
-	Environment::CreateFunction(false, "chr", "chr", { "num" }, false, "", csawstd::ntoc);
+	Environment::CreateFunction(false, "num", "num", { "str" }, false, "", ston);
+	Environment::CreateFunction(false, "num", "num", { "chr" }, false, "", cton);
+	Environment::CreateFunction(false, "str", "str", { "num" }, false, "", ntos);
+	Environment::CreateFunction(false, "str", "str", { "chr" }, false, "", ctos);
+	Environment::CreateFunction(false, "chr", "chr", { "num" }, false, "", ntoc);
 }
 
 ValuePtr csawstd::ston(EnvironmentPtr env, ValuePtr callee, const std::vector<ValuePtr>& args)

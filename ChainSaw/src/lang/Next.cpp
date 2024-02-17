@@ -107,6 +107,17 @@ csaw::lang::Token& csaw::lang::Parser::Next()
 			str += c;
 			Mark();
 			c = Read();
+
+			if (c == 'e' || c == 'E')
+			{
+				str += c;
+				c = Read();
+				if (c == '-')
+					str += c;
+				Mark();
+				c = Read();
+			}
+
 		} while (isdigit(c) || c == '.');
 		Reset();
 
