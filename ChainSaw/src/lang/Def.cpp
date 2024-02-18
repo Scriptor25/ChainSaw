@@ -1,4 +1,4 @@
-#include <lang/ASTDef.h>
+#include <lang/Def.h>
 #include <lang/Stmt.h>
 #include <lang/Expr.h>
 
@@ -17,24 +17,42 @@ static std::string spaces()
 
 std::ostream& csaw::lang::operator<<(std::ostream& out, const FunStmt& stmt)
 {
-	out << '@' << stmt.Name;
-	if (!stmt.Result.empty())
+	if (stmt.Constructor)
+		out << '$';
+	else out << '@';
+
+	bool needparens = false;
+	for (auto c : stmt.Name)
+		if (!isalnum(c) && c != '_')
+		{
+			needparens = true;
+			break;
+		}
+
+	if (needparens) out << '(';
+	out << stmt.Name;
+	if (needparens) out << ')';
+
+	if (!stmt.Result.empty() && !stmt.Constructor)
 		out << ": " << stmt.Result;
 
-	if (!stmt.Params.empty())
+	if (!stmt.Args.empty())
 	{
 		out << " (";
-		for (size_t i = 0; i < stmt.Params.size(); i++)
+		for (size_t i = 0; i < stmt.Args.size(); i++)
 		{
 			if (i > 0)
 				out << ", ";
-			out << stmt.Params[i].first << ": " << stmt.Params[i].second;
+			out << stmt.Args[i].first << ": " << stmt.Args[i].second;
 		}
 		out << ')';
 	}
 
 	if (stmt.VarArg)
 		out << " ?";
+
+	if (!stmt.Callee.empty())
+		out << " -> " << stmt.Callee;
 
 	if (!stmt.Body)
 		return out << ';';
@@ -60,7 +78,7 @@ std::ostream& csaw::lang::operator<<(std::ostream& out, const EnclosedStmt& stmt
 	for (auto& s : stmt.Content)
 		out << sp << s << '\n';
 	depth--;
-	return out << '}';
+	return out << spaces() << '}';
 }
 
 std::ostream& csaw::lang::operator<<(std::ostream& out, const ForStmt& stmt)
@@ -81,10 +99,61 @@ std::ostream& csaw::lang::operator<<(std::ostream& out, const VarStmt& stmt)
 {
 	out << stmt.Type << ' ' << stmt.Name;
 	if (!stmt.Value)
-		if (end) return out << ';';
-		else return out;
+	{
+		if (end) out << ';';
+		return out;
+	}
 	out << " = " << stmt.Value;
+	if (end) out << ';';
+	return out;
+}
+
+std::ostream& csaw::lang::operator<<(std::ostream& out, const IncStmt& stmt)
+{
+	out << "inc \"" << stmt.Filename << '"';
 	if (end) return out << ';';
+	return out;
+}
+
+std::ostream& csaw::lang::operator<<(std::ostream& out, const WhileStmt& stmt)
+{
+	return out << "while (" << stmt.Condition << ") " << stmt.Condition;
+}
+
+std::ostream& csaw::lang::operator<<(std::ostream& out, const IfStmt& stmt)
+{
+	out << "if (" << stmt.Condition << ") " << stmt.True;
+	if (stmt.False) out << " else " << stmt.False;
+	return out;
+}
+
+std::ostream& csaw::lang::operator<<(std::ostream& out, const ThingStmt& stmt)
+{
+	out << "thing: " << stmt.Name;
+	if (!stmt.Group.empty()) out << " : " << stmt.Group;
+	if (stmt.Elements.empty())
+	{
+		if (end) out << ';';
+		return out;
+	}
+
+	depth++;
+	auto sp = spaces();
+	out << '{' << '\n';
+	size_t i = 0;
+	for (auto& e : stmt.Elements)
+	{
+		if (i++ > 0) out << ",\n";
+		out << sp << e.first << ": " << e.second;
+	}
+	depth--;
+	return out << spaces() << "\n}";
+}
+
+std::ostream& csaw::lang::operator<<(std::ostream& out, const AliasStmt& stmt)
+{
+	out << "alias " << stmt.Name << ": " << stmt.Origin;
+	if (end) out << ';';
 	return out;
 }
 
@@ -102,6 +171,16 @@ std::ostream& csaw::lang::operator<<(std::ostream& out, const StmtPtr ptr)
 	if (auto stmt = std::dynamic_pointer_cast<ForStmt>(ptr))
 		return out << *stmt;
 	if (auto stmt = std::dynamic_pointer_cast<VarStmt>(ptr))
+		return out << *stmt;
+	if (auto stmt = std::dynamic_pointer_cast<IncStmt>(ptr))
+		return out << *stmt;
+	if (auto stmt = std::dynamic_pointer_cast<WhileStmt>(ptr))
+		return out << *stmt;
+	if (auto stmt = std::dynamic_pointer_cast<IfStmt>(ptr))
+		return out << *stmt;
+	if (auto stmt = std::dynamic_pointer_cast<ThingStmt>(ptr))
+		return out << *stmt;
+	if (auto stmt = std::dynamic_pointer_cast<AliasStmt>(ptr))
 		return out << *stmt;
 
 	if (auto expr = std::dynamic_pointer_cast<Expr>(ptr))
@@ -207,6 +286,11 @@ std::ostream& csaw::lang::operator<<(std::ostream& out, const VarArgExpr& expr)
 	return out << '?' << expr.Type << '[' << expr.Index << ']';
 }
 
+std::ostream& csaw::lang::operator<<(std::ostream& out, const SelExpr& expr)
+{
+	return out << expr.Condition << " ? " << expr.True << " : " << expr.False;
+}
+
 std::ostream& csaw::lang::operator<<(std::ostream& out, const ExprPtr ptr)
 {
 	if (auto expr = std::dynamic_pointer_cast<CallExpr>(ptr))
@@ -228,6 +312,8 @@ std::ostream& csaw::lang::operator<<(std::ostream& out, const ExprPtr ptr)
 	if (auto expr = std::dynamic_pointer_cast<MemberExpr>(ptr))
 		return out << *expr;
 	if (auto expr = std::dynamic_pointer_cast<VarArgExpr>(ptr))
+		return out << *expr;
+	if (auto expr = std::dynamic_pointer_cast<SelExpr>(ptr))
 		return out << *expr;
 
 	throw;

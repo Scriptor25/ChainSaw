@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <iostream>
+#include <memory>
 
 namespace csaw::lang
 {
@@ -60,6 +60,11 @@ namespace csaw::lang
 	std::ostream& operator<<(std::ostream& out, const EnclosedStmt& stmt);
 	std::ostream& operator<<(std::ostream& out, const ForStmt& stmt);
 	std::ostream& operator<<(std::ostream& out, const VarStmt& stmt);
+	std::ostream& operator<<(std::ostream& out, const IncStmt& stmt);
+	std::ostream& operator<<(std::ostream& out, const WhileStmt& stmt);
+	std::ostream& operator<<(std::ostream& out, const IfStmt& stmt);
+	std::ostream& operator<<(std::ostream& out, const ThingStmt& stmt);
+	std::ostream& operator<<(std::ostream& out, const AliasStmt& stmt);
 	std::ostream& operator<<(std::ostream& out, const StmtPtr ptr);
 
 	std::ostream& operator<<(std::ostream& out, const CallExpr& expr);
@@ -72,5 +77,6 @@ namespace csaw::lang
 	std::ostream& operator<<(std::ostream& out, const IndexExpr& expr);
 	std::ostream& operator<<(std::ostream& out, const MemberExpr& expr);
 	std::ostream& operator<<(std::ostream& out, const VarArgExpr& expr);
+	std::ostream& operator<<(std::ostream& out, const SelExpr& expr);
 	std::ostream& operator<<(std::ostream& out, const ExprPtr ptr);
 }

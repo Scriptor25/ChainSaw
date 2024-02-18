@@ -14,11 +14,13 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseSelExpr()
 
 	if (NextIfAt("?"))
 	{
+		auto line = m_Line;
+
 		auto _true = ParseExpr();
 		ExpectAndNext(":");
 		auto _false = ParseExpr();
 
-		expr = SelExpr::Ptr(expr, _true, _false);
+		expr = std::make_shared<SelExpr>(line, expr, _true, _false);
 	}
 
 	return expr;
@@ -35,6 +37,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseLogicExpr()
 
 	while (At("&") || At("|") || At("^"))
 	{
+		auto line = m_Line;
+
 		std::string op = GetAndNext().Value;
 		if (At("=") || At(op))
 			op += GetAndNext().Value;
@@ -47,7 +51,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseLogicExpr()
 		else
 			right = ParseCmpExpr();
 
-		expr = BinExpr::Ptr(op, expr, right);
+		expr = std::make_shared<BinExpr>(line, op, expr, right);
 	}
 
 	return expr;
@@ -59,6 +63,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCmpExpr()
 
 	while (At("=") || At("!"))
 	{
+		auto line = m_Line;
+
 		std::string op = GetAndNext().Value;
 		if (At("="))
 			op += GetAndNext().Value;
@@ -71,7 +77,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCmpExpr()
 		else
 			right = ParseShiftExpr();
 
-		expr = BinExpr::Ptr(op, expr, right);
+		expr = std::make_shared<BinExpr>(line, op, expr, right);
 	}
 
 	return expr;
@@ -83,6 +89,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseShiftExpr()
 
 	while (At("<") || At(">"))
 	{
+		auto line = m_Line;
+
 		std::string op = GetAndNext().Value;
 		while (At("=") || At(op))
 			op += GetAndNext().Value;
@@ -95,7 +103,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseShiftExpr()
 		else
 			right = ParseSumExpr();
 
-		expr = BinExpr::Ptr(op, expr, right);
+		expr = std::make_shared<BinExpr>(line, op, expr, right);
 	}
 
 	return expr;
@@ -107,6 +115,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseSumExpr()
 
 	while (At("+") || At("-"))
 	{
+		auto line = m_Line;
+
 		std::string op = GetAndNext().Value;
 		if (At("=") || At(op))
 			op += GetAndNext().Value;
@@ -118,13 +128,13 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseSumExpr()
 			right = ParseExpr();
 		else if (op == "++" || op == "--")
 		{
-			expr = UnExpr::Ptr(op, expr, true);
+			expr = std::make_shared<UnExpr>(line, op, expr, true);
 			break;
 		}
 		else
 			right = ParseProExpr();
 
-		expr = BinExpr::Ptr(op, expr, right);
+		expr = std::make_shared<BinExpr>(line, op, expr, right);
 	}
 
 	return expr;
@@ -136,6 +146,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseProExpr()
 
 	while (At("*") || At("/") || At("%"))
 	{
+		auto line = m_Line;
+
 		std::string op = GetAndNext().Value;
 		if (At("=") || At(op))
 			op += GetAndNext().Value;
@@ -148,7 +160,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseProExpr()
 		else
 			right = ParseIndexExpr();
 
-		expr = BinExpr::Ptr(op, expr, right);
+		expr = std::make_shared<BinExpr>(line, op, expr, right);
 	}
 
 	return expr;
@@ -160,10 +172,12 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseIndexExpr()
 
 	while (NextIfAt("["))
 	{
+		auto line = m_Line;
+
 		auto index = ParseExpr();
 		ExpectAndNext("]");
 
-		expr = IndexExpr::Ptr(expr, index);
+		expr = std::make_shared<IndexExpr>(line, expr, index);
 
 		if (At("."))
 			expr = ParseMemberExpr(expr);
@@ -178,6 +192,8 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCallExpr()
 
 	while (NextIfAt("("))
 	{
+		auto line = m_Line;
+
 		std::vector<ExprPtr> args;
 		while (!AtEOF() && !At(")"))
 		{
@@ -187,7 +203,7 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseCallExpr()
 		}
 		ExpectAndNext(")");
 
-		expr = CallExpr::Ptr(expr, args);
+		expr = std::make_shared<CallExpr>(line, expr, args);
 
 		if (At("."))
 			expr = ParseMemberExpr(expr);
@@ -205,8 +221,10 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseMemberExpr(ExprPtr expr)
 {
 	while (NextIfAt("."))
 	{
+		auto line = m_Line;
+
 		std::string id = ExpectAndNext(TK_IDENTIFIER).Value;
-		expr = MemberExpr::Ptr(expr, id);
+		expr = std::make_shared<MemberExpr>(line, expr, id);
 	}
 
 	return expr;
@@ -214,28 +232,32 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParseMemberExpr(ExprPtr expr)
 
 csaw::lang::ExprPtr csaw::lang::Parser::ParsePrimExpr()
 {
+	auto line = m_Line;
+
 	assert(!AtEOF());
 
 	if (At(TK_DEC))
-		return NumExpr::Ptr(GetAndNext().Value, 10);
+		return std::make_shared<NumExpr>(line, GetAndNext().Value, 10);
 	if (At(TK_HEX))
-		return NumExpr::Ptr(GetAndNext().Value, 16);
+		return std::make_shared<NumExpr>(line, GetAndNext().Value, 16);
 	if (At(TK_BIN))
-		return NumExpr::Ptr(GetAndNext().Value, 2);
+		return std::make_shared<NumExpr>(line, GetAndNext().Value, 2);
 
 	if (At(TK_CHAR))
-		return ChrExpr::Ptr(GetAndNext().Value);
+		return std::make_shared<ChrExpr>(line, GetAndNext().Value);
 
 	if (At(TK_STRING))
-		return StrExpr::Ptr(GetAndNext().Value);
+		return std::make_shared<StrExpr>(line, GetAndNext().Value);
 
 	if (At(TK_IDENTIFIER))
-		return IdentExpr::Ptr(GetAndNext().Value);
+		return std::make_shared<IdentExpr>(line, GetAndNext().Value);
 
-	if (At("++") || At("--") || At("-") || At("!") || At("~"))
+	if (At("+") || At("-") || At("!") || At("~"))
 	{
 		std::string op = GetAndNext().Value;
-		return UnExpr::Ptr(op, ParseExpr());
+		if ((op == "+" || op == "-") && At(op))
+			op += GetAndNext().Value;
+		return std::make_shared<UnExpr>(line, op, ParseExpr(), false);
 	}
 
 	if (NextIfAt("("))
@@ -251,136 +273,94 @@ csaw::lang::ExprPtr csaw::lang::Parser::ParsePrimExpr()
 		ExpectAndNext("[");
 		auto index = ParseExpr();
 		ExpectAndNext("]");
-		return VarArgExpr::Ptr(type, index);
+		return std::make_shared<VarArgExpr>(line, type, index);
 	}
 
 	throw;
 }
 
-csaw::lang::NumExprPtr csaw::lang::NumExpr::Ptr(const std::string& value, const int radix)
+csaw::lang::Expr::Expr(size_t line)
+	: Stmt(line)
 {
-	double v;
-	switch (radix)
+}
+
+csaw::lang::NumExpr::NumExpr(size_t line, double value)
+	: Expr(line), Value(value)
+{
+}
+
+csaw::lang::NumExpr::NumExpr(size_t line, const std::string& value, int base)
+	: Expr(line)
+{
+	switch (base)
 	{
-	case 10:
-		v = std::stod(value);
-		break;
 	case 2:
-		v = std::stol(value, nullptr, 2);
-		break;
 	case 16:
-		v = std::stol(value, nullptr, 16);
+		Value = std::stol(value, nullptr, base);
 		break;
-	default:
-		v = 0.0;
-		break;
-	}
 
-	return std::make_shared<NumExpr>(v);
+	case 10:
+		Value = std::stod(value);
+		break;
+
+	default:
+		throw;
+	}
 }
 
-csaw::lang::NumExpr::NumExpr(const double value)
-	: Value(value)
+csaw::lang::ChrExpr::ChrExpr(size_t line, char value)
+	: Expr(line), Value(value)
 {
 }
 
-csaw::lang::ChrExprPtr csaw::lang::ChrExpr::Ptr(const std::string& value)
+csaw::lang::ChrExpr::ChrExpr(size_t line, const std::string& value)
+	: Expr(line)
 {
 	assert(value.length() == 1);
-	return std::make_shared<ChrExpr>(value[0]);
+	Value = value[0];
 }
 
-csaw::lang::ChrExpr::ChrExpr(const char value)
-	: Value(value)
+csaw::lang::StrExpr::StrExpr(size_t line, const std::string& value)
+	: Expr(line), Value(value)
 {
 }
 
-csaw::lang::StrExprPtr csaw::lang::StrExpr::Ptr(const std::string& value)
-{
-	return std::make_shared<StrExpr>(value);
-}
-
-csaw::lang::StrExpr::StrExpr(const std::string& value)
-	: Value(value)
+csaw::lang::CallExpr::CallExpr(size_t line, ExprPtr callee, const std::vector<ExprPtr>& args)
+	: Expr(line), Callee(callee), Args(args)
 {
 }
 
-csaw::lang::CallExprPtr csaw::lang::CallExpr::Ptr(const ExprPtr callee, const std::vector<ExprPtr>& args)
-{
-	return std::make_shared<CallExpr>(callee, args);
-}
-
-csaw::lang::CallExpr::CallExpr(const ExprPtr callee, const std::vector<ExprPtr>& args)
-	: Callee(callee), Args(args)
+csaw::lang::IdentExpr::IdentExpr(size_t line, const std::string& id)
+	: Expr(line), Id(id)
 {
 }
 
-csaw::lang::IdentExprPtr csaw::lang::IdentExpr::Ptr(const std::string& id)
-{
-	return std::make_shared<IdentExpr>(id);
-}
-
-csaw::lang::IdentExpr::IdentExpr(const std::string& id)
-	: Id(id)
+csaw::lang::BinExpr::BinExpr(size_t line, const std::string& op, ExprPtr left, ExprPtr right)
+	: Expr(line), Operator(op), Left(left), Right(right)
 {
 }
 
-csaw::lang::BinExprPtr csaw::lang::BinExpr::Ptr(const std::string& op, const ExprPtr left, const ExprPtr right)
-{
-	return std::make_shared<BinExpr>(op, left, right);
-}
-
-csaw::lang::BinExpr::BinExpr(const std::string& op, const ExprPtr left, const ExprPtr right)
-	: Operator(op), Left(left), Right(right)
+csaw::lang::UnExpr::UnExpr(size_t line, const std::string& op, ExprPtr value, bool rightop)
+	: Expr(line), Operator(op), Value(value), RightOp(rightop)
 {
 }
 
-csaw::lang::UnExprPtr csaw::lang::UnExpr::Ptr(const std::string& op, const ExprPtr value, const bool rightop)
-{
-	return std::make_shared<UnExpr>(op, value, rightop);
-}
-
-csaw::lang::UnExpr::UnExpr(const std::string& op, const ExprPtr value, const bool rightop)
-	: Operator(op), Value(value), RightOp(rightop)
+csaw::lang::IndexExpr::IndexExpr(size_t line, ExprPtr array, ExprPtr index)
+	: Expr(line), Array(array), Index(index)
 {
 }
 
-csaw::lang::IndexExprPtr csaw::lang::IndexExpr::Ptr(const ExprPtr array, const ExprPtr index)
-{
-	return std::make_shared<IndexExpr>(array, index);
-}
-
-csaw::lang::IndexExpr::IndexExpr(const ExprPtr array, const ExprPtr index)
-	: Array(array), Index(index)
+csaw::lang::MemberExpr::MemberExpr(size_t line, ExprPtr object, const std::string& member)
+	: Expr(line), Object(object), Member(member)
 {
 }
 
-csaw::lang::MemberExprPtr csaw::lang::MemberExpr::Ptr(const ExprPtr object, const std::string& member)
-{
-	return std::make_shared<MemberExpr>(object, member);
-}
-
-csaw::lang::MemberExpr::MemberExpr(const ExprPtr object, const std::string& member)
-	: Object(object), Member(member)
+csaw::lang::VarArgExpr::VarArgExpr(size_t line, const std::string& type, ExprPtr index)
+	: Expr(line), Type(type), Index(index)
 {
 }
 
-csaw::lang::VarArgExprPtr csaw::lang::VarArgExpr::Ptr(const std::string& type, const ExprPtr index)
-{
-	return std::make_shared<VarArgExpr>(type, index);
-}
-
-csaw::lang::VarArgExpr::VarArgExpr(const std::string& type, const ExprPtr index)
-	: Type(type), Index(index)
-{
-}
-
-csaw::lang::SelExprPtr csaw::lang::SelExpr::Ptr(const ExprPtr condition, const ExprPtr _true, const ExprPtr _false)
-{
-	return std::make_shared<SelExpr>(condition, _true, _false);
-}
-
-csaw::lang::SelExpr::SelExpr(const ExprPtr condition, const ExprPtr _true, const ExprPtr _false)
-	: Condition(condition), True(_true), False(_false)
+csaw::lang::SelExpr::SelExpr(size_t line, ExprPtr condition, ExprPtr _true, ExprPtr _false)
+	: Expr(line), Condition(condition), True(_true), False(_false)
 {
 }

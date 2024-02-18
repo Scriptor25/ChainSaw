@@ -1,8 +1,8 @@
 #pragma once
 
-#include <lang/ASTDef.h>
-#include <runtime/Runtime.h>
+#include <lang/Def.h>
 
+#include <functional>
 #include <istream>
 #include <string>
 #include <vector>
@@ -43,7 +43,7 @@ namespace csaw::lang
 	class Parser
 	{
 	public:
-		static void Parse(std::istream& stream, csaw::runtime::EnvironmentPtr env);
+		static void Parse(std::istream& stream, std::function<void(StmtPtr stmt)> callback);
 
 	private:
 		Parser(std::istream& stream);

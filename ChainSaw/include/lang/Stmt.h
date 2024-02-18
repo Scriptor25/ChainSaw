@@ -1,7 +1,8 @@
 #pragma once
 
-#include <lang/ASTDef.h>
+#include <lang/Def.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,108 +11,96 @@ namespace csaw::lang
 {
 	struct Stmt
 	{
+		Stmt(size_t line);
 		virtual ~Stmt() {}
+
+		size_t Line;
 	};
 
 	struct FunStmt : Stmt
 	{
-		static FunStmtPtr Ptr(const bool constructor, const std::string& name, const std::string& result, const std::vector<std::pair<std::string, std::string>>& params, const bool vararg, const std::string& callee, const EnclosedStmtPtr body);
-		static FunStmtPtr Ptr(const bool constructor, const std::string& name, const std::string& result, const std::vector<std::pair<std::string, std::string>>& params, const bool vararg, const std::string& callee);
-		FunStmt(const bool constructor, const std::string& name, const std::string& result, const std::vector<std::pair<std::string, std::string>>& params, const bool vararg, const std::string& callee, const EnclosedStmtPtr body);
+		FunStmt(size_t line, bool constructor, const std::string& name, const std::string& result, const std::vector<std::pair<std::string, std::string>>& args, bool vararg, const std::string& callee, EnclosedStmtPtr body);
 
-		const bool Constructor;
-		const std::string Name;
-		const std::string Result;
-		const std::vector<std::pair<std::string, std::string>> Params;
-		const bool VarArg;
-		const std::string Callee;
-		const EnclosedStmtPtr Body;
+		bool Constructor;
+		std::string Name;
+		std::string Result;
+		std::vector<std::pair<std::string, std::string>> Args;
+		bool VarArg;
+		std::string Callee;
+		EnclosedStmtPtr Body;
 	};
 
 	struct RetStmt : Stmt
 	{
-		static RetStmtPtr Ptr(const ExprPtr value);
-		static RetStmtPtr Ptr();
-		RetStmt(const ExprPtr value);
+		RetStmt(size_t line, ExprPtr value);
 
-		const ExprPtr Value;
+		ExprPtr Value;
 	};
 
 	struct EnclosedStmt : Stmt
 	{
-		static EnclosedStmtPtr Ptr(const std::vector<StmtPtr>& content);
-		EnclosedStmt(const std::vector<StmtPtr>& content);
+		EnclosedStmt(size_t line, const std::vector<StmtPtr>& content);
 
-		const std::vector<StmtPtr> Content;
+		std::vector<StmtPtr> Content;
 	};
 
 	struct ForStmt : Stmt
 	{
-		static ForStmtPtr Ptr(const StmtPtr pre, const ExprPtr condition, const StmtPtr loop, const StmtPtr body);
-		ForStmt(const StmtPtr pre, const ExprPtr condition, const StmtPtr loop, const StmtPtr body);
+		ForStmt(size_t line, StmtPtr pre, ExprPtr condition, StmtPtr loop, StmtPtr body);
 
-		const StmtPtr Pre;
-		const ExprPtr Condition;
-		const StmtPtr Loop;
-		const StmtPtr Body;
+		StmtPtr Pre;
+		ExprPtr Condition;
+		StmtPtr Loop;
+		StmtPtr Body;
 	};
 
 	struct VarStmt : Stmt
 	{
-		static VarStmtPtr Ptr(const std::string& type, const std::string& name, const ExprPtr value);
-		static VarStmtPtr Ptr(const std::string& type, const std::string& name);
-		VarStmt(const std::string& type, const std::string& name, const ExprPtr value);
+		VarStmt(size_t line, const std::string& type, const std::string& name, ExprPtr value);
 
-		const std::string Type;
-		const std::string Name;
-		const ExprPtr Value;
+		std::string Type;
+		std::string Name;
+		ExprPtr Value;
 	};
 
 	struct IncStmt : Stmt
 	{
-		static IncStmtPtr Ptr(const std::string& filename);
-		IncStmt(const std::string& filename);
+		IncStmt(size_t line, const std::string& filename);
 
-		const std::string Filename;
+		std::string Filename;
 	};
 
 	struct WhileStmt : Stmt
 	{
-		static WhileStmtPtr Ptr(const ExprPtr condition, const StmtPtr body);
-		WhileStmt(const ExprPtr condition, const StmtPtr body);
+		WhileStmt(size_t line, ExprPtr condition, StmtPtr body);
 
-		const ExprPtr Condition;
-		const StmtPtr Body;
+		ExprPtr Condition;
+		StmtPtr Body;
 	};
 
 	struct IfStmt : Stmt
 	{
-		static IfStmtPtr Ptr(const ExprPtr condition, const StmtPtr _true, const StmtPtr _false);
-		static IfStmtPtr Ptr(const ExprPtr condition, const StmtPtr _true);
-		IfStmt(const ExprPtr condition, const StmtPtr _true, const StmtPtr _false);
+		IfStmt(size_t line, ExprPtr condition, StmtPtr _true, StmtPtr _false);
 
-		const ExprPtr Condition;
-		const StmtPtr True;
-		const StmtPtr False;
+		ExprPtr Condition;
+		StmtPtr True;
+		StmtPtr False;
 	};
 
 	struct ThingStmt : Stmt
 	{
-		static ThingStmtPtr Ptr(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements);
-		static ThingStmtPtr Ptr(const std::string& name, const std::string& group);
-		ThingStmt(const std::string& name, const std::string& group, const std::vector<std::pair<std::string, std::string>>& elements);
+		ThingStmt(size_t line, const std::string& name, const std::string& group, const std::map<std::string, std::string>& elements);
 
-		const std::string Name;
-		const std::string Group;
-		const std::vector<std::pair<std::string, std::string>> Elements;
+		std::string Name;
+		std::string Group;
+		std::map<std::string, std::string> Elements;
 	};
 
 	struct AliasStmt : Stmt
 	{
-		static AliasStmtPtr Ptr(const std::string& name, const std::string& origin);
-		AliasStmt(const std::string& name, const std::string& origin);
+		AliasStmt(size_t line, const std::string& name, const std::string& origin);
 
-		const std::string Name;
-		const std::string Origin;
+		std::string Name;
+		std::string Origin;
 	};
 }

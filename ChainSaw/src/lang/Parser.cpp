@@ -1,18 +1,15 @@
 #include <lang/Parser.h>
-#include <runtime/Compute.h>
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
-void csaw::lang::Parser::Parse(std::istream& stream, csaw::runtime::EnvironmentPtr env)
+void csaw::lang::Parser::Parse(std::istream& stream, std::function<void(StmtPtr stmt)> callback)
 {
 	Parser parser(stream);
 
 	parser.Next();
 	do {
-		auto stmt = parser.ParseStmt();
-		// std::cout << stmt << std::endl;
-		Evaluate(env, stmt);
+		callback(parser.ParseStmt());
 	} while (!parser.AtEOF());
 }
 

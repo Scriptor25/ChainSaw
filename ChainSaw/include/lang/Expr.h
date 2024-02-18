@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lang/ASTDef.h>
+#include <lang/Def.h>
 #include <lang/Stmt.h>
 
 #include <string>
@@ -10,104 +10,95 @@ namespace csaw::lang
 {
 	struct Expr : Stmt
 	{
-		virtual ~Expr() {}
+		Expr(size_t line);
 	};
 
 	struct CallExpr : Expr
 	{
-		static CallExprPtr Ptr(const ExprPtr callee, const std::vector<ExprPtr>& args);
-		CallExpr(const ExprPtr callee, const std::vector<ExprPtr>& args);
+		CallExpr(size_t line, ExprPtr callee, const std::vector<ExprPtr>& args);
 
-		const ExprPtr Callee;
-		const std::vector<ExprPtr> Args;
+		ExprPtr Callee;
+		std::vector<ExprPtr> Args;
 	};
 
 	struct NumExpr : Expr
 	{
-		static NumExprPtr Ptr(const std::string& value, const int radix);
-		NumExpr(const double value);
+		NumExpr(size_t line, double value);
+		NumExpr(size_t line, const std::string& value, int base);
 
-		const double Value;
+		double Value;
 	};
 
 	struct ChrExpr : Expr
 	{
-		static ChrExprPtr Ptr(const std::string& value);
-		ChrExpr(const char value);
+		ChrExpr(size_t line, char value);
+		ChrExpr(size_t line, const std::string& value);
 
-		const char Value;
+		char Value;
 	};
 
 	struct StrExpr : Expr
 	{
-		static StrExprPtr Ptr(const std::string& value);
-		StrExpr(const std::string& value);
+		StrExpr(size_t line, const std::string& value);
 
-		const std::string Value;
+		std::string Value;
 	};
 
 	struct IdentExpr : Expr
 	{
-		static IdentExprPtr Ptr(const std::string& id);
-		IdentExpr(const std::string& id);
+		IdentExpr(size_t line, const std::string& id);
 
-		const std::string Id;
+		std::string Id;
 	};
 
 	struct BinExpr : Expr
 	{
-		static BinExprPtr Ptr(const std::string& op, const ExprPtr left, const ExprPtr right);
-		BinExpr(const std::string& op, const ExprPtr left, const ExprPtr right);
+		BinExpr(size_t line, const std::string& op, ExprPtr left, ExprPtr right);
 
-		const std::string Operator;
-		const ExprPtr Left;
-		const ExprPtr Right;
+		std::string Operator;
+		ExprPtr Left;
+		ExprPtr Right;
 	};
 
 	struct UnExpr : Expr
 	{
-		static UnExprPtr Ptr(const std::string& op, const ExprPtr value, const bool rightop = false);
-		UnExpr(const std::string& op, const ExprPtr value, const bool rightop);
+		UnExpr(size_t line, const std::string& op, ExprPtr value, bool rightop);
 
-		const std::string Operator;
-		const ExprPtr Value;
-		const bool RightOp;
+		std::string Operator;
+		ExprPtr Value;
+		bool RightOp;
 	};
 
 	struct IndexExpr : Expr
 	{
-		static IndexExprPtr Ptr(const ExprPtr array, const ExprPtr index);
-		IndexExpr(const ExprPtr array, const ExprPtr index);
+		IndexExpr(size_t line, ExprPtr array, ExprPtr index);
 
-		const ExprPtr Array;
-		const ExprPtr Index;
+		ExprPtr Array;
+		ExprPtr Index;
 	};
 
 	struct MemberExpr : Expr
 	{
-		static MemberExprPtr Ptr(const ExprPtr object, const std::string& member);
-		MemberExpr(const ExprPtr object, const std::string& member);
+		MemberExpr(size_t line, ExprPtr object, const std::string& member);
 
-		const ExprPtr Object;
-		const std::string Member;
+		ExprPtr Object;
+		std::string Member;
 	};
 
 	struct VarArgExpr : Expr
 	{
-		static VarArgExprPtr Ptr(const std::string& type, const ExprPtr index);
-		VarArgExpr(const std::string& type, const ExprPtr index);
+		VarArgExpr(size_t line, const std::string& type, ExprPtr index);
 
-		const std::string Type;
-		const ExprPtr Index;
+		std::string Type;
+		ExprPtr Index;
 	};
 
 	struct SelExpr : Expr
 	{
-		static SelExprPtr Ptr(const ExprPtr condition, const ExprPtr _true, const ExprPtr _false);
-		SelExpr(const ExprPtr condition, const ExprPtr _true, const ExprPtr _false);
+		SelExpr(size_t line, ExprPtr condition, ExprPtr _true, ExprPtr _false);
 
-		const ExprPtr Condition;
-		const ExprPtr True;
-		const ExprPtr False;
+		ExprPtr Condition;
+		ExprPtr True;
+		ExprPtr False;
 	};
 }
