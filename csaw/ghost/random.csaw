@@ -1,7 +1,9 @@
+@random: num;
 @random: num (minc: num, mexc: num) {
     ret minc + (mexc - minc) * random();
 }
 
+@floor: num (x: num);
 @randomInt: num (minc: num, mexc: num) {
     ret floor(random(minc, mexc));
 }

@@ -1,25 +1,33 @@
 #include <codegen/Context.h>
 
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLT(ValuePtr left, ValuePtr right)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLT_NN(ValuePtr left, ValuePtr right)
 {
 	auto result = std::make_shared<Value>(GetNumType());
-	auto inst = std::make_shared<CmpInst>(CMP_LT, left, right, result);
+	auto inst = std::make_shared<CmpInst>(MODE_NN, CMP_LT, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLE(ValuePtr left, ValuePtr right)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLE_NN(ValuePtr left, ValuePtr right)
 {
 	auto result = std::make_shared<Value>(GetNumType());
-	auto inst = std::make_shared<CmpInst>(CMP_LE, left, right, result);
+	auto inst = std::make_shared<CmpInst>(MODE_NN, CMP_LE, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpEQ(ValuePtr left, ValuePtr right)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpEQ_NN(ValuePtr left, ValuePtr right)
 {
 	auto result = std::make_shared<Value>(GetNumType());
-	auto inst = std::make_shared<CmpInst>(CMP_EQ, left, right, result);
+	auto inst = std::make_shared<CmpInst>(MODE_NN, CMP_EQ, left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
+}
+
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpNE_SS(ValuePtr left, ValuePtr right)
+{
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<CmpInst>(MODE_SS, CMP_NE, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }
@@ -62,7 +70,10 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateXOr(ValuePtr left, ValuePt
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateLAnd(ValuePtr left, ValuePtr right)
 {
-	throw;
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<LAndInst>(left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
 }
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateLOr(ValuePtr left, ValuePtr right)

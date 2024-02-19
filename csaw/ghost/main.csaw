@@ -2,6 +2,10 @@
 inc "bool.csaw";
 inc "random.csaw";
 
+@printf (fmt: str) ?;
+@readf: str (fmt: str) ?;
+@num: num (x: str);
+
 ## Main - Ghost Game
 @main: num {
 

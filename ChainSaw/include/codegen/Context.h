@@ -15,6 +15,8 @@ namespace csaw::codegen
 	class Context
 	{
 	public:
+		Context();
+
 		TypePtr GetType(const std::string& name);
 		NumTypePtr GetNumType();
 		ChrTypePtr GetChrType();
@@ -34,11 +36,16 @@ namespace csaw::codegen
 		const std::map<TypePtr, std::map<std::string, std::map<FunctionTypePtr, FunctionPtr>>>& Functions() const;
 		const std::vector<std::string>& Filepaths() const;
 
+		const std::vector<FunctionPtr> ListFunctions() const;
+		const FunctionPtr& GetGlobal() const;
+
 		void PushFilepath(const std::string& filepath);
 		void PopFilepath();
 
 		void ClearVariables();
+		void CreateVariable(const std::string& name, TypePtr type);
 		void SetVariable(const std::string& name, TypePtr type);
+		TypePtr GetVariable(const std::string& name);
 
 		ConstNumPtr GetConstNum(double value);
 		ConstStrPtr GetConstStr(const std::string& value);
@@ -51,7 +58,6 @@ namespace csaw::codegen
 		BranchPtr CreateBranch();
 		void CreateSplit(ValuePtr condition, BranchPtr _true, BranchPtr _false);
 		void CreateFlow(BranchPtr branch);
-		ValuePtr CreateMerge(ValuePtr condition, TypePtr type, BranchPtr _true, BranchPtr _false);
 
 		void CreateVar(const std::string& name, TypePtr type, ValuePtr value);
 		void CreateEmptyRet();
@@ -62,9 +68,10 @@ namespace csaw::codegen
 		ValuePtr CreateGetVar(const std::string& name);
 		ValuePtr CreateAssign(ValuePtr var, ValuePtr value);
 
-		ValuePtr CreateCmpLT(ValuePtr left, ValuePtr right);
-		ValuePtr CreateCmpLE(ValuePtr left, ValuePtr right);
-		ValuePtr CreateCmpEQ(ValuePtr left, ValuePtr right);
+		ValuePtr CreateCmpLT_NN(ValuePtr left, ValuePtr right);
+		ValuePtr CreateCmpLE_NN(ValuePtr left, ValuePtr right);
+		ValuePtr CreateCmpEQ_NN(ValuePtr left, ValuePtr right);
+		ValuePtr CreateCmpNE_SS(ValuePtr left, ValuePtr right);
 
 		ValuePtr CreateAddNN(ValuePtr left, ValuePtr right);
 		ValuePtr CreateAddCC(ValuePtr left, ValuePtr right);
@@ -96,15 +103,18 @@ namespace csaw::codegen
 		ValuePtr CreateNot(ValuePtr value);
 		ValuePtr CreateInv(ValuePtr value);
 
+		ValuePtr CreateSel(ValuePtr condition, TypePtr type, ValuePtr _true, ValuePtr _false);
+
 	private:
 		std::map<std::string, TypePtr> m_Types;
 		std::map<TypePtr, std::map<std::string, std::map<FunctionTypePtr, FunctionPtr>>> m_Functions;
 
+		std::map<std::string, TypePtr> m_GlobalVariables;
 		std::map<std::string, TypePtr> m_Variables;
 
 		std::vector<std::string> m_Filepath;
 
-		InstructionPtr m_GlobalInsertPoint;
+		FunctionPtr m_GlobalInsertPoint;
 		InstructionPtr m_InsertPoint;
 	};
 

@@ -203,7 +203,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::S
 	context->SetInsertPoint(ebr);
 
 	Assert(tval->Type == fval->Type, context, ptr);
-	auto merge = context->CreateMerge(condition, tval->Type, tbr, fbr);
+	auto merge = context->CreateSel(condition, tval->Type, tval, fval);
 
 	return merge;
 }

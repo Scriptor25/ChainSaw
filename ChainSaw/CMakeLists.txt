@@ -8,9 +8,11 @@
 	"include/codegen/GenOp.h"
 	"include/codegen/GenStmt.h"
 	"include/codegen/Instruction.h"
+	"include/codegen/Native.h"
 	"include/codegen/Type.h"
 	"include/codegen/Value.h"
 	"src/codegen/Assert.cpp"
+	"src/codegen/Branching.cpp"
 	"src/codegen/Builder.cpp"
 	"src/codegen/Const.cpp"
 	"src/codegen/Context.cpp"
@@ -22,10 +24,11 @@
 	"src/codegen/GenOp.cpp"
 	"src/codegen/GenStmt.cpp"
 	"src/codegen/Instruction.cpp"
+	"src/codegen/Print.cpp"
 	"src/codegen/Type.cpp"
 	"src/codegen/Value.cpp"
 
-	"include/lang/Def.h"
+	
 	"include/lang/Expr.h"
 	"include/lang/Parser.h"
 	"include/lang/Stmt.h"
@@ -38,7 +41,10 @@
 
 	"include/misc/stb_image_write.h"
 	"src/misc/stb_image_write.cpp"
- "src/codegen/Branching.cpp" "src/codegen/Print.cpp" "include/runtime/Runtime.h" "src/runtime/RuntimeValue.cpp" "src/runtime/Runtime.cpp")
+
+	"include/runtime/Runtime.h"
+	"src/runtime/Runtime.cpp"
+)
 
 include_directories ("include")
 

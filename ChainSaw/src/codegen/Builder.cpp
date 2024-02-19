@@ -30,7 +30,8 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetCurrentFunction()
 
 void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValuePtr value)
 {
-	m_Variables[name] = type;
+	if (!type) throw;
+	CreateVariable(name, type);
 	auto inst = std::make_shared<CreateVarInst>(name, type, value);
 	m_InsertPoint->Insert(inst);
 }
@@ -57,7 +58,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateCall(FunctionPtr function,
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetElement(ValuePtr thing, const std::string& element)
 {
-	auto result = std::make_shared<Value>(std::dynamic_pointer_cast<ThingType>(thing->Type)->Elements[element]);
+	auto result = std::make_shared<Value>(thing->Type->AsThing()->Elements[element]);
 	auto inst = std::make_shared<GetElementInst>(thing, element, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -65,7 +66,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetElement(ValuePtr thing,
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetVar(const std::string& name)
 {
-	auto result = std::make_shared<Value>(m_Variables[name]);
+	auto result = std::make_shared<Value>(GetVariable(name));
 	auto inst = std::make_shared<GetVarInst>(name, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -76,4 +77,12 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateAssign(ValuePtr var, Value
 	auto inst = std::make_shared<AssignVarInst>(var, value);
 	m_InsertPoint->Insert(inst);
 	return var;
+}
+
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateSel(ValuePtr condition, TypePtr type, ValuePtr _true, ValuePtr _false)
+{
+	auto result = std::make_shared<Value>(type);
+	auto inst = std::make_shared<SelInst>(condition, _true, _false, result);
+	m_InsertPoint->Insert(inst);
+	return result;
 }

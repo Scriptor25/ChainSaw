@@ -25,7 +25,10 @@ namespace csaw::codegen
 	typedef std::shared_ptr<ConstThing> ConstThingPtr;
 
 	struct Value
+		: std::enable_shared_from_this<Value>
 	{
+		static ValuePtr Default(TypePtr type);
+
 		Value(TypePtr type);
 		virtual ~Value() {}
 
@@ -34,6 +37,13 @@ namespace csaw::codegen
 
 	struct Const : Value
 	{
+		static ConstPtr Default(TypePtr type);
+
+		ConstNumPtr AsNum();
+		ConstChrPtr AsChr();
+		ConstStrPtr AsStr();
+		ConstThingPtr AsThing();
+
 		Const(TypePtr type);
 	};
 

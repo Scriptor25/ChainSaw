@@ -10,8 +10,8 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpLT(ContextPtr context, ValuePtr 
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
-			return context->CreateCmpLT(left, right);
+		if (left->Type->IsNum())
+			return context->CreateCmpLT_NN(left, right);
 	}
 
 	throw;
@@ -26,8 +26,8 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpLE(ContextPtr context, ValuePtr 
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
-			return context->CreateCmpLE(left, right);
+		if (left->Type->IsNum())
+			return context->CreateCmpLE_NN(left, right);
 	}
 
 	throw;
@@ -42,8 +42,8 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpEQ(ContextPtr context, ValuePtr 
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
-			return context->CreateCmpEQ(left, right);
+		if (left->Type->IsNum())
+			return context->CreateCmpEQ_NN(left, right);
 	}
 
 	throw;
@@ -51,6 +51,12 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpEQ(ContextPtr context, ValuePtr 
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGenOpNE(ContextPtr context, ValuePtr left, ValuePtr right)
 {
+	if (left->Type == right->Type)
+	{
+		if (left->Type->IsStr())
+			return context->CreateCmpNE_SS(left, right);
+	}
+
 	throw;
 }
 
@@ -58,26 +64,26 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpAdd(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateAddNN(left, right);
-		if (left->Type == context->GetChrType())
+		if (left->Type->IsChr())
 			return context->CreateAddCC(left, right);
-		if (left->Type == context->GetStrType())
+		if (left->Type->IsStr())
 			return context->CreateAddSS(left, right);
 	}
 
-	if (left->Type == context->GetNumType() && right->Type == context->GetStrType())
+	if (left->Type->IsNum() && right->Type->IsStr())
 		return context->CreateAddNS(left, right);
-	if (left->Type == context->GetChrType() && right->Type == context->GetStrType())
+	if (left->Type->IsChr() && right->Type->IsStr())
 		return context->CreateAddCS(left, right);
-	if (left->Type == context->GetStrType() && right->Type == context->GetNumType())
+	if (left->Type->IsStr() && right->Type->IsNum())
 		return context->CreateAddSN(left, right);
-	if (left->Type == context->GetStrType() && right->Type == context->GetChrType())
+	if (left->Type->IsStr() && right->Type->IsChr())
 		return context->CreateAddSC(left, right);
 
-	if (left->Type == context->GetChrType() && right->Type == context->GetNumType())
+	if (left->Type->IsChr() && right->Type->IsNum())
 		return context->CreateAddCN(left, right);
-	if (left->Type == context->GetNumType() && right->Type == context->GetChrType())
+	if (left->Type->IsNum() && right->Type->IsChr())
 		return context->CreateAddNC(left, right);
 
 	throw;
@@ -87,15 +93,15 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpSub(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateSubNN(left, right);
-		if (left->Type == context->GetChrType())
+		if (left->Type->IsChr())
 			return context->CreateSubCC(left, right);
 	}
 
-	if (left->Type == context->GetChrType() && right->Type == context->GetNumType())
+	if (left->Type->IsChr() && right->Type->IsNum())
 		return context->CreateSubCN(left, right);
-	if (left->Type == context->GetNumType() && right->Type == context->GetChrType())
+	if (left->Type->IsNum() && right->Type->IsChr())
 		return context->CreateSubNC(left, right);
 
 	throw;
@@ -105,7 +111,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpMul(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateMul(left, right);
 	}
 
@@ -116,7 +122,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpDiv(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateDiv(left, right);
 	}
 
@@ -127,7 +133,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpRem(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateRem(left, right);
 	}
 
@@ -138,7 +144,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpAnd(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateAnd(left, right);
 	}
 
@@ -149,7 +155,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpOr(ContextPtr context, ValuePtr 
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateOr(left, right);
 	}
 
@@ -160,7 +166,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpXOr(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateXOr(left, right);
 	}
 
@@ -171,7 +177,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpLAnd(ContextPtr context, ValuePt
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateLAnd(left, right);
 	}
 
@@ -182,7 +188,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpLOr(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateLOr(left, right);
 	}
 
@@ -193,7 +199,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpShL(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateShL(left, right);
 	}
 
@@ -204,7 +210,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpShR(ContextPtr context, ValuePtr
 {
 	if (left->Type == right->Type)
 	{
-		if (left->Type == context->GetNumType())
+		if (left->Type->IsNum())
 			return context->CreateShR(left, right);
 	}
 
@@ -213,7 +219,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpShR(ContextPtr context, ValuePtr
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGenOpNeg(ContextPtr context, ValuePtr value)
 {
-	if (value->Type == context->GetNumType())
+	if (value->Type->IsNum())
 		return context->CreateNeg(value);
 
 	throw;
@@ -221,7 +227,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpNeg(ContextPtr context, ValuePtr
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGenOpNot(ContextPtr context, ValuePtr value)
 {
-	if (value->Type == context->GetNumType())
+	if (value->Type->IsNum())
 		return context->CreateNot(value);
 
 	throw;
@@ -229,7 +235,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpNot(ContextPtr context, ValuePtr
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGenOpInv(ContextPtr context, ValuePtr value)
 {
-	if (value->Type == context->GetNumType())
+	if (value->Type->IsNum())
 		return context->CreateInv(value);
 
 	throw;

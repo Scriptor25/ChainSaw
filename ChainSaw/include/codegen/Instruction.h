@@ -3,6 +3,7 @@
 #include <codegen/Type.h>
 #include <codegen/Value.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -25,7 +26,8 @@ namespace csaw::codegen
 	struct DivInst;
 	struct NegInst;
 	struct CmpInst;
-	struct MergeInst;
+	struct SelInst;
+	struct LAndInst;
 
 	typedef std::shared_ptr<Instruction> InstructionPtr;
 
@@ -35,6 +37,7 @@ namespace csaw::codegen
 	typedef std::shared_ptr<FlowInst> FlowInstPtr;
 
 	typedef std::shared_ptr<CallInst> CallInstPtr;
+	typedef std::shared_ptr<GetVarInst> GetVarInstPtr;
 	typedef std::shared_ptr<GetElementInst> GetElementInstPtr;
 	typedef std::shared_ptr<AssignVarInst> AssignVarInstPtr;
 	typedef std::shared_ptr<AddInst> AddInstPtr;
@@ -43,7 +46,8 @@ namespace csaw::codegen
 	typedef std::shared_ptr<DivInst> DivInstPtr;
 	typedef std::shared_ptr<NegInst> NegInstPtr;
 	typedef std::shared_ptr<CmpInst> CmpInstPtr;
-	typedef std::shared_ptr<MergeInst> MergeInstPtr;
+	typedef std::shared_ptr<SelInst> SelInstPtr;
+	typedef std::shared_ptr<LAndInst> LAndInstPtr;
 
 	enum MathInstMode
 	{
@@ -199,21 +203,31 @@ namespace csaw::codegen
 
 	struct CmpInst : Instruction
 	{
-		CmpInst(CmpInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result);
+		CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValuePtr left, ValuePtr right, ValuePtr result);
 
-		CmpInstMode Mode;
+		MathInstMode Mode;
+		CmpInstMode CMPMode;
 		ValuePtr Left;
 		ValuePtr Right;
 		ValuePtr Result;
 	};
 
-	struct MergeInst : Instruction
+	struct SelInst : Instruction
 	{
-		MergeInst(ValuePtr condition, BranchPtr _true, BranchPtr _false, ValuePtr result);
+		SelInst(ValuePtr condition, ValuePtr _true, ValuePtr _false, ValuePtr result);
 
 		ValuePtr Condition;
-		BranchPtr True;
-		BranchPtr False;
+		ValuePtr True;
+		ValuePtr False;
+		ValuePtr Result;
+	};
+
+	struct LAndInst : Instruction
+	{
+		LAndInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		ValuePtr Left;
+		ValuePtr Right;
 		ValuePtr Result;
 	};
 }

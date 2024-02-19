@@ -1,6 +1,13 @@
 #include <codegen/Assert.h>
 #include <codegen/Context.h>
 
+csaw::codegen::Context::Context()
+{
+	auto type = std::make_shared<FunctionType>(GetEmptyType(), std::vector<TypePtr>(), false);
+	m_GlobalInsertPoint = std::make_shared<Function>(std::string("__global__"), type, false, std::vector<ArgPtr>(), GetEmptyType());
+	SetInsertGlobal();
+}
+
 csaw::codegen::TypePtr csaw::codegen::Context::GetType(const std::string& name)
 {
 	if (name == "num") return GetNumType();
@@ -13,7 +20,7 @@ csaw::codegen::TypePtr csaw::codegen::Context::GetType(const std::string& name)
 csaw::codegen::NumTypePtr csaw::codegen::Context::GetNumType()
 {
 	if (auto& type = m_Types["num"])
-		return std::dynamic_pointer_cast<NumType>(type);
+		return type->AsNum();
 	auto type = std::make_shared<NumType>();
 	m_Types["num"] = type;
 	return type;
@@ -22,7 +29,7 @@ csaw::codegen::NumTypePtr csaw::codegen::Context::GetNumType()
 csaw::codegen::ChrTypePtr csaw::codegen::Context::GetChrType()
 {
 	if (auto& type = m_Types["chr"])
-		return std::dynamic_pointer_cast<ChrType>(type);
+		return type->AsChr();
 	auto type = std::make_shared<ChrType>();
 	m_Types["chr"] = type;
 	return type;
@@ -31,7 +38,7 @@ csaw::codegen::ChrTypePtr csaw::codegen::Context::GetChrType()
 csaw::codegen::StrTypePtr csaw::codegen::Context::GetStrType()
 {
 	if (auto& type = m_Types["str"])
-		return std::dynamic_pointer_cast<StrType>(type);
+		return type->AsStr();
 	auto type = std::make_shared<StrType>();
 	m_Types["str"] = type;
 	return type;
@@ -40,7 +47,7 @@ csaw::codegen::StrTypePtr csaw::codegen::Context::GetStrType()
 csaw::codegen::EmptyTypePtr csaw::codegen::Context::GetEmptyType()
 {
 	if (auto& type = m_Types[""])
-		return std::dynamic_pointer_cast<EmptyType>(type);
+		return type->AsEmpty();
 	auto type = std::make_shared<EmptyType>();
 	m_Types[""] = type;
 	return type;
@@ -49,7 +56,7 @@ csaw::codegen::EmptyTypePtr csaw::codegen::Context::GetEmptyType()
 csaw::codegen::ThingTypePtr csaw::codegen::Context::GetThingType(const std::string& name)
 {
 	if (auto& type = m_Types[name])
-		return std::dynamic_pointer_cast<ThingType>(type);
+		return type->AsThing();
 	return nullptr;
 }
 
@@ -65,7 +72,7 @@ csaw::codegen::FunctionTypePtr csaw::codegen::Context::GetFunctionType(TypePtr r
 	auto ftype = std::make_shared<FunctionType>(result, argtypes, isvararg);
 	auto name = ftype->GetName();
 	if (auto& type = m_Types[name])
-		return std::dynamic_pointer_cast<FunctionType>(type);
+		return type->AsFunction();
 	m_Types[name] = ftype;
 	return ftype;
 }
@@ -134,6 +141,21 @@ const std::vector<std::string>& csaw::codegen::Context::Filepaths() const
 	return m_Filepath;
 }
 
+const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::ListFunctions() const
+{
+	std::vector<FunctionPtr> functions;
+	for (auto& a : m_Functions)
+		for (auto& b : a.second)
+			for (auto& c : b.second)
+				functions.push_back(c.second);
+	return functions;
+}
+
+const csaw::codegen::FunctionPtr& csaw::codegen::Context::GetGlobal() const
+{
+	return m_GlobalInsertPoint;
+}
+
 void csaw::codegen::Context::PushFilepath(const std::string& filepath)
 {
 	m_Filepath.push_back(filepath);
@@ -149,7 +171,48 @@ void csaw::codegen::Context::ClearVariables()
 	m_Variables.clear();
 }
 
+void csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
+{
+	if (!type) throw;
+	if (m_InsertPoint == m_GlobalInsertPoint)
+	{
+		if (m_GlobalVariables[name]) throw;
+		m_GlobalVariables[name] = type;
+		return;
+	}
+	if (m_Variables[name]) throw;
+	m_Variables[name] = type;
+}
+
 void csaw::codegen::Context::SetVariable(const std::string& name, TypePtr type)
 {
+	if (!type) throw;
+	if (m_InsertPoint == m_GlobalInsertPoint)
+	{
+		if (!m_GlobalVariables[name]) throw;
+		m_GlobalVariables[name] = type;
+		return;
+	}
+	if (!m_Variables[name])
+	{
+		if (!m_GlobalVariables[name]) throw;
+		m_GlobalVariables[name] = type;
+		return;
+	}
 	m_Variables[name] = type;
+}
+
+csaw::codegen::TypePtr csaw::codegen::Context::GetVariable(const std::string& name)
+{
+	if (m_InsertPoint == m_GlobalInsertPoint)
+	{
+		if (!m_GlobalVariables[name]) throw;
+		return m_GlobalVariables[name];
+	}
+	if (!m_Variables[name])
+	{
+		if (!m_GlobalVariables[name]) throw;
+		return m_GlobalVariables[name];
+	}
+	return m_Variables[name];
 }

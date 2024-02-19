@@ -61,16 +61,16 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::FunStmtPtr ptr)
 
 	Assert(!function->Next, context, ptr);
 
+	context->SetInsertPoint(function);
 	context->ClearVariables();
 	for (auto& arg : ptr->Args)
-		context->SetVariable(arg.first, context->GetType(arg.second));
+		context->CreateVariable(arg.first, context->GetType(arg.second));
 
 	if (function->IsConstructor)
-		context->SetVariable("my", function->Type->Result);
-	if (function->Callee != context->GetEmptyType())
-		context->SetVariable("my", function->Callee);
+		context->CreateVariable("my", function->Type->Result);
+	if (!function->Callee->IsEmpty())
+		context->CreateVariable("my", function->Callee);
 
-	context->SetInsertPoint(function);
 	CodeGen(context, ptr->Body);
 	context->SetInsertGlobal();
 }
@@ -101,7 +101,10 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ForStmtPtr ptr)
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarStmtPtr ptr)
 {
 	auto type = context->GetType(ptr->Type);
-	auto value = CodeGen(context, ptr->Value);
+	auto value =
+		ptr->Value
+		? CodeGen(context, ptr->Value)
+		: Const::Default(type);
 	context->CreateVar(ptr->Name, type, value);
 }
 
@@ -127,12 +130,44 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IncStmtPtr ptr)
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::WhileStmtPtr ptr)
 {
-	throw;
+	auto cbr = context->CreateBranch();
+	auto lbr = context->CreateBranch();
+	auto ebr = context->CreateBranch();
+
+	context->CreateFlow(cbr);
+
+	context->SetInsertPoint(cbr);
+	auto condition = CodeGen(context, ptr->Condition);
+	context->CreateSplit(condition, lbr, ebr);
+
+	context->SetInsertPoint(lbr);
+	CodeGen(context, ptr->Body);
+	context->CreateFlow(cbr);
+
+	context->SetInsertPoint(ebr);
 }
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IfStmtPtr ptr)
 {
-	throw;
+	auto tbr = context->CreateBranch();
+	auto fbr = ptr->False ? context->CreateBranch() : nullptr;
+	auto ebr = context->CreateBranch();
+
+	auto condition = CodeGen(context, ptr->Condition);
+	context->CreateSplit(condition, tbr, ptr->False ? fbr : ebr);
+
+	context->SetInsertPoint(tbr);
+	CodeGen(context, ptr->True);
+	context->CreateFlow(ebr);
+
+	if (ptr->False)
+	{
+		context->SetInsertPoint(fbr);
+		CodeGen(context, ptr->False);
+		context->CreateFlow(ebr);
+	}
+
+	context->SetInsertPoint(ebr);
 }
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ThingStmtPtr ptr)

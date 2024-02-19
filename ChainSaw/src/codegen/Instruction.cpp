@@ -1,4 +1,5 @@
 #include <codegen/Instruction.h>
+#include <codegen/Native.h>
 
 void csaw::codegen::Instruction::Insert(InstructionPtr instruction)
 {
@@ -95,12 +96,22 @@ csaw::codegen::NegInst::NegInst(ValuePtr value, ValuePtr result)
 {
 }
 
-csaw::codegen::CmpInst::CmpInst(CmpInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result)
-	: Mode(mode), Left(left), Right(right), Result(result)
+csaw::codegen::CmpInst::CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValuePtr left, ValuePtr right, ValuePtr result)
+	: Mode(mode), CMPMode(cmpmode), Left(left), Right(right), Result(result)
 {
 }
 
-csaw::codegen::MergeInst::MergeInst(ValuePtr condition, BranchPtr _true, BranchPtr _false, ValuePtr result)
+csaw::codegen::SelInst::SelInst(ValuePtr condition, ValuePtr _true, ValuePtr _false, ValuePtr result)
 	: Condition(condition), True(_true), False(_false), Result(result)
+{
+}
+
+csaw::codegen::LAndInst::LAndInst(ValuePtr left, ValuePtr right, ValuePtr result)
+	: Left(left), Right(right), Result(result)
+{
+}
+
+csaw::codegen::NativeInst::NativeInst(NativeFunction function)
+	: Function(function)
 {
 }
