@@ -76,7 +76,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::S
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IdentExprPtr ptr)
 {
-	return context->CreateGetVar(ptr->Id);
+	return context->GetVariable(ptr->Id);
 }
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::BinExprPtr ptr)

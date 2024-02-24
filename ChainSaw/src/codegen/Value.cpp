@@ -1,5 +1,7 @@
 #include <codegen/Value.h>
 
+#include <iostream>
+
 csaw::codegen::ValuePtr csaw::codegen::Value::Default(TypePtr type)
 {
 	if (type->IsEmpty())
@@ -25,4 +27,14 @@ csaw::codegen::ValuePtr csaw::codegen::Value::Default(TypePtr type)
 csaw::codegen::Value::Value(TypePtr type)
 	: Type(type)
 {
+}
+
+std::ostream& csaw::codegen::Value::Print() const
+{
+	return Print(std::cout);
+}
+
+std::ostream& csaw::codegen::Value::Print(std::ostream& out) const
+{
+	return out << Type->GetName();
 }

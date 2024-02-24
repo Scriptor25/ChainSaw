@@ -76,13 +76,14 @@ csaw::runtime::RuntimePtr csaw::runtime::Runtime::GetGlobal()
 	return shared_from_this();
 }
 
-ConstPtr csaw::runtime::Runtime::Create(const std::string& name, ConstPtr value)
+ConstPtr csaw::runtime::Runtime::Create(const std::string& name, ValuePtr ptr, ConstPtr value)
 {
 	if (!value) throw;
 	if (GetEntry(name)) throw;
-	auto key = std::make_shared<Value>(value->Type);
-	m_Variables[name] = key;
-	return m_Values[key] = value;
+	ptr->Print() << " " << name << " = ";
+	value->Print() << std::endl;
+	m_Variables[name] = ptr;
+	return m_Values[ptr] = value;
 }
 
 ConstPtr csaw::runtime::Runtime::Get(const std::string& name)
@@ -133,12 +134,12 @@ ConstPtr csaw::runtime::Runtime::Call(RuntimePtr runtime, FunctionPtr function, 
 	runtime->m_Args = args;
 
 	for (size_t i = 0; i < function->Args.size(); i++)
-		runtime->Create(function->Args[i]->Name, args[i]);
+		runtime->Create(function->Args[i]->Name, std::make_shared<Value>(args[i]->Type), args[i]);
 
 	if (function->IsConstructor)
-		runtime->Create("my", Const::Default(function->Type->Result));
+		runtime->Create("my", std::make_shared<Value>(function->Type->Result), Const::Default(function->Type->Result));
 	if (callee)
-		runtime->Create("my", callee);
+		runtime->Create("my", std::make_shared<Value>(callee->Type), callee);
 
 	InstructionPtr ptr = function->Next;
 	while (ptr)
@@ -163,8 +164,6 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(InstructionPtr ptr)
 
 	if (auto p = std::dynamic_pointer_cast<CallInst>(ptr))
 		return Evaluate(p);
-	if (auto p = std::dynamic_pointer_cast<GetVarInst>(ptr))
-		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<AssignVarInst>(ptr))
 		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<AddInst>(ptr))
@@ -188,8 +187,8 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(InstructionPtr ptr)
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(CreateVarInstPtr ptr)
 {
-	if (ptr->Value->Type != ptr->Type) throw;
-	Create(ptr->Name, GetConst(ptr->Value));
+	if (ptr->Value->Type != ptr->Var->Type) throw;
+	Create(ptr->Name, ptr->Var, GetConst(ptr->Value));
 	return ptr->Next;
 }
 
@@ -216,12 +215,6 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(CallInstPtr ptr)
 	auto runtime = std::make_shared<Runtime>(GetGlobal());
 	auto value = Call(runtime, ptr->Function, ptr->Callee ? GetConst(ptr->Callee) : ConstPtr(), GetConst(ptr->Args));
 	m_Values[ptr->Result] = value;
-	return ptr->Next;
-}
-
-InstructionPtr csaw::runtime::Runtime::Evaluate(GetVarInstPtr ptr)
-{
-	m_Values[ptr->Result] = Get(ptr->Name);
 	return ptr->Next;
 }
 

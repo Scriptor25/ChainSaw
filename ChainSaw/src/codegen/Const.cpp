@@ -1,5 +1,7 @@
 #include <codegen/Value.h>
 
+#include <iostream>
+
 csaw::codegen::ConstPtr csaw::codegen::Const::Default(TypePtr type)
 {
 	if (type->IsNum())
@@ -50,9 +52,19 @@ csaw::codegen::ConstNum::ConstNum(NumTypePtr type, double value)
 {
 }
 
+std::ostream& csaw::codegen::ConstNum::Print(std::ostream& out) const
+{
+	return out << Type->GetName() << " " << Value;
+}
+
 csaw::codegen::ConstChr::ConstChr(ChrTypePtr type, char value)
 	: Const(type), Value(value)
 {
+}
+
+std::ostream& csaw::codegen::ConstChr::Print(std::ostream& out) const
+{
+	return out << Type->GetName() << " " << Value;
 }
 
 csaw::codegen::ConstStr::ConstStr(StrTypePtr type, const std::string& value)
@@ -60,7 +72,23 @@ csaw::codegen::ConstStr::ConstStr(StrTypePtr type, const std::string& value)
 {
 }
 
+std::ostream& csaw::codegen::ConstStr::Print(std::ostream& out) const
+{
+	return out << Type->GetName() << " " << Value;
+}
+
 csaw::codegen::ConstThing::ConstThing(ThingTypePtr type, const std::map<std::string, ValuePtr>& elements)
 	: Const(type), Elements(elements)
 {
+}
+
+std::ostream& csaw::codegen::ConstThing::Print(std::ostream& out) const
+{
+	out << Type->GetName();
+	for (auto& elem : Elements)
+	{
+		out << std::endl << "\t" << elem.first << ": ";
+		elem.second->Print(out);
+	}
+	return out;
 }

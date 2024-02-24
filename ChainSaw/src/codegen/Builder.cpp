@@ -31,8 +31,8 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetCurrentFunction()
 void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValuePtr value)
 {
 	if (!type) throw;
-	CreateVariable(name, type);
-	auto inst = std::make_shared<CreateVarInst>(name, type, value);
+	auto var = CreateVariable(name, type);
+	auto inst = std::make_shared<CreateVarInst>(name, var, value);
 	m_InsertPoint->Insert(inst);
 }
 
@@ -60,14 +60,6 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetElement(ValuePtr thing,
 {
 	auto result = std::make_shared<Value>(thing->Type->AsThing()->Elements[element]);
 	auto inst = std::make_shared<GetElementInst>(thing, element, result);
-	m_InsertPoint->Insert(inst);
-	return result;
-}
-
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetVar(const std::string& name)
-{
-	auto result = std::make_shared<Value>(GetVariable(name));
-	auto inst = std::make_shared<GetVarInst>(name, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }

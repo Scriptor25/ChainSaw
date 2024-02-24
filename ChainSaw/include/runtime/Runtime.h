@@ -33,7 +33,7 @@ namespace csaw::runtime
 	private:
 		RuntimePtr GetGlobal();
 
-		ConstPtr Create(const std::string& name, ConstPtr value);
+		ConstPtr Create(const std::string& name, ValuePtr ptr, ConstPtr value);
 		ConstPtr Get(const std::string& name);
 		ConstPtr Set(const std::string& name, ConstPtr value);
 		ValuePtr& GetEntry(const std::string& name);
@@ -51,7 +51,6 @@ namespace csaw::runtime
 		InstructionPtr Evaluate(FlowInstPtr ptr);
 
 		InstructionPtr Evaluate(CallInstPtr ptr);
-		InstructionPtr Evaluate(GetVarInstPtr ptr);
 		InstructionPtr Evaluate(AssignVarInstPtr ptr);
 		InstructionPtr Evaluate(AddInstPtr ptr);
 		InstructionPtr Evaluate(SubInstPtr ptr);

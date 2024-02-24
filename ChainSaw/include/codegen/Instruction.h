@@ -17,7 +17,6 @@ namespace csaw::codegen
 	struct FlowInst;
 
 	struct CallInst;
-	struct GetVarInst;
 	struct GetElementInst;
 	struct AssignVarInst;
 	struct AddInst;
@@ -37,7 +36,6 @@ namespace csaw::codegen
 	typedef std::shared_ptr<FlowInst> FlowInstPtr;
 
 	typedef std::shared_ptr<CallInst> CallInstPtr;
-	typedef std::shared_ptr<GetVarInst> GetVarInstPtr;
 	typedef std::shared_ptr<GetElementInst> GetElementInstPtr;
 	typedef std::shared_ptr<AssignVarInst> AssignVarInstPtr;
 	typedef std::shared_ptr<AddInst> AddInstPtr;
@@ -85,10 +83,10 @@ namespace csaw::codegen
 
 	struct CreateVarInst : Instruction
 	{
-		CreateVarInst(const std::string& name, TypePtr type, ValuePtr value);
+		CreateVarInst(const std::string& name, ValuePtr var, ValuePtr value);
 
 		std::string Name;
-		TypePtr Type;
+		ValuePtr Var;
 		ValuePtr Value;
 	};
 
@@ -127,14 +125,6 @@ namespace csaw::codegen
 		FunctionPtr Function;
 		ValuePtr Callee;
 		std::vector<ValuePtr> Args;
-		ValuePtr Result;
-	};
-
-	struct GetVarInst : Instruction
-	{
-		GetVarInst(const std::string& name, ValuePtr result);
-
-		std::string Name;
 		ValuePtr Result;
 	};
 

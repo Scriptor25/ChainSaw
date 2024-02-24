@@ -32,6 +32,9 @@ namespace csaw::codegen
 		Value(TypePtr type);
 		virtual ~Value() {}
 
+		std::ostream& Print() const;
+		virtual std::ostream& Print(std::ostream& out) const;
+
 		TypePtr Type;
 	};
 
@@ -50,6 +53,7 @@ namespace csaw::codegen
 	struct ConstNum : Const
 	{
 		ConstNum(NumTypePtr type, double value);
+		std::ostream& Print(std::ostream& out) const override;
 
 		double Value;
 	};
@@ -57,6 +61,7 @@ namespace csaw::codegen
 	struct ConstChr : Const
 	{
 		ConstChr(ChrTypePtr type, char value);
+		std::ostream& Print(std::ostream& out) const override;
 
 		char Value;
 	};
@@ -64,6 +69,7 @@ namespace csaw::codegen
 	struct ConstStr : Const
 	{
 		ConstStr(StrTypePtr type, const std::string& value);
+		std::ostream& Print(std::ostream& out) const override;
 
 		std::string Value;
 	};
@@ -71,6 +77,7 @@ namespace csaw::codegen
 	struct ConstThing : Const
 	{
 		ConstThing(ThingTypePtr type, const std::map<std::string, ValuePtr>& elements);
+		std::ostream& Print(std::ostream& out) const override;
 
 		std::map<std::string, ValuePtr> Elements;
 	};

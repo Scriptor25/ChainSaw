@@ -17,6 +17,9 @@ namespace csaw::codegen
 	public:
 		Context();
 
+		std::ostream& Print() const;
+		std::ostream& Print(std::ostream& out) const;
+
 		TypePtr GetType(const std::string& name);
 		NumTypePtr GetNumType();
 		ChrTypePtr GetChrType();
@@ -43,9 +46,8 @@ namespace csaw::codegen
 		void PopFilepath();
 
 		void ClearVariables();
-		void CreateVariable(const std::string& name, TypePtr type);
-		void SetVariable(const std::string& name, TypePtr type);
-		TypePtr GetVariable(const std::string& name);
+		ValuePtr CreateVariable(const std::string& name, TypePtr type);
+		ValuePtr GetVariable(const std::string& name);
 
 		ConstNumPtr GetConstNum(double value);
 		ConstStrPtr GetConstStr(const std::string& value);
@@ -65,7 +67,6 @@ namespace csaw::codegen
 
 		ValuePtr CreateCall(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args);
 		ValuePtr CreateGetElement(ValuePtr thing, const std::string& element);
-		ValuePtr CreateGetVar(const std::string& name);
 		ValuePtr CreateAssign(ValuePtr var, ValuePtr value);
 
 		ValuePtr CreateCmpLT_NN(ValuePtr left, ValuePtr right);
@@ -109,8 +110,8 @@ namespace csaw::codegen
 		std::map<std::string, TypePtr> m_Types;
 		std::map<TypePtr, std::map<std::string, std::map<FunctionTypePtr, FunctionPtr>>> m_Functions;
 
-		std::map<std::string, TypePtr> m_GlobalVariables;
-		std::map<std::string, TypePtr> m_Variables;
+		std::map<std::string, ValuePtr> m_GlobalVariables;
+		std::map<std::string, ValuePtr> m_Variables;
 
 		std::vector<std::string> m_Filepath;
 
@@ -119,6 +120,4 @@ namespace csaw::codegen
 	};
 
 	typedef std::shared_ptr<Context> ContextPtr;
-
-	std::ostream& operator<<(std::ostream& out, const Context& context);
 }

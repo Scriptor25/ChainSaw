@@ -120,7 +120,7 @@ static void registerNative(RuntimePtr runtime)
 
 int main(int argc, char** argv)
 {
-	std::string filename = "C:/Users/Felix Schreiber/Documents/Projects/C++/CSaw/csaw/ghost/main.csaw";
+	std::string filename = "../../../../csaw/ghost/main.csaw";
 	std::ifstream stream(filename);
 	if (!stream.is_open())
 		std::cerr << "Failed to open stream from '" << filename << "'" << std::endl;

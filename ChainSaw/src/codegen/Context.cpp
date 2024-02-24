@@ -8,6 +8,16 @@ csaw::codegen::Context::Context()
 	SetInsertGlobal();
 }
 
+std::ostream& csaw::codegen::Context::Print() const
+{
+	return Print(std::cout);
+}
+
+std::ostream& csaw::codegen::Context::Print(std::ostream& out) const
+{
+	throw;
+}
+
 csaw::codegen::TypePtr csaw::codegen::Context::GetType(const std::string& name)
 {
 	if (name == "num") return GetNumType();
@@ -171,38 +181,22 @@ void csaw::codegen::Context::ClearVariables()
 	m_Variables.clear();
 }
 
-void csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
 {
 	if (!type) throw;
+	auto value = std::make_shared<Value>(type);
 	if (m_InsertPoint == m_GlobalInsertPoint)
 	{
 		if (m_GlobalVariables[name]) throw;
-		m_GlobalVariables[name] = type;
-		return;
+		m_GlobalVariables[name] = value;
+		return value;
 	}
 	if (m_Variables[name]) throw;
-	m_Variables[name] = type;
+	m_Variables[name] = value;
+	return value;
 }
 
-void csaw::codegen::Context::SetVariable(const std::string& name, TypePtr type)
-{
-	if (!type) throw;
-	if (m_InsertPoint == m_GlobalInsertPoint)
-	{
-		if (!m_GlobalVariables[name]) throw;
-		m_GlobalVariables[name] = type;
-		return;
-	}
-	if (!m_Variables[name])
-	{
-		if (!m_GlobalVariables[name]) throw;
-		m_GlobalVariables[name] = type;
-		return;
-	}
-	m_Variables[name] = type;
-}
-
-csaw::codegen::TypePtr csaw::codegen::Context::GetVariable(const std::string& name)
+csaw::codegen::ValuePtr csaw::codegen::Context::GetVariable(const std::string& name)
 {
 	if (m_InsertPoint == m_GlobalInsertPoint)
 	{

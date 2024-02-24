@@ -16,8 +16,8 @@ bool csaw::codegen::Instruction::IsTerminator() const
 	return false;
 }
 
-csaw::codegen::CreateVarInst::CreateVarInst(const std::string& name, TypePtr type, ValuePtr value)
-	: Name(name), Type(type), Value(value)
+csaw::codegen::CreateVarInst::CreateVarInst(const std::string& name, ValuePtr var, ValuePtr value)
+	: Name(name), Var(var), Value(value)
 {
 }
 
@@ -53,11 +53,6 @@ bool csaw::codegen::FlowInst::IsTerminator() const
 
 csaw::codegen::CallInst::CallInst(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args, ValuePtr result)
 	: Function(function), Callee(callee), Args(args), Result(result)
-{
-}
-
-csaw::codegen::GetVarInst::GetVarInst(const std::string& name, ValuePtr result)
-	: Name(name), Result(result)
 {
 }
 
