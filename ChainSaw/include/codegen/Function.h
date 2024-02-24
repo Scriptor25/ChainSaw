@@ -2,6 +2,7 @@
 
 #include <codegen/Instruction.h>
 #include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <memory>
 #include <string>
@@ -11,27 +12,25 @@ namespace csaw::codegen
 {
 	struct Arg;
 	struct Function;
-
 	struct Branch;
 
 	typedef std::shared_ptr<Arg> ArgPtr;
 	typedef std::shared_ptr<Function> FunctionPtr;
-
 	typedef std::shared_ptr<Branch> BranchPtr;
 
-	struct Arg
+	struct Arg : Value
 	{
-		Arg(const std::string& name, TypePtr type);
-
-		std::string Name;
-		TypePtr Type;
+		Arg(TypePtr type, const std::string& name = "");
 	};
 
 	struct Function : Instruction
 	{
 		Function(const std::string& name, FunctionTypePtr type, bool isconstructor, const std::vector<ArgPtr>& args, TypePtr callee);
 
-		BranchPtr CreateBranch();
+		std::ostream& Print(std::ostream& out) const override;
+		std::ostream& PrintShort(std::ostream& out) const;
+
+		BranchPtr CreateBranch(const std::string& name);
 
 		std::string Name;
 		FunctionTypePtr Type;
@@ -44,6 +43,11 @@ namespace csaw::codegen
 
 	struct Branch : Instruction
 	{
-		Branch();
+		Branch(const std::string& name);
+		bool HasTerminator() const;
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		std::string Name;
 	};
 }

@@ -1,19 +1,27 @@
 #pragma once
 
-#include <codegen/Context.h>
 #include <codegen/Instruction.h>
 #include <codegen/Value.h>
+
+#include <runtime/Runtime.h>
 
 #include <functional>
 #include <memory>
 
+namespace csaw::runtime
+{
+	typedef std::shared_ptr<class Runtime> RuntimePtr;
+}
+
 namespace csaw::codegen
 {
-	typedef std::function<ConstPtr(ContextPtr context, ConstPtr callee, const std::vector<ConstPtr>& args)> NativeFunction;
+	typedef std::function<ConstPtr(csaw::runtime::RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)> NativeFunction;
 
 	struct NativeInst : Instruction
 	{
 		NativeInst(NativeFunction function);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		NativeFunction Function;
 	};

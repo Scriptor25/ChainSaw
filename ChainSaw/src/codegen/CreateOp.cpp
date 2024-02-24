@@ -8,6 +8,14 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLT_NN(ValuePtr left, Va
 	return result;
 }
 
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpGT_NN(ValuePtr left, ValuePtr right)
+{
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<CmpInst>(MODE_NN, CMP_GT, left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
+}
+
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateCmpLE_NN(ValuePtr left, ValuePtr right)
 {
 	auto result = std::make_shared<Value>(GetNumType());
@@ -55,12 +63,18 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateRem(ValuePtr left, ValuePt
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateAnd(ValuePtr left, ValuePtr right)
 {
-	throw;
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<AndInst>(left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
 }
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateOr(ValuePtr left, ValuePtr right)
 {
-	throw;
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<OrInst>(left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
 }
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateXOr(ValuePtr left, ValuePtr right)
@@ -83,7 +97,10 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateLOr(ValuePtr left, ValuePt
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateShL(ValuePtr left, ValuePtr right)
 {
-	throw;
+	auto result = std::make_shared<Value>(GetNumType());
+	auto inst = std::make_shared<ShLInst>(left, right, result);
+	m_InsertPoint->Insert(inst);
+	return result;
 }
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateShR(ValuePtr left, ValuePtr right)

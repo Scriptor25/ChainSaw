@@ -5,6 +5,7 @@
 #include <codegen/Type.h>
 #include <codegen/Value.h>
 
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,42 +27,44 @@ namespace csaw::codegen
 		StrTypePtr GetStrType();
 		EmptyTypePtr GetEmptyType();
 		ThingTypePtr GetThingType(const std::string& name);
-		ThingTypePtr CreateThingType(const std::string& name, const std::map<std::string, TypePtr>& elements);
 		FunctionTypePtr GetFunctionType(TypePtr result, const std::vector<TypePtr>& argtypes, bool isvararg);
 
 		FunctionPtr GetFunction(const std::string& name, TypePtr callee, FunctionTypePtr type, bool isconstructor);
 		FunctionPtr GetFunction(const std::string& name, TypePtr callee, const std::vector<TypePtr>& argtypes);
 
-		std::string& Filepath();
-		const std::string& Filepath() const;
+		std::filesystem::path& Filepath();
+		const std::filesystem::path& Filepath() const;
+		const std::vector<std::filesystem::path>& Filepaths() const;
 
-		const std::map<std::string, TypePtr>& Types() const;
-		const std::map<TypePtr, std::map<std::string, std::map<FunctionTypePtr, FunctionPtr>>>& Functions() const;
-		const std::vector<std::string>& Filepaths() const;
-
-		const std::vector<FunctionPtr> ListFunctions() const;
+		const std::vector<FunctionPtr> Functions() const;
+		const std::vector<FunctionPtr> DefinedFunctions() const;
+		const std::vector<FunctionPtr> DeclaredFunctions() const;
 		const FunctionPtr& GetGlobal() const;
 
-		void PushFilepath(const std::string& filepath);
+		void PushFilepath(const std::filesystem::path& filepath);
 		void PopFilepath();
 
 		void ClearVariables();
 		ValuePtr CreateVariable(const std::string& name, TypePtr type);
 		ValuePtr GetVariable(const std::string& name);
+		void CreateArgs(const std::vector<ArgPtr>& args);
 
 		ConstNumPtr GetConstNum(double value);
+		ConstChrPtr GetConstChr(char value);
 		ConstStrPtr GetConstStr(const std::string& value);
+		ConstThingPtr GetConstThing(const std::string& type, const std::map<std::string, ValuePtr>& elements);
 
 		void SetInsertPoint(InstructionPtr insertpoint);
 		void SetInsertGlobal();
+		bool IsInsertGlobal();
+		InstructionPtr GetInsertPoint();
+		BranchPtr GetInsertBranch();
+		FunctionPtr GetInsertFunction();
+		BranchPtr CreateBranch(const std::string& name = "");
 
-		FunctionPtr GetCurrentFunction();
-
-		BranchPtr CreateBranch();
 		void CreateSplit(ValuePtr condition, BranchPtr _true, BranchPtr _false);
 		void CreateFlow(BranchPtr branch);
-
-		void CreateVar(const std::string& name, TypePtr type, ValuePtr value);
+		void CreateVar(const std::string& name, TypePtr type, ValuePtr value = nullptr);
 		void CreateEmptyRet();
 		void CreateRet(ValuePtr value);
 
@@ -70,6 +73,7 @@ namespace csaw::codegen
 		ValuePtr CreateAssign(ValuePtr var, ValuePtr value);
 
 		ValuePtr CreateCmpLT_NN(ValuePtr left, ValuePtr right);
+		ValuePtr CreateCmpGT_NN(ValuePtr left, ValuePtr right);
 		ValuePtr CreateCmpLE_NN(ValuePtr left, ValuePtr right);
 		ValuePtr CreateCmpEQ_NN(ValuePtr left, ValuePtr right);
 		ValuePtr CreateCmpNE_SS(ValuePtr left, ValuePtr right);
@@ -113,7 +117,7 @@ namespace csaw::codegen
 		std::map<std::string, ValuePtr> m_GlobalVariables;
 		std::map<std::string, ValuePtr> m_Variables;
 
-		std::vector<std::string> m_Filepath;
+		std::vector<std::filesystem::path> m_Filepaths;
 
 		FunctionPtr m_GlobalInsertPoint;
 		InstructionPtr m_InsertPoint;

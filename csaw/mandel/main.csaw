@@ -1,65 +1,52 @@
 inc "complex.csaw";
+inc "../stdlib/io.csaw";
+inc "../stdlib/random.csaw";
+inc "../stdlib/types.csaw";
+inc "../stdlib/math.csaw";
+inc "../stdlib/img.csaw";
 
-num MAX_ITER = 100;
-num SAMPLES  =  10;
-num WIDTH    = 128;
+num MAX_ITER =  10;
+num SAMPLES  =   1;
+num WIDTH    =  10;
 num HEIGHT   = WIDTH;
+
+@mandel: num (z0: complex, max: num);
 
 @main: num {
 
-    num xc = num(readf("xc: "));     ## -0.5
-    num yc = num(readf("yc: "));     ##    0
-    num size = num(readf("size: ")); ##    2
+    num xc = #num(readf("xc: "));     # -0.5;
+    num yc = #num(readf("yc: "));     #    0;
+    num size = #num(readf("size: ")); #    2;
 
     img output = img(WIDTH, HEIGHT);
-    bar b = bar(HEIGHT);
-
-    printf("Starting...");
+	
     for (num j = 0; j < HEIGHT; j++) {
         for (num i = 0; i < WIDTH; i++) {
             num n = 0;
             for (num s = 0; s < SAMPLES; s++) {
                 num x0 = xc - size / 2 + size * (i + random()) / WIDTH;
                 num y0 = yc - size / 2 + size * (j + random()) / HEIGHT;
-                complex z0 = complex(x0, y0);
+                complex z0 = complex();
+				z0.real = x0;
+				z0.imaginary = y0;
+				printf("[{}]", str(z0));
                 n += mandel(z0, MAX_ITER);
             }
             n /= (SAMPLES * MAX_ITER);
             num grey = floor(n * 255.999);
-            output.set(i, j, (0xff << 24) | ((grey & 0xff) << 16) | ((grey & 0xff) << 8) | (grey & 0xff));
+            output.set(i, j, (0xff << 24) | (grey << 16) | (grey << 8) | grey);
         }
-        b.on_progress();
+		printf("\n");
     }
-    printf("\rDone!            \n");
-
+	
     output.write("png", "mandel.png");
-
     ret 0;
 }
 
-@min: num (a: num, b: num) { ret a < b ? a : b; }
-@max: num (a: num, b: num) { ret a > b ? a : b; }
-
 @mandel: num (z0: complex, max: num) {
     complex z = z0;
-    for (num t = 0; t < max; t++) {
-        if (z.abs() > 2.0) ret t;
+	num t = 0;
+    for (; (t < max) && (z.abs() <= 2.0); t++)
         z = z.square() + z0;
-    }
-    ret max;
-}
-
-thing: bar {
-    progress: num,
-    max: num
-}
-
-$bar (max: num) {
-    my.progress = 0;
-    my.max = max;
-}
-
-@on_progress -> bar {
-    my.progress += 1 / my.max;
-    printf("\rProgress: {}% ", floor(my.progress * 100));
+    ret t;
 }

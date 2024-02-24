@@ -31,10 +31,10 @@ ContextPtr csaw::runtime::Runtime::Context()
 	return m_Context;
 }
 
-void csaw::runtime::Runtime::PreStart()
+bool csaw::runtime::Runtime::PreStart()
 {
 	size_t missing = 0;
-	for (auto& function : m_Context->ListFunctions())
+	for (auto& function : m_Context->Functions())
 	{
 		if (!function->Next)
 		{
@@ -51,11 +51,13 @@ void csaw::runtime::Runtime::PreStart()
 	if (missing)
 	{
 		std::cerr << missing << " missing functions" << std::endl;
-		throw;
+		return false;
 	}
 
 	auto& global = m_Context->GetGlobal();
 	Call(shared_from_this(), global, nullptr, {});
+
+	return true;
 }
 
 ConstPtr csaw::runtime::Runtime::Call(const std::string& name, ConstPtr callee, const std::vector<ConstPtr>& args)
@@ -69,6 +71,25 @@ ConstPtr csaw::runtime::Runtime::Call(const std::string& name, ConstPtr callee, 
 	return Call(runtime, function, callee, args);
 }
 
+ConstPtr csaw::runtime::Runtime::GetConst(ValuePtr value)
+{
+	if (!value) throw;
+	auto c = std::dynamic_pointer_cast<Const>(value);
+	if (c) return c;
+	c = m_Values[value];
+	if (c) return c;
+	if (!m_Parent) throw;
+	return m_Parent->GetConst(value);
+}
+
+std::vector<ConstPtr> csaw::runtime::Runtime::GetConst(const std::vector<ValuePtr>& values)
+{
+	std::vector<ConstPtr> consts;
+	for (auto& value : values)
+		consts.push_back(GetConst(value));
+	return consts;
+}
+
 csaw::runtime::RuntimePtr csaw::runtime::Runtime::GetGlobal()
 {
 	if (m_Parent)
@@ -79,9 +100,6 @@ csaw::runtime::RuntimePtr csaw::runtime::Runtime::GetGlobal()
 ConstPtr csaw::runtime::Runtime::Create(const std::string& name, ValuePtr ptr, ConstPtr value)
 {
 	if (!value) throw;
-	if (GetEntry(name)) throw;
-	ptr->Print() << " " << name << " = ";
-	value->Print() << std::endl;
 	m_Variables[name] = ptr;
 	return m_Values[ptr] = value;
 }
@@ -109,44 +127,17 @@ ValuePtr& csaw::runtime::Runtime::GetEntry(const std::string& name)
 	return m_Parent->GetEntry(name);
 }
 
-ConstPtr csaw::runtime::Runtime::GetConst(ValuePtr value)
-{
-	if (!value) throw;
-	auto c = std::dynamic_pointer_cast<Const>(value);
-	if (c) return c;
-	c = m_Values[value];
-	if (c) return c;
-	if (!m_Parent) throw;
-	return m_Parent->GetConst(value);
-}
-
-std::vector<ConstPtr> csaw::runtime::Runtime::GetConst(const std::vector<ValuePtr>& values)
-{
-	std::vector<ConstPtr> consts;
-	for (auto& value : values)
-		consts.push_back(GetConst(value));
-	return consts;
-}
-
 ConstPtr csaw::runtime::Runtime::Call(RuntimePtr runtime, FunctionPtr function, ConstPtr callee, const std::vector<ConstPtr>& args)
 {
 	runtime->m_Callee = callee;
 	runtime->m_Args = args;
 
 	for (size_t i = 0; i < function->Args.size(); i++)
-		runtime->Create(function->Args[i]->Name, std::make_shared<Value>(args[i]->Type), args[i]);
-
-	if (function->IsConstructor)
-		runtime->Create("my", std::make_shared<Value>(function->Type->Result), Const::Default(function->Type->Result));
-	if (callee)
-		runtime->Create("my", std::make_shared<Value>(callee->Type), callee);
+		runtime->Create(function->Args[i]->Name, function->Args[i], args[i]);
 
 	InstructionPtr ptr = function->Next;
 	while (ptr)
 		ptr = runtime->Evaluate(ptr);
-
-	if (function->IsConstructor)
-		return runtime->Get("my");
 
 	return runtime->m_Result;
 }
@@ -164,6 +155,8 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(InstructionPtr ptr)
 
 	if (auto p = std::dynamic_pointer_cast<CallInst>(ptr))
 		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<GetElementInst>(ptr))
+		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<AssignVarInst>(ptr))
 		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<AddInst>(ptr))
@@ -172,11 +165,21 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(InstructionPtr ptr)
 		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<MulInst>(ptr))
 		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<DivInst>(ptr))
+		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<NegInst>(ptr))
+		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<CmpInst>(ptr))
 		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<SelInst>(ptr))
 		return Evaluate(p);
 	if (auto p = std::dynamic_pointer_cast<LAndInst>(ptr))
+		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<ShLInst>(ptr))
+		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<AndInst>(ptr))
+		return Evaluate(p);
+	if (auto p = std::dynamic_pointer_cast<OrInst>(ptr))
 		return Evaluate(p);
 
 	if (auto p = std::dynamic_pointer_cast<NativeInst>(ptr))
@@ -218,6 +221,13 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(CallInstPtr ptr)
 	return ptr->Next;
 }
 
+InstructionPtr csaw::runtime::Runtime::Evaluate(GetElementInstPtr ptr) // TODO
+{
+	auto thing = GetConst(ptr->Thing)->AsThing();
+	m_Values[ptr->Result] = GetConst(thing->Elements[ptr->Element]);
+	return ptr->Next;
+}
+
 InstructionPtr csaw::runtime::Runtime::Evaluate(AssignVarInstPtr ptr)
 {
 	m_Values[ptr->Var] = GetConst(ptr->Value);
@@ -229,39 +239,35 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(AddInstPtr ptr)
 	auto left = GetConst(ptr->Left);
 	auto right = GetConst(ptr->Right);
 
-	auto numty = m_Context->GetNumType();
-	auto chrty = m_Context->GetChrType();
-	auto strty = m_Context->GetStrType();
-
 	ConstPtr value;
 	switch (ptr->Mode)
 	{
 	case MODE_NN:
-		value = std::make_shared<ConstNum>(numty, left->AsNum()->Value + right->AsNum()->Value);
+		value = m_Context->GetConstNum(left->AsNum()->Value + right->AsNum()->Value);
 		break;
 	case MODE_CC:
-		value = std::make_shared<ConstChr>(chrty, left->AsChr()->Value + right->AsChr()->Value);
+		value = m_Context->GetConstChr(left->AsChr()->Value + right->AsChr()->Value);
 		break;
 	case MODE_SS:
-		value = std::make_shared<ConstStr>(strty, left->AsStr()->Value + right->AsStr()->Value);
+		value = m_Context->GetConstStr(left->AsStr()->Value + right->AsStr()->Value);
 		break;
 	case MODE_NS:
-		value = std::make_shared<ConstStr>(strty, std::to_string(left->AsNum()->Value) + right->AsStr()->Value);
+		value = m_Context->GetConstStr(std::to_string(left->AsNum()->Value) + right->AsStr()->Value);
 		break;
 	case MODE_CS:
-		value = std::make_shared<ConstStr>(strty, left->AsChr()->Value + right->AsStr()->Value);
+		value = m_Context->GetConstStr(left->AsChr()->Value + right->AsStr()->Value);
 		break;
 	case MODE_SN:
-		value = std::make_shared<ConstStr>(strty, left->AsStr()->Value + std::to_string(right->AsNum()->Value));
+		value = m_Context->GetConstStr(left->AsStr()->Value + std::to_string(right->AsNum()->Value));
 		break;
 	case MODE_SC:
-		value = std::make_shared<ConstStr>(strty, left->AsStr()->Value + right->AsChr()->Value);
+		value = m_Context->GetConstStr(left->AsStr()->Value + right->AsChr()->Value);
 		break;
 	case MODE_CN:
-		value = std::make_shared<ConstChr>(chrty, left->AsChr()->Value + char(right->AsNum()->Value));
+		value = m_Context->GetConstChr(left->AsChr()->Value + char(right->AsNum()->Value));
 		break;
 	case MODE_NC:
-		value = std::make_shared<ConstNum>(numty, left->AsNum()->Value + right->AsChr()->Value);
+		value = m_Context->GetConstNum(left->AsNum()->Value + right->AsChr()->Value);
 		break;
 
 	default:
@@ -277,23 +283,20 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(SubInstPtr ptr)
 	auto left = GetConst(ptr->Left);
 	auto right = GetConst(ptr->Right);
 
-	auto numty = m_Context->GetNumType();
-	auto chrty = m_Context->GetChrType();
-
 	ConstPtr value;
 	switch (ptr->Mode)
 	{
 	case MODE_NN:
-		value = std::make_shared<ConstNum>(numty, left->AsNum()->Value - right->AsNum()->Value);
+		value = m_Context->GetConstNum(left->AsNum()->Value - right->AsNum()->Value);
 		break;
 	case MODE_CC:
-		value = std::make_shared<ConstChr>(chrty, left->AsChr()->Value - right->AsChr()->Value);
+		value = m_Context->GetConstChr(left->AsChr()->Value - right->AsChr()->Value);
 		break;
 	case MODE_CN:
-		value = std::make_shared<ConstChr>(chrty, left->AsChr()->Value - char(right->AsNum()->Value));
+		value = m_Context->GetConstChr(left->AsChr()->Value - char(right->AsNum()->Value));
 		break;
 	case MODE_NC:
-		value = std::make_shared<ConstNum>(numty, left->AsNum()->Value - right->AsChr()->Value);
+		value = m_Context->GetConstNum(left->AsNum()->Value - right->AsChr()->Value);
 		break;
 
 	default:
@@ -309,9 +312,23 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(MulInstPtr ptr)
 	auto left = GetConst(ptr->Left)->AsNum();
 	auto right = GetConst(ptr->Right)->AsNum();
 
-	auto numty = m_Context->GetNumType();
+	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value * right->Value);
+	return ptr->Next;
+}
 
-	m_Values[ptr->Result] = std::make_shared<ConstNum>(numty, left->Value * right->Value);
+InstructionPtr csaw::runtime::Runtime::Evaluate(DivInstPtr ptr)
+{
+	auto left = GetConst(ptr->Left)->AsNum();
+	auto right = GetConst(ptr->Right)->AsNum();
+
+	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value / right->Value);
+	return ptr->Next;
+}
+
+InstructionPtr csaw::runtime::Runtime::Evaluate(NegInstPtr ptr)
+{
+	auto value = GetConst(ptr->Value)->AsNum();
+	m_Values[ptr->Result] = m_Context->GetConstNum(-value->Value);
 	return ptr->Next;
 }
 
@@ -380,7 +397,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(CmpInstPtr ptr)
 		throw;
 	}
 
-	m_Values[ptr->Result] = std::make_shared<ConstNum>(m_Context->GetNumType(), value ? 1.0 : 0.0);
+	m_Values[ptr->Result] = m_Context->GetConstNum(value ? 1.0 : 0.0);
 	return ptr->Next;
 }
 
@@ -392,7 +409,6 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(SelInstPtr ptr)
 		condition->Value
 		? GetConst(ptr->True)
 		: GetConst(ptr->False);
-
 	return ptr->Next;
 }
 
@@ -401,14 +417,39 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(LAndInstPtr ptr)
 	auto left = GetConst(ptr->Left)->AsNum();
 	auto right = GetConst(ptr->Right)->AsNum();
 
-	m_Values[ptr->Result] = std::make_shared<ConstNum>(m_Context->GetNumType(), left->Value && right->Value ? 1.0 : 0.0);
+	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value && right->Value ? 1.0 : 0.0);
+	return ptr->Next;
+}
 
+InstructionPtr csaw::runtime::Runtime::Evaluate(ShLInstPtr ptr)
+{
+	auto left = GetConst(ptr->Left)->AsNum();
+	auto right = GetConst(ptr->Right)->AsNum();
+
+	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) << long(right->Value));
+	return ptr->Next;
+}
+
+InstructionPtr csaw::runtime::Runtime::Evaluate(AndInstPtr ptr)
+{
+	auto left = GetConst(ptr->Left)->AsNum();
+	auto right = GetConst(ptr->Right)->AsNum();
+
+	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) & long(right->Value));
+	return ptr->Next;
+}
+
+InstructionPtr csaw::runtime::Runtime::Evaluate(OrInstPtr ptr)
+{
+	auto left = GetConst(ptr->Left)->AsNum();
+	auto right = GetConst(ptr->Right)->AsNum();
+
+	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) | long(right->Value));
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(NativeInstPtr ptr)
 {
-	m_Result = ptr->Function(m_Context, m_Callee, m_Args);
-
+	m_Result = ptr->Function(shared_from_this(), m_Callee, m_Args);
 	return ptr->Next;
 }

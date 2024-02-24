@@ -5,6 +5,11 @@
 
 #include <string>
 
+namespace csaw::codegen
+{
+	typedef std::shared_ptr<struct NativeInst> NativeInstPtr;
+}
+
 namespace csaw::runtime
 {
 	using namespace csaw::codegen;
@@ -27,8 +32,11 @@ namespace csaw::runtime
 
 		ContextPtr Context();
 
-		void PreStart();
+		bool PreStart();
 		ConstPtr Call(const std::string& name, ConstPtr callee, const std::vector<ConstPtr>& args);
+
+		ConstPtr GetConst(ValuePtr value);
+		std::vector<ConstPtr> GetConst(const std::vector<ValuePtr>& values);
 
 	private:
 		RuntimePtr GetGlobal();
@@ -37,9 +45,6 @@ namespace csaw::runtime
 		ConstPtr Get(const std::string& name);
 		ConstPtr Set(const std::string& name, ConstPtr value);
 		ValuePtr& GetEntry(const std::string& name);
-
-		ConstPtr GetConst(ValuePtr value);
-		std::vector<ConstPtr> GetConst(const std::vector<ValuePtr>& values);
 
 		ConstPtr Call(RuntimePtr runtime, FunctionPtr function, ConstPtr callee, const std::vector<ConstPtr>& args);
 
@@ -51,13 +56,19 @@ namespace csaw::runtime
 		InstructionPtr Evaluate(FlowInstPtr ptr);
 
 		InstructionPtr Evaluate(CallInstPtr ptr);
+		InstructionPtr Evaluate(GetElementInstPtr ptr);
 		InstructionPtr Evaluate(AssignVarInstPtr ptr);
 		InstructionPtr Evaluate(AddInstPtr ptr);
 		InstructionPtr Evaluate(SubInstPtr ptr);
 		InstructionPtr Evaluate(MulInstPtr ptr);
+		InstructionPtr Evaluate(DivInstPtr ptr);
+		InstructionPtr Evaluate(NegInstPtr ptr);
 		InstructionPtr Evaluate(CmpInstPtr ptr);
 		InstructionPtr Evaluate(SelInstPtr ptr);
 		InstructionPtr Evaluate(LAndInstPtr ptr);
+		InstructionPtr Evaluate(ShLInstPtr ptr);
+		InstructionPtr Evaluate(AndInstPtr ptr);
+		InstructionPtr Evaluate(OrInstPtr ptr);
 
 		InstructionPtr Evaluate(NativeInstPtr ptr);
 

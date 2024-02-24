@@ -5,9 +5,19 @@ csaw::codegen::ConstNumPtr csaw::codegen::Context::GetConstNum(double value)
 	return std::make_shared<ConstNum>(GetNumType(), value);
 }
 
+csaw::codegen::ConstChrPtr csaw::codegen::Context::GetConstChr(char value)
+{
+	return std::make_shared<ConstChr>(GetChrType(), value);
+}
+
 csaw::codegen::ConstStrPtr csaw::codegen::Context::GetConstStr(const std::string& value)
 {
 	return std::make_shared<ConstStr>(GetStrType(), value);
+}
+
+csaw::codegen::ConstThingPtr csaw::codegen::Context::GetConstThing(const std::string& type, const std::map<std::string, ValuePtr>& elements)
+{
+	return std::make_shared<ConstThing>(GetThingType(type), elements);
 }
 
 void csaw::codegen::Context::SetInsertPoint(InstructionPtr insertpoint)
@@ -20,7 +30,22 @@ void csaw::codegen::Context::SetInsertGlobal()
 	m_InsertPoint = m_GlobalInsertPoint;
 }
 
-csaw::codegen::FunctionPtr csaw::codegen::Context::GetCurrentFunction()
+bool csaw::codegen::Context::IsInsertGlobal()
+{
+	return m_InsertPoint == m_GlobalInsertPoint;
+}
+
+csaw::codegen::InstructionPtr csaw::codegen::Context::GetInsertPoint()
+{
+	return m_InsertPoint;
+}
+
+csaw::codegen::BranchPtr csaw::codegen::Context::GetInsertBranch()
+{
+	return std::dynamic_pointer_cast<Branch>(m_InsertPoint);
+}
+
+csaw::codegen::FunctionPtr csaw::codegen::Context::GetInsertFunction()
 {
 	InstructionPtr ptr = m_InsertPoint;
 	while (ptr->Prev)
@@ -31,6 +56,7 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetCurrentFunction()
 void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValuePtr value)
 {
 	if (!type) throw;
+	if (!value) value = Value::Default(type);
 	auto var = CreateVariable(name, type);
 	auto inst = std::make_shared<CreateVarInst>(name, var, value);
 	m_InsertPoint->Insert(inst);

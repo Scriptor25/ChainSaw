@@ -19,6 +19,12 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGenOpLT(ContextPtr context, ValuePtr 
 
 csaw::codegen::ValuePtr csaw::codegen::CodeGenOpGT(ContextPtr context, ValuePtr left, ValuePtr right)
 {
+	if (left->Type == right->Type)
+	{
+		if (left->Type->IsNum())
+			return context->CreateCmpGT_NN(left, right);
+	}
+
 	throw;
 }
 

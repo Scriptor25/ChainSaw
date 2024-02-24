@@ -27,6 +27,9 @@ namespace csaw::codegen
 	struct CmpInst;
 	struct SelInst;
 	struct LAndInst;
+	struct ShLInst;
+	struct AndInst;
+	struct OrInst;
 
 	typedef std::shared_ptr<Instruction> InstructionPtr;
 
@@ -46,6 +49,9 @@ namespace csaw::codegen
 	typedef std::shared_ptr<CmpInst> CmpInstPtr;
 	typedef std::shared_ptr<SelInst> SelInstPtr;
 	typedef std::shared_ptr<LAndInst> LAndInstPtr;
+	typedef std::shared_ptr<ShLInst> ShLInstPtr;
+	typedef std::shared_ptr<AndInst> AndInstPtr;
+	typedef std::shared_ptr<OrInst> OrInstPtr;
 
 	enum MathInstMode
 	{
@@ -77,6 +83,9 @@ namespace csaw::codegen
 		virtual void Insert(InstructionPtr instruction);
 		virtual bool IsTerminator() const;
 
+		std::ostream& Print() const;
+		virtual std::ostream& Print(std::ostream& out) const = 0;
+
 		InstructionPtr Prev;
 		InstructionPtr Next;
 	};
@@ -84,6 +93,8 @@ namespace csaw::codegen
 	struct CreateVarInst : Instruction
 	{
 		CreateVarInst(const std::string& name, ValuePtr var, ValuePtr value);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		std::string Name;
 		ValuePtr Var;
@@ -95,6 +106,8 @@ namespace csaw::codegen
 		RetInst(ValuePtr value);
 		bool IsTerminator() const override;
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Value;
 	};
 
@@ -103,6 +116,8 @@ namespace csaw::codegen
 	{
 		SplitInst(ValuePtr condition, BranchPtr _true, BranchPtr _false);
 		bool IsTerminator() const override;
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		ValuePtr Condition;
 		BranchPtr True;
@@ -114,6 +129,8 @@ namespace csaw::codegen
 		FlowInst(BranchPtr branch);
 		bool IsTerminator() const override;
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		BranchPtr Branch;
 	};
 
@@ -121,6 +138,8 @@ namespace csaw::codegen
 	struct CallInst : Instruction
 	{
 		CallInst(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		FunctionPtr Function;
 		ValuePtr Callee;
@@ -132,6 +151,8 @@ namespace csaw::codegen
 	{
 		GetElementInst(ValuePtr thing, const std::string& element, ValuePtr result);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Thing;
 		std::string Element;
 		ValuePtr Result;
@@ -141,6 +162,8 @@ namespace csaw::codegen
 	{
 		AssignVarInst(ValuePtr var, ValuePtr value);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Var;
 		ValuePtr Value;
 	};
@@ -148,6 +171,8 @@ namespace csaw::codegen
 	struct AddInst : Instruction
 	{
 		AddInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		MathInstMode Mode;
 		ValuePtr Left;
@@ -159,6 +184,8 @@ namespace csaw::codegen
 	{
 		SubInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		MathInstMode Mode;
 		ValuePtr Left;
 		ValuePtr Right;
@@ -169,6 +196,8 @@ namespace csaw::codegen
 	{
 		MulInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Left;
 		ValuePtr Right;
 		ValuePtr Result;
@@ -177,6 +206,8 @@ namespace csaw::codegen
 	struct DivInst : Instruction
 	{
 		DivInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		ValuePtr Left;
 		ValuePtr Right;
@@ -187,6 +218,8 @@ namespace csaw::codegen
 	{
 		NegInst(ValuePtr value, ValuePtr result);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Value;
 		ValuePtr Result;
 	};
@@ -194,6 +227,8 @@ namespace csaw::codegen
 	struct CmpInst : Instruction
 	{
 		CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		MathInstMode Mode;
 		CmpInstMode CMPMode;
@@ -206,6 +241,8 @@ namespace csaw::codegen
 	{
 		SelInst(ValuePtr condition, ValuePtr _true, ValuePtr _false, ValuePtr result);
 
+		std::ostream& Print(std::ostream& out) const override;
+
 		ValuePtr Condition;
 		ValuePtr True;
 		ValuePtr False;
@@ -215,6 +252,41 @@ namespace csaw::codegen
 	struct LAndInst : Instruction
 	{
 		LAndInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
+	};
+
+	struct ShLInst : Instruction
+	{
+		ShLInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
+	};
+
+	struct AndInst : Instruction
+	{
+		AndInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
+	};
+
+	struct OrInst : Instruction
+	{
+		OrInst(ValuePtr left, ValuePtr right, ValuePtr result);
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		ValuePtr Left;
 		ValuePtr Right;

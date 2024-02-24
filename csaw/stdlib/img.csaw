@@ -1,0 +1,4 @@
+thing: img { ptr: str }
+$img (width: num, height: num);
+@set (x: num, y: num, abgr: num) -> img;
+@write (format: str, filename: str) -> img;

@@ -1,3 +1,6 @@
+inc "../stdlib/math.csaw";
+inc "../stdlib/io.csaw";
+
 thing: complex {
     real: num,
     imaginary: num,
@@ -30,7 +33,6 @@ $complex (real: num, imaginary: num) { my.real = real; my.imaginary = imaginary;
 
 @conjugate: complex -> complex;
 @mod: num -> complex;
-@pow: num (a: num, b: num);
 @(/=): complex (z: complex) -> complex {
     my *= z.conjugate();
     num div = 1 / pow(z.mod(), 2);
@@ -67,7 +69,6 @@ $complex (real: num, imaginary: num) { my.real = real; my.imaginary = imaginary;
     ret complex(my.real, -my.imaginary);
 }
 
-@sqrt: num (x: num);
 @mod: num -> complex {
     ret sqrt(pow(my.real, 2) + pow(my.imaginary, 2));
 }
@@ -79,7 +80,7 @@ $complex (real: num, imaginary: num) { my.real = real; my.imaginary = imaginary;
 }
 
 $str (c: complex) {
-	my = c.real + " " + (c.imaginary < 0 ? "" : "+ ") + c.imaginary + "i";
+	my = format("{} {}{}i", c.real, (c.imaginary < 0 ? "" : "+ "), c.imaginary);
 }
 
 @exp: complex (z: complex) {

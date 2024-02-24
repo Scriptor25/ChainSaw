@@ -24,11 +24,10 @@
 	"src/codegen/GenOp.cpp"
 	"src/codegen/GenStmt.cpp"
 	"src/codegen/Instruction.cpp"
-	"src/codegen/Print.cpp"
 	"src/codegen/Type.cpp"
 	"src/codegen/Value.cpp"
 
-	
+	"include/lang/Def.h"
 	"include/lang/Expr.h"
 	"include/lang/Parser.h"
 	"include/lang/Stmt.h"

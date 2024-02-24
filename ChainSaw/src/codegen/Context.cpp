@@ -1,6 +1,8 @@
 #include <codegen/Assert.h>
 #include <codegen/Context.h>
 
+#include <iostream>
+
 csaw::codegen::Context::Context()
 {
 	auto type = std::make_shared<FunctionType>(GetEmptyType(), std::vector<TypePtr>(), false);
@@ -15,7 +17,25 @@ std::ostream& csaw::codegen::Context::Print() const
 
 std::ostream& csaw::codegen::Context::Print(std::ostream& out) const
 {
-	throw;
+	out << "; filepath " << Filepath() << std::endl;
+	out << std::endl;
+
+	for (auto& type : m_Types)
+		if (type.second->IsThing())
+			type.second->Print(out) << std::endl;
+
+	for (auto& var : m_GlobalVariables)
+		var.second->Print(out << "@" << var.first << " = ") << std::endl;
+
+	for (auto& func : DeclaredFunctions())
+		func->Print(out << std::endl) << std::endl;
+
+	m_GlobalInsertPoint->Print(out << std::endl) << std::endl;
+
+	for (auto& func : DefinedFunctions())
+		func->Print(out << std::endl) << std::endl;
+
+	return out;
 }
 
 csaw::codegen::TypePtr csaw::codegen::Context::GetType(const std::string& name)
@@ -67,12 +87,7 @@ csaw::codegen::ThingTypePtr csaw::codegen::Context::GetThingType(const std::stri
 {
 	if (auto& type = m_Types[name])
 		return type->AsThing();
-	return nullptr;
-}
-
-csaw::codegen::ThingTypePtr csaw::codegen::Context::CreateThingType(const std::string& name, const std::map<std::string, TypePtr>& elements)
-{
-	auto type = std::make_shared<ThingType>(name, elements);
+	auto type = std::make_shared<ThingType>(name, std::map<std::string, TypePtr>());
 	m_Types[name] = type;
 	return type;
 }
@@ -96,7 +111,7 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetFunction(const std::string
 
 	std::vector<ArgPtr> args;
 	for (size_t i = 0; i < type->ArgTypes.size(); i++)
-		args.push_back(std::make_shared<Arg>("arg" + std::to_string(i), type->ArgTypes[i]));
+		args.push_back(std::make_shared<Arg>(type->ArgTypes[i]));
 
 	return m_Functions[callee][name][type] = std::make_shared<Function>(name, type, isconstructor, args, callee);
 }
@@ -126,32 +141,22 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetFunction(const std::string
 	return nullptr;
 }
 
-std::string& csaw::codegen::Context::Filepath()
+std::filesystem::path& csaw::codegen::Context::Filepath()
 {
-	return m_Filepath.back();
+	return m_Filepaths.back();
 }
 
-const std::string& csaw::codegen::Context::Filepath() const
+const std::filesystem::path& csaw::codegen::Context::Filepath() const
 {
-	return m_Filepath.back();
+	return m_Filepaths.back();
 }
 
-const std::map<std::string, csaw::codegen::TypePtr>& csaw::codegen::Context::Types() const
+const std::vector<std::filesystem::path>& csaw::codegen::Context::Filepaths() const
 {
-	return m_Types;
+	return m_Filepaths;
 }
 
-const std::map<csaw::codegen::TypePtr, std::map<std::string, std::map<csaw::codegen::FunctionTypePtr, csaw::codegen::FunctionPtr>>>& csaw::codegen::Context::Functions() const
-{
-	return m_Functions;
-}
-
-const std::vector<std::string>& csaw::codegen::Context::Filepaths() const
-{
-	return m_Filepath;
-}
-
-const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::ListFunctions() const
+const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::Functions() const
 {
 	std::vector<FunctionPtr> functions;
 	for (auto& a : m_Functions)
@@ -161,19 +166,41 @@ const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::ListFuncti
 	return functions;
 }
 
+const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::DefinedFunctions() const
+{
+	std::vector<FunctionPtr> functions;
+	for (auto& a : m_Functions)
+		for (auto& b : a.second)
+			for (auto& c : b.second)
+				if (c.second->Next)
+					functions.push_back(c.second);
+	return functions;
+}
+
+const std::vector<csaw::codegen::FunctionPtr> csaw::codegen::Context::DeclaredFunctions() const
+{
+	std::vector<FunctionPtr> functions;
+	for (auto& a : m_Functions)
+		for (auto& b : a.second)
+			for (auto& c : b.second)
+				if (!c.second->Next)
+					functions.push_back(c.second);
+	return functions;
+}
+
 const csaw::codegen::FunctionPtr& csaw::codegen::Context::GetGlobal() const
 {
 	return m_GlobalInsertPoint;
 }
 
-void csaw::codegen::Context::PushFilepath(const std::string& filepath)
+void csaw::codegen::Context::PushFilepath(const std::filesystem::path& filepath)
 {
-	m_Filepath.push_back(filepath);
+	m_Filepaths.push_back(filepath);
 }
 
 void csaw::codegen::Context::PopFilepath()
 {
-	m_Filepath.pop_back();
+	m_Filepaths.pop_back();
 }
 
 void csaw::codegen::Context::ClearVariables()
@@ -209,4 +236,10 @@ csaw::codegen::ValuePtr csaw::codegen::Context::GetVariable(const std::string& n
 		return m_GlobalVariables[name];
 	}
 	return m_Variables[name];
+}
+
+void csaw::codegen::Context::CreateArgs(const std::vector<ArgPtr>& args)
+{
+	for (auto& arg : args)
+		m_Variables[arg->Name] = arg;
 }

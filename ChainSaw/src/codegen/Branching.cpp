@@ -1,9 +1,9 @@
 #include <codegen/Context.h>
 
-csaw::codegen::BranchPtr csaw::codegen::Context::CreateBranch()
+csaw::codegen::BranchPtr csaw::codegen::Context::CreateBranch(const std::string& name)
 {
-	auto function = GetCurrentFunction();
-	return function->CreateBranch();
+	auto function = GetInsertFunction();
+	return function->CreateBranch(name);
 }
 
 void csaw::codegen::Context::CreateSplit(ValuePtr condition, BranchPtr _true, BranchPtr _false)

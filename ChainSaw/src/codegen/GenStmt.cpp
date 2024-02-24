@@ -45,6 +45,7 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::FunStmtPtr ptr)
 {
 	auto callee = context->GetType(ptr->Callee);
 	auto result = context->GetType(ptr->Result);
+	Assert(result, context, ptr);
 
 	std::vector<TypePtr> argtypes;
 	for (auto& arg : ptr->Args)
@@ -61,17 +62,20 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::FunStmtPtr ptr)
 
 	Assert(!function->Next, context, ptr);
 
-	context->SetInsertPoint(function);
 	context->ClearVariables();
-	for (auto& arg : ptr->Args)
-		context->CreateVariable(arg.first, context->GetType(arg.second));
+	context->CreateArgs(function->Args);
+
+	context->SetInsertPoint(function);
 
 	if (function->IsConstructor)
-		context->CreateVariable("my", function->Type->Result);
+		context->CreateVar("my", function->Type->Result);
 	if (!function->Callee->IsEmpty())
-		context->CreateVariable("my", function->Callee);
+		context->CreateVar("my", function->Callee);
 
 	CodeGen(context, ptr->Body);
+	if (function->IsConstructor)
+		context->CreateRet(context->GetVariable("my"));
+
 	context->SetInsertGlobal();
 }
 
@@ -95,7 +99,23 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::EnclosedStmtPtr ptr)
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ForStmtPtr ptr)
 {
-	throw;
+	auto cbr = context->CreateBranch();
+	auto lbr = context->CreateBranch();
+	auto ebr = context->CreateBranch();
+
+	if (ptr->Pre) CodeGen(context, ptr->Pre);
+	context->CreateFlow(cbr);
+
+	context->SetInsertPoint(cbr);
+	auto condition = CodeGen(context, ptr->Condition);
+	context->CreateSplit(condition, lbr, ebr);
+
+	context->SetInsertPoint(lbr);
+	CodeGen(context, ptr->Body);
+	if (ptr->Loop) CodeGen(context, ptr->Loop);
+	context->CreateFlow(cbr);
+
+	context->SetInsertPoint(ebr);
 }
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarStmtPtr ptr)
@@ -110,12 +130,12 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarStmtPtr ptr)
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IncStmtPtr ptr)
 {
-	auto path = std::filesystem::path(context->Filepath()).parent_path() / ptr->Filename;
+	auto path = std::filesystem::absolute(context->Filepath().parent_path() / ptr->Filename);
 
 	std::ifstream stream(path);
 	Assert(stream.is_open(), context, ptr);
 
-	context->PushFilepath(path.string());
+	context->PushFilepath(path);
 	csaw::lang::Parser::Parse(
 		stream,
 		[context](csaw::lang::StmtPtr ptr)
@@ -158,13 +178,15 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IfStmtPtr ptr)
 
 	context->SetInsertPoint(tbr);
 	CodeGen(context, ptr->True);
-	context->CreateFlow(ebr);
+	if (!context->GetInsertBranch()->HasTerminator())
+		context->CreateFlow(ebr);
 
 	if (ptr->False)
 	{
 		context->SetInsertPoint(fbr);
 		CodeGen(context, ptr->False);
-		context->CreateFlow(ebr);
+		if (!context->GetInsertBranch()->HasTerminator())
+			context->CreateFlow(ebr);
 	}
 
 	context->SetInsertPoint(ebr);
@@ -172,10 +194,11 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IfStmtPtr ptr)
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ThingStmtPtr ptr)
 {
-	std::map<std::string, TypePtr> elements;
+	auto type = context->GetThingType(ptr->Name);
+	Assert(type->Elements.empty(), context, ptr);
+
 	for (auto& element : ptr->Elements)
-		elements[element.first] = context->GetType(element.second);
-	context->CreateThingType(ptr->Name, elements);
+		type->Elements[element.first] = context->GetType(element.second);
 }
 
 void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::AliasStmtPtr ptr)

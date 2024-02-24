@@ -29,6 +29,9 @@ namespace csaw::codegen
 		virtual ~Type() {}
 		virtual std::string GetName() const = 0;
 
+		std::ostream& Print() const;
+		virtual std::ostream& Print(std::ostream& out) const;
+
 		virtual bool IsNum() const;
 		virtual bool IsChr() const;
 		virtual bool IsStr() const;
@@ -74,6 +77,8 @@ namespace csaw::codegen
 
 		std::string GetName() const override;
 		bool IsThing() const override;
+
+		std::ostream& Print(std::ostream& out) const override;
 
 		std::string Name;
 		std::map<std::string, TypePtr> Elements;

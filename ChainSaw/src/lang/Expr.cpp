@@ -296,7 +296,7 @@ csaw::lang::NumExpr::NumExpr(size_t line, const std::string& value, int base)
 	{
 	case 2:
 	case 16:
-		Value = std::stol(value, nullptr, base);
+		Value = std::stoll(value, nullptr, base);
 		break;
 
 	case 10:

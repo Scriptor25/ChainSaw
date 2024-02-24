@@ -1,0 +1,10 @@
+@floor: num (x: num);
+
+@sin: num (x: num);
+@cos: num (x: num);
+
+@atan2: num (y: num, x: num);
+
+@exp: num (x: num);
+@pow: num (b: num, p: num);
+@sqrt: num (x: num);

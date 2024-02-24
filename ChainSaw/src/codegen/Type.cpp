@@ -1,5 +1,17 @@
 #include <codegen/Type.h>
 
+#include <iostream>
+
+std::ostream& csaw::codegen::Type::Print() const
+{
+	return Print(std::cout);
+}
+
+std::ostream& csaw::codegen::Type::Print(std::ostream& out) const
+{
+	return out << GetName();
+}
+
 bool csaw::codegen::Type::IsNum() const
 {
 	return false;
@@ -113,6 +125,14 @@ std::string csaw::codegen::ThingType::GetName() const
 bool csaw::codegen::ThingType::IsThing() const
 {
 	return true;
+}
+
+std::ostream& csaw::codegen::ThingType::Print(std::ostream& out) const
+{
+	out << GetName() << " {" << std::endl;
+	for (auto& elem : Elements)
+		elem.second->Print(out << "\t" << elem.first << ": ") << "," << std::endl;
+	return out << "}";
 }
 
 csaw::codegen::FunctionType::FunctionType(TypePtr result, const std::vector<TypePtr>& argtypes, bool isvararg)
