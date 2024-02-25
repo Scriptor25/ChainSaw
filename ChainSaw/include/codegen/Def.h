@@ -5,6 +5,48 @@
 
 namespace csaw::codegen
 {
+	struct Type;
+	typedef std::shared_ptr<Type> TypePtr;
+
+	struct NumType;
+	typedef std::shared_ptr<NumType> NumTypePtr;
+
+	struct ChrType;
+	typedef std::shared_ptr<ChrType> ChrTypePtr;
+
+	struct StrType;
+	typedef std::shared_ptr<StrType> StrTypePtr;
+
+	struct EmptyType;
+	typedef std::shared_ptr<EmptyType> EmptyTypePtr;
+
+	struct ThingType;
+	typedef std::shared_ptr<ThingType> ThingTypePtr;
+
+	struct FunctionType;
+	typedef std::shared_ptr<FunctionType> FunctionTypePtr;
+
+	struct Value;
+	typedef std::shared_ptr<Value> ValuePtr;
+
+	struct Const;
+	typedef std::shared_ptr<Const> ConstPtr;
+
+	struct ConstNum;
+	typedef std::shared_ptr<ConstNum> ConstNumPtr;
+
+	struct ConstChr;
+	typedef std::shared_ptr<ConstChr> ConstChrPtr;
+
+	struct ConstStr;
+	typedef std::shared_ptr<ConstStr> ConstStrPtr;
+
+	struct ConstThing;
+	typedef std::shared_ptr<ConstThing> ConstThingPtr;
+
+	struct ValueRef;
+	typedef std::shared_ptr<ValueRef> ValueRefPtr;
+
 	class Context;
 	typedef std::shared_ptr<Context> ContextPtr;
 
@@ -77,46 +119,4 @@ namespace csaw::codegen
 	struct NativeInst;
 	typedef std::shared_ptr<NativeInst> NativeInstPtr;
 	typedef std::function<ValueRefPtr(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)> NativeFunction;
-
-	struct Type;
-	typedef std::shared_ptr<Type> TypePtr;
-
-	struct NumType;
-	typedef std::shared_ptr<NumType> NumTypePtr;
-
-	struct ChrType;
-	typedef std::shared_ptr<ChrType> ChrTypePtr;
-
-	struct StrType;
-	typedef std::shared_ptr<StrType> StrTypePtr;
-
-	struct EmptyType;
-	typedef std::shared_ptr<EmptyType> EmptyTypePtr;
-
-	struct ThingType;
-	typedef std::shared_ptr<ThingType> ThingTypePtr;
-
-	struct FunctionType;
-	typedef std::shared_ptr<FunctionType> FunctionTypePtr;
-
-	struct Value;
-	typedef std::shared_ptr<Value> ValuePtr;
-
-	struct Const;
-	typedef std::shared_ptr<Const> ConstPtr;
-
-	struct ConstNum;
-	typedef std::shared_ptr<ConstNum> ConstNumPtr;
-
-	struct ConstChr;
-	typedef std::shared_ptr<ConstChr> ConstChrPtr;
-
-	struct ConstStr;
-	typedef std::shared_ptr<ConstStr> ConstStrPtr;
-
-	struct ConstThing;
-	typedef std::shared_ptr<ConstThing> ConstThingPtr;
-
-	struct ValueRef;
-	typedef std::shared_ptr<ValueRef> ValueRefPtr;
 }

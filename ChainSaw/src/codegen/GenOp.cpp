@@ -1,5 +1,8 @@
 #include <codegen/Assert.h>
+#include <codegen/Context.h>
 #include <codegen/GenOp.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 csaw::codegen::ValueRefPtr csaw::codegen::CodeGenAssign(ContextPtr context, ValueRefPtr assignee, ValueRefPtr value)
 {

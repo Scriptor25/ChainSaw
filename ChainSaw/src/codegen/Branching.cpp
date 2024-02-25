@@ -1,4 +1,6 @@
 #include <codegen/Context.h>
+#include <codegen/Function.h>
+#include <codegen/Instruction.h>
 
 csaw::codegen::BranchPtr csaw::codegen::Context::CreateBranch(const std::string& name)
 {

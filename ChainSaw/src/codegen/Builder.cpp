@@ -1,4 +1,8 @@
 #include <codegen/Context.h>
+#include <codegen/Function.h>
+#include <codegen/Instruction.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 csaw::codegen::ConstNumPtr csaw::codegen::Context::GetConstNum(double value)
 {

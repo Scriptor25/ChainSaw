@@ -1,6 +1,10 @@
 #include <codegen/Assert.h>
+#include <codegen/Context.h>
+#include <codegen/Function.h>
 #include <codegen/GenExpr.h>
 #include <codegen/GenOp.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <lang/Expr.h>
 

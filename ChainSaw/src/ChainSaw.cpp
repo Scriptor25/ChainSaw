@@ -4,6 +4,9 @@
 
 #include <codegen/Context.h>
 #include <codegen/GenStmt.h>
+#include <codegen/Native.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <runtime/Runtime.h>
 

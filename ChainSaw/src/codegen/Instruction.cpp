@@ -1,5 +1,8 @@
+#include <codegen/Function.h>
 #include <codegen/Instruction.h>
 #include <codegen/Native.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <iostream>
 

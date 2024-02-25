@@ -2,6 +2,7 @@
 
 #include <codegen/Def.h>
 #include <codegen/Instruction.h>
+#include <codegen/Value.h>
 
 #include <string>
 #include <vector>

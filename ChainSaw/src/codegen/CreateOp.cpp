@@ -1,4 +1,7 @@
 #include <codegen/Context.h>
+#include <codegen/Instruction.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateCmpLT_NN(ValueRefPtr left, ValueRefPtr right)
 {

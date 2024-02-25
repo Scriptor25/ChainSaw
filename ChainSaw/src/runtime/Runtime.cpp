@@ -1,4 +1,10 @@
+#include <codegen/Context.h>
+#include <codegen/Function.h>
+#include <codegen/Instruction.h>
+#include <codegen/Native.h>
 #include <runtime/Runtime.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <iostream>
 

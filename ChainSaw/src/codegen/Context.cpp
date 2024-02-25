@@ -1,5 +1,8 @@
 #include <codegen/Assert.h>
 #include <codegen/Context.h>
+#include <codegen/Function.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <iostream>
 
