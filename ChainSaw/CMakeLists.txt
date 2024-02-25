@@ -3,6 +3,7 @@
 
 	"include/codegen/Assert.h"
 	"include/codegen/Context.h"
+	"include/codegen/Def.h"
 	"include/codegen/Function.h"
 	"include/codegen/GenExpr.h"
 	"include/codegen/GenOp.h"

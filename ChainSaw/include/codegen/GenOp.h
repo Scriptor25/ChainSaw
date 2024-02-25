@@ -1,35 +1,33 @@
 #pragma once
 
-#include <codegen/Context.h>
-#include <codegen/Value.h>
-
+#include <codegen/Def.h>
 #include <lang/Def.h>
 
 namespace csaw::codegen
 {
-	ValuePtr CodeGenAssign(ContextPtr context, ValuePtr assignee, ValuePtr value);
+	ValueRefPtr CodeGenAssign(ContextPtr context, ValueRefPtr assignee, ValueRefPtr value);
 
-	ValuePtr CodeGenOpLT(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpGT(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpLE(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpGE(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpEQ(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpNE(ContextPtr context, ValuePtr left, ValuePtr right);
+	ValueRefPtr CodeGenOpLT(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpGT(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpLE(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpGE(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpEQ(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpNE(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
 
-	ValuePtr CodeGenOpAdd(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpSub(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpMul(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpDiv(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpRem(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpAnd(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpOr(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpXOr(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpLAnd(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpLOr(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpShL(ContextPtr context, ValuePtr left, ValuePtr right);
-	ValuePtr CodeGenOpShR(ContextPtr context, ValuePtr left, ValuePtr right);
+	ValueRefPtr CodeGenOpAdd(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpSub(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpMul(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpDiv(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpRem(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpAnd(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpOr(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpXOr(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpLAnd(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpLOr(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpShL(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
+	ValueRefPtr CodeGenOpShR(ContextPtr context, ValueRefPtr left, ValueRefPtr right);
 
-	ValuePtr CodeGenOpNeg(ContextPtr context, ValuePtr value);
-	ValuePtr CodeGenOpNot(ContextPtr context, ValuePtr value);
-	ValuePtr CodeGenOpInv(ContextPtr context, ValuePtr value);
+	ValueRefPtr CodeGenOpNeg(ContextPtr context, ValueRefPtr value);
+	ValueRefPtr CodeGenOpNot(ContextPtr context, ValueRefPtr value);
+	ValueRefPtr CodeGenOpInv(ContextPtr context, ValueRefPtr value);
 }

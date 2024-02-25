@@ -60,34 +60,15 @@ bool csaw::runtime::Runtime::PreStart()
 	return true;
 }
 
-ConstPtr csaw::runtime::Runtime::Call(const std::string& name, ConstPtr callee, const std::vector<ConstPtr>& args)
+ValueRefPtr csaw::runtime::Runtime::Call(const std::string& name, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 {
 	std::vector<csaw::codegen::TypePtr> argtypes;
 	for (auto& arg : args)
-		argtypes.push_back(arg->Type);
+		argtypes.push_back(arg->Type());
 
 	auto runtime = std::make_shared<Runtime>(GetGlobal());
-	auto function = m_Context->GetFunction(name, callee ? callee->Type : m_Context->GetEmptyType(), argtypes);
+	auto function = m_Context->GetFunction(name, callee->Type(m_Context->GetEmptyType()), argtypes);
 	return Call(runtime, function, callee, args);
-}
-
-ConstPtr csaw::runtime::Runtime::GetConst(ValuePtr value)
-{
-	if (!value) throw;
-	auto c = std::dynamic_pointer_cast<Const>(value);
-	if (c) return c;
-	c = m_Values[value];
-	if (c) return c;
-	if (!m_Parent) throw;
-	return m_Parent->GetConst(value);
-}
-
-std::vector<ConstPtr> csaw::runtime::Runtime::GetConst(const std::vector<ValuePtr>& values)
-{
-	std::vector<ConstPtr> consts;
-	for (auto& value : values)
-		consts.push_back(GetConst(value));
-	return consts;
 }
 
 csaw::runtime::RuntimePtr csaw::runtime::Runtime::GetGlobal()
@@ -97,43 +78,41 @@ csaw::runtime::RuntimePtr csaw::runtime::Runtime::GetGlobal()
 	return shared_from_this();
 }
 
-ConstPtr csaw::runtime::Runtime::Create(const std::string& name, ValuePtr ptr, ConstPtr value)
+ValueRefPtr csaw::runtime::Runtime::Create(const std::string& name, ValueRefPtr ref)
 {
-	if (!value) throw;
-	m_Variables[name] = ptr;
-	return m_Values[ptr] = value;
+	if (!ref) throw;
+	return m_References[name] = ref;
 }
 
-ConstPtr csaw::runtime::Runtime::Get(const std::string& name)
+ValueRefPtr csaw::runtime::Runtime::Get(const std::string& name)
 {
-	auto& entry = GetEntry(name);
+	auto& entry = GetRef(name);
 	if (!entry) throw;
-	return m_Values[entry];
+	return entry;
 }
 
-ConstPtr csaw::runtime::Runtime::Set(const std::string& name, ConstPtr value)
+ValueRefPtr csaw::runtime::Runtime::Set(const std::string& name, ValueRefPtr ref)
 {
-	if (!value) throw;
-	auto& entry = GetEntry(name);
+	if (!ref) throw;
+	auto& entry = GetRef(name);
 	if (!entry) throw;
-	return m_Values[entry] = value;
+	return entry = ref;
 }
 
-ValuePtr& csaw::runtime::Runtime::GetEntry(const std::string& name)
+ValueRefPtr& csaw::runtime::Runtime::GetRef(const std::string& name)
 {
-	if (auto& entry = m_Variables[name])
-		return entry;
-	if (!m_Parent) return m_Variables[name];
-	return m_Parent->GetEntry(name);
+	if (auto& entry = m_References[name]) return entry;
+	if (!m_Parent) return m_References[name];
+	return m_Parent->GetRef(name);
 }
 
-ConstPtr csaw::runtime::Runtime::Call(RuntimePtr runtime, FunctionPtr function, ConstPtr callee, const std::vector<ConstPtr>& args)
+ValueRefPtr csaw::runtime::Runtime::Call(RuntimePtr runtime, FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 {
 	runtime->m_Callee = callee;
 	runtime->m_Args = args;
 
 	for (size_t i = 0; i < function->Args.size(); i++)
-		runtime->Create(function->Args[i]->Name, function->Args[i], args[i]);
+		runtime->Create(function->Args[i]->Name, args[i]);
 
 	InstructionPtr ptr = function->Next;
 	while (ptr)
@@ -190,20 +169,19 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(InstructionPtr ptr)
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(CreateVarInstPtr ptr)
 {
-	if (ptr->Value->Type != ptr->Var->Type) throw;
-	Create(ptr->Name, ptr->Var, GetConst(ptr->Value));
+	Create(ptr->Name, ptr->Value);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(RetInstPtr ptr)
 {
-	m_Result = GetConst(ptr->Value);
+	m_Result->Value = ptr->Value->Value;
 	return InstructionPtr();
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(SplitInstPtr ptr)
 {
-	auto condition = GetConst(ptr->Condition)->AsNum();
+	auto condition = ptr->Condition->Value->AsConst()->AsNum();
 	if (condition->Value) return ptr->True->Next;
 	return ptr->False->Next;
 }
@@ -216,30 +194,29 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(FlowInstPtr ptr)
 InstructionPtr csaw::runtime::Runtime::Evaluate(CallInstPtr ptr)
 {
 	auto runtime = std::make_shared<Runtime>(GetGlobal());
-	auto value = Call(runtime, ptr->Function, ptr->Callee ? GetConst(ptr->Callee) : ConstPtr(), GetConst(ptr->Args));
-	m_Values[ptr->Result] = value;
+	ptr->Result = Call(runtime, ptr->Function, ptr->Callee, ptr->Args);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(GetElementInstPtr ptr) // TODO
 {
-	auto thing = GetConst(ptr->Thing)->AsThing();
-	m_Values[ptr->Result] = GetConst(thing->Elements[ptr->Element]);
+	auto thing = ptr->Thing->Value->AsConst()->AsThing();
+	ptr->Result->Value = thing->Elements[ptr->Element];
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(AssignVarInstPtr ptr)
 {
-	m_Values[ptr->Var] = GetConst(ptr->Value);
+	ptr->Var = ptr->Value;
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(AddInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left);
-	auto right = GetConst(ptr->Right);
+	auto left = ptr->Left->Value->AsConst();
+	auto right = ptr->Right->Value->AsConst();
 
-	ConstPtr value;
+	ValuePtr value;
 	switch (ptr->Mode)
 	{
 	case MODE_NN:
@@ -274,16 +251,16 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(AddInstPtr ptr)
 		throw;
 	}
 
-	m_Values[ptr->Result] = value;
+	ptr->Result->Value = value;
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(SubInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left);
-	auto right = GetConst(ptr->Right);
+	auto left = ptr->Left->Value->AsConst();
+	auto right = ptr->Right->Value->AsConst();
 
-	ConstPtr value;
+	ValuePtr value;
 	switch (ptr->Mode)
 	{
 	case MODE_NN:
@@ -303,39 +280,39 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(SubInstPtr ptr)
 		throw;
 	}
 
-	m_Values[ptr->Result] = value;
+	ptr->Result->Value = value;
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(MulInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value * right->Value);
+	ptr->Result->Value = m_Context->GetConstNum(left->Value * right->Value);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(DivInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value / right->Value);
+	ptr->Result->Value = m_Context->GetConstNum(left->Value / right->Value);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(NegInstPtr ptr)
 {
-	auto value = GetConst(ptr->Value)->AsNum();
-	m_Values[ptr->Result] = m_Context->GetConstNum(-value->Value);
+	auto value = ptr->Value->Value->AsConst()->AsNum();
+	ptr->Result->Value = m_Context->GetConstNum(-value->Value);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(CmpInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left);
-	auto right = GetConst(ptr->Right);
+	auto left = ptr->Left->Value->AsConst();
+	auto right = ptr->Right->Value->AsConst();
 
 	bool value;
 	switch (ptr->Mode)
@@ -397,59 +374,59 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(CmpInstPtr ptr)
 		throw;
 	}
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(value ? 1.0 : 0.0);
+	ptr->Result->Value = m_Context->GetConstNum(value ? 1.0 : 0.0);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(SelInstPtr ptr)
 {
-	auto condition = GetConst(ptr->Condition)->AsNum();
+	auto condition = ptr->Condition->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] =
+	ptr->Result =
 		condition->Value
-		? GetConst(ptr->True)
-		: GetConst(ptr->False);
+		? ptr->True
+		: ptr->False;
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(LAndInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(left->Value && right->Value ? 1.0 : 0.0);
+	ptr->Result->Value = m_Context->GetConstNum(left->Value && right->Value ? 1.0 : 0.0);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(ShLInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) << long(right->Value));
+	ptr->Result->Value = m_Context->GetConstNum(long(left->Value) << long(right->Value));
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(AndInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) & long(right->Value));
+	ptr->Result->Value = m_Context->GetConstNum(long(left->Value) & long(right->Value));
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(OrInstPtr ptr)
 {
-	auto left = GetConst(ptr->Left)->AsNum();
-	auto right = GetConst(ptr->Right)->AsNum();
+	auto left = ptr->Left->Value->AsConst()->AsNum();
+	auto right = ptr->Right->Value->AsConst()->AsNum();
 
-	m_Values[ptr->Result] = m_Context->GetConstNum(long(left->Value) | long(right->Value));
+	ptr->Result->Value = m_Context->GetConstNum(long(left->Value) | long(right->Value));
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(NativeInstPtr ptr)
 {
-	m_Result = ptr->Function(shared_from_this(), m_Callee, m_Args);
+	m_Result = ptr->Function(m_Context, m_Callee, m_Args);
 	return ptr->Next;
 }

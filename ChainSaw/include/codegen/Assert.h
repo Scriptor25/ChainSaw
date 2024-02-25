@@ -1,7 +1,6 @@
 #pragma once
 
-#include <codegen/Context.h>
-
+#include <codegen/Def.h>
 #include <lang/Def.h>
 
 namespace csaw::codegen

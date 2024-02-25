@@ -6,53 +6,72 @@
 namespace csaw::lang
 {
 	struct Stmt;
-	struct FunStmt;
-	struct RetStmt;
-	struct EnclosedStmt;
-	struct ForStmt;
-	struct VarStmt;
-	struct IncStmt;
-	struct WhileStmt;
-	struct IfStmt;
-	struct ThingStmt;
-	struct AliasStmt;
-
 	typedef std::shared_ptr<Stmt> StmtPtr;
+
+	struct FunStmt;
 	typedef std::shared_ptr<FunStmt> FunStmtPtr;
+
+	struct RetStmt;
 	typedef std::shared_ptr<RetStmt> RetStmtPtr;
+
+	struct EnclosedStmt;
 	typedef std::shared_ptr<EnclosedStmt> EnclosedStmtPtr;
+
+	struct ForStmt;
 	typedef std::shared_ptr<ForStmt> ForStmtPtr;
+
+	struct VarStmt;
 	typedef std::shared_ptr<VarStmt> VarStmtPtr;
+
+	struct IncStmt;
 	typedef std::shared_ptr<IncStmt> IncStmtPtr;
+
+	struct WhileStmt;
 	typedef std::shared_ptr<WhileStmt> WhileStmtPtr;
+
+	struct IfStmt;
 	typedef std::shared_ptr<IfStmt> IfStmtPtr;
+
+	struct ThingStmt;
 	typedef std::shared_ptr<ThingStmt> ThingStmtPtr;
+
+	struct AliasStmt;
 	typedef std::shared_ptr<AliasStmt> AliasStmtPtr;
 
 	struct Expr;
-	struct CallExpr;
-	struct NumExpr;
-	struct ChrExpr;
-	struct StrExpr;
-	struct IdentExpr;
-	struct BinExpr;
-	struct UnExpr;
-	struct IndexExpr;
-	struct MemberExpr;
-	struct VarArgExpr;
-	struct SelExpr;
-
 	typedef std::shared_ptr<Expr> ExprPtr;
+
+	struct CallExpr;
 	typedef std::shared_ptr<CallExpr> CallExprPtr;
+
+	struct NumExpr;
 	typedef std::shared_ptr<NumExpr> NumExprPtr;
+
+	struct ChrExpr;
 	typedef std::shared_ptr<ChrExpr> ChrExprPtr;
+
+	struct StrExpr;
 	typedef std::shared_ptr<StrExpr> StrExprPtr;
+
+	struct IdentExpr;
 	typedef std::shared_ptr<IdentExpr> IdentExprPtr;
+
+	struct BinExpr;
 	typedef std::shared_ptr<BinExpr> BinExprPtr;
+
+	struct UnExpr;
 	typedef std::shared_ptr<UnExpr> UnExprPtr;
+
+	struct IndexExpr;
 	typedef std::shared_ptr<IndexExpr> IndexExprPtr;
+
+	struct MemberExpr;
 	typedef std::shared_ptr<MemberExpr> MemberExprPtr;
+
+	struct VarArgExpr;
 	typedef std::shared_ptr<VarArgExpr> VarArgExprPtr;
+
+	struct SelExpr;
 	typedef std::shared_ptr<SelExpr> SelExprPtr;
 
 	std::ostream& operator<<(std::ostream& out, const FunStmt& stmt);

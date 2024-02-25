@@ -70,19 +70,19 @@ namespace csaw::stdlib
 		uint32_t* Pixels;
 	};
 
-	static ConstPtr floor(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr floor(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsNum();
-		return runtime->Context()->GetConstNum(std::floor(x->Value));
+		auto x = args[0]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::floor(x->Value)));
 	}
 
-	static ConstPtr num(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr num(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsStr();
-		return runtime->Context()->GetConstNum(std::stod(x->Value));
+		auto x = args[0]->Value->AsConst()->AsStr();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::stod(x->Value)));
 	}
 
-	static void formatstream(std::ostream& stream, const std::string& fmtsrc, const std::vector<ConstPtr>& args, size_t offset)
+	static void formatstream(std::ostream& stream, const std::string& fmtsrc, const std::vector<ValueRefPtr>& args, size_t offset)
 	{
 		std::string fmt = fmtsrc;
 		std::vector<std::string> format;
@@ -98,22 +98,22 @@ namespace csaw::stdlib
 		for (size_t i = 0; i < format.size(); i++)
 		{
 			if (i >= offset)
-				args[i]->PrintValue(stream);
+				args[i]->Value->AsConst()->PrintValue(stream);
 			stream << format[i];
 		}
 	}
 
-	static ConstPtr format(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr format(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
 		std::stringstream stream;
-		formatstream(stream, args[0]->AsStr()->Value, args, 1);
-		return runtime->Context()->GetConstStr(stream.str());
+		formatstream(stream, args[0]->Value->AsConst()->AsStr()->Value, args, 1);
+		return std::make_shared<ValueRef>(context->GetConstStr(stream.str()));
 	}
 
-	static ConstPtr printf(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr printf(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		formatstream(std::cout, args[0]->AsStr()->Value, args, 1);
-		return ConstPtr();
+		formatstream(std::cout, args[0]->Value->AsConst()->AsStr()->Value, args, 1);
+		return nullptr;
 	}
 
 	std::mt19937_64 RNG;
@@ -128,92 +128,92 @@ namespace csaw::stdlib
 			.count());
 	}
 
-	static ConstPtr random(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr random(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
 		double r = UDIST(RNG);
-		return runtime->Context()->GetConstNum(r);
+		return std::make_shared<ValueRef>(context->GetConstNum(r));
 	}
 
-	static ConstPtr readf(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr readf(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		printf(runtime, callee, args);
+		printf(context, callee, args);
 
 		std::string line;
 		std::getline(std::cin, line);
 
-		return runtime->Context()->GetConstStr(line);
+		return std::make_shared<ValueRef>(context->GetConstStr(line));
 	}
 
-	static ConstPtr atan2(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr atan2(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto y = args[0]->AsNum();
-		auto x = args[1]->AsNum();
-		return runtime->Context()->GetConstNum(std::atan2(y->Value, x->Value));
+		auto y = args[0]->Value->AsConst()->AsNum();
+		auto x = args[1]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::atan2(y->Value, x->Value)));
 	}
 
-	static ConstPtr cos(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr cos(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsNum();
-		return runtime->Context()->GetConstNum(std::cos(x->Value));
+		auto x = args[0]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::cos(x->Value)));
 	}
 
-	static ConstPtr exp(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr exp(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsNum();
-		return runtime->Context()->GetConstNum(std::exp(x->Value));
+		auto x = args[0]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::exp(x->Value)));
 	}
 
-	static ConstPtr img(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr img(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto w = args[0]->AsNum();
-		auto h = args[1]->AsNum();
+		auto w = args[0]->Value->AsConst()->AsNum();
+		auto h = args[1]->Value->AsConst()->AsNum();
 		auto ptr = new Img(int(w->Value), int(h->Value));
-		auto ptrstr = runtime->Context()->GetConstStr(ptr->ToString());
-		return runtime->Context()->GetConstThing("img", { {"ptr", ptrstr} });
+		auto ptrstr = context->GetConstStr(ptr->ToString());
+		return std::make_shared<ValueRef>(context->GetConstThing("img", { {"ptr", ptrstr} }));
 	}
 
-	static ConstPtr pow(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr pow(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto b = args[0]->AsNum();
-		auto p = args[1]->AsNum();
-		return runtime->Context()->GetConstNum(std::pow(b->Value, p->Value));
+		auto b = args[0]->Value->AsConst()->AsNum();
+		auto p = args[1]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::pow(b->Value, p->Value)));
 	}
 
-	static ConstPtr sin(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr sin(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsNum();
-		return runtime->Context()->GetConstNum(std::sin(x->Value));
+		auto x = args[0]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::sin(x->Value)));
 	}
 
-	static ConstPtr sqrt(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr sqrt(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto x = args[0]->AsNum();
-		return runtime->Context()->GetConstNum(std::sqrt(x->Value));
+		auto x = args[0]->Value->AsConst()->AsNum();
+		return std::make_shared<ValueRef>(context->GetConstNum(std::sqrt(x->Value)));
 	}
 
-	static ConstPtr set(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr set(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto ptr = Img::FromString(runtime->GetConst(callee->AsThing()->Elements["ptr"])->AsStr()->Value);
+		auto ptr = Img::FromString(callee->Value->AsConst()->AsThing()->Elements["ptr"]->AsConst()->AsStr()->Value);
 
-		auto x = args[0]->AsNum();
-		auto y = args[1]->AsNum();
-		auto argb = args[2]->AsNum();
+		auto x = args[0]->Value->AsConst()->AsNum();
+		auto y = args[1]->Value->AsConst()->AsNum();
+		auto argb = args[2]->Value->AsConst()->AsNum();
 
 		ptr->Set(int(x->Value), int(y->Value), uint32_t(argb->Value));
 
-		return ConstPtr();
+		return std::make_shared<ValueRef>(ValuePtr());
 	}
 
-	static ConstPtr write(RuntimePtr runtime, ConstPtr callee, const std::vector<ConstPtr>& args)
+	static ValueRefPtr write(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
 	{
-		auto ptr = Img::FromString(runtime->GetConst(callee->AsThing()->Elements["ptr"])->AsStr()->Value);
+		auto ptr = Img::FromString(callee->Value->AsConst()->AsThing()->Elements["ptr"]->AsConst()->AsStr()->Value);
 
-		auto fmt = args[0]->AsStr();
-		auto filename = args[1]->AsStr();
+		auto fmt = args[0]->Value->AsConst()->AsStr();
+		auto filename = args[1]->Value->AsConst()->AsStr();
 
 		ptr->Write(fmt->Value, filename->Value);
 
-		return ConstPtr();
+		return std::make_shared<ValueRef>(ValuePtr());
 	}
 }
 
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
 	if (!runtime->PreStart()) return 1;
 
 	auto value = runtime->Call("main", nullptr, {});
-	auto result = value->AsNum()->Value;
+	auto result = value->Value->AsConst()->AsNum()->Value;
 
 	return int(long(result));
 }
