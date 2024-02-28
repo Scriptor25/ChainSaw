@@ -43,37 +43,65 @@ namespace csaw::codegen
 		InstructionPtr Next;
 	};
 
+	struct Function : Instruction
+	{
+		Function(const std::string& name, FunctionTypePtr type, bool isconstructor, const std::vector<ArgPtr>& args, TypePtr callee);
+
+		std::ostream& Print(std::ostream& out) const override;
+		std::ostream& PrintShort(std::ostream& out) const;
+
+		BranchPtr CreateBranch(const std::string& name);
+
+		std::string Name;
+		FunctionTypePtr Type;
+		bool IsConstructor;
+		std::vector<ArgPtr> Args;
+		TypePtr Callee;
+
+		std::vector<BranchPtr> Branches;
+	};
+
+	struct Branch : Instruction
+	{
+		Branch(const std::string& name);
+		bool HasTerminator() const;
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		std::string Name;
+	};
+
 	struct CreateVarInst : Instruction
 	{
-		CreateVarInst(const std::string& name, TypePtr type, ValueRefPtr value);
+		CreateVarInst(const std::string& name, TypePtr type, ValuePtr value);
 
 		std::ostream& Print(std::ostream& out) const override;
 
 		std::string Name;
 		TypePtr Type;
-		ValueRefPtr Value;
+		ValuePtr Value;
 	};
 
 	struct RetInst : Instruction
 	{
-		RetInst(ValueRefPtr value);
+		RetInst(ValuePtr value);
 
 		bool IsTerminator() const override;
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Value;
+		ValuePtr Value;
 	};
 
 	typedef std::shared_ptr<struct Branch> BranchPtr;
 	struct SplitInst : Instruction
 	{
-		SplitInst(ValueRefPtr condition, BranchPtr _true, BranchPtr _false);
+		SplitInst(ValuePtr condition, BranchPtr _true, BranchPtr _false);
 		bool IsTerminator() const override;
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Condition;
+		ValuePtr Condition;
 		BranchPtr True;
 		BranchPtr False;
 	};
@@ -88,162 +116,170 @@ namespace csaw::codegen
 		BranchPtr Branch;
 	};
 
-	typedef std::shared_ptr<struct Function> FunctionPtr;
 	struct CallInst : Instruction
 	{
-		CallInst(FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args, ValueRefPtr result);
+		CallInst(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
 		FunctionPtr Function;
-		ValueRefPtr Callee;
-		std::vector<ValueRefPtr> Args;
-		ValueRefPtr Result;
+		ValuePtr Callee;
+		std::vector<ValuePtr> Args;
+		ValuePtr Result;
 	};
 
 	struct GetElementInst : Instruction
 	{
-		GetElementInst(ValueRefPtr thing, const std::string& element, ValueRefPtr result);
+		GetElementInst(ValuePtr thing, const std::string& element, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Thing;
+		ValuePtr Thing;
 		std::string Element;
-		ValueRefPtr Result;
+		ValuePtr Result;
 	};
 
 	struct AssignVarInst : Instruction
 	{
-		AssignVarInst(ValueRefPtr var, ValueRefPtr value);
+		AssignVarInst(ValuePtr var, ValuePtr value);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Var;
-		ValueRefPtr Value;
+		ValuePtr Var;
+		ValuePtr Value;
 	};
 
 	struct AddInst : Instruction
 	{
-		AddInst(MathInstMode mode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		AddInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
 		MathInstMode Mode;
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct SubInst : Instruction
 	{
-		SubInst(MathInstMode mode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		SubInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
 		MathInstMode Mode;
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct MulInst : Instruction
 	{
-		MulInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		MulInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct DivInst : Instruction
 	{
-		DivInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		DivInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct NegInst : Instruction
 	{
-		NegInst(ValueRefPtr value, ValueRefPtr result);
+		NegInst(ValuePtr value, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Value;
-		ValueRefPtr Result;
+		ValuePtr Value;
+		ValuePtr Result;
 	};
 
 	struct CmpInst : Instruction
 	{
-		CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
 		MathInstMode Mode;
 		CmpInstMode CMPMode;
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct SelInst : Instruction
 	{
-		SelInst(ValueRefPtr condition, ValueRefPtr _true, ValueRefPtr _false, ValueRefPtr result);
+		SelInst(ValuePtr condition, ValuePtr _true, ValuePtr _false, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Condition;
-		ValueRefPtr True;
-		ValueRefPtr False;
-		ValueRefPtr Result;
+		ValuePtr Condition;
+		ValuePtr True;
+		ValuePtr False;
+		ValuePtr Result;
 	};
 
 	struct LAndInst : Instruction
 	{
-		LAndInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		LAndInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct ShLInst : Instruction
 	{
-		ShLInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		ShLInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct AndInst : Instruction
 	{
-		AndInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		AndInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
 	};
 
 	struct OrInst : Instruction
 	{
-		OrInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result);
+		OrInst(ValuePtr left, ValuePtr right, ValuePtr result);
 
 		std::ostream& Print(std::ostream& out) const override;
 
-		ValueRefPtr Left;
-		ValueRefPtr Right;
-		ValueRefPtr Result;
+		ValuePtr Left;
+		ValuePtr Right;
+		ValuePtr Result;
+	};
+
+	struct NativeInst : Instruction
+	{
+		NativeInst(NativeFunction function);
+
+		std::ostream& Print(std::ostream& out) const override;
+
+		NativeFunction Function;
 	};
 }

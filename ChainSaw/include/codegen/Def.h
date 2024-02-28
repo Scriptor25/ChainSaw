@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lang/Def.h>
+
 #include <functional>
 #include <memory>
 
@@ -29,6 +31,9 @@ namespace csaw::codegen
 	struct Value;
 	typedef std::shared_ptr<Value> ValuePtr;
 
+	struct Arg;
+	typedef std::shared_ptr<Arg> ArgPtr;
+
 	struct Const;
 	typedef std::shared_ptr<Const> ConstPtr;
 
@@ -44,14 +49,8 @@ namespace csaw::codegen
 	struct ConstThing;
 	typedef std::shared_ptr<ConstThing> ConstThingPtr;
 
-	struct ValueRef;
-	typedef std::shared_ptr<ValueRef> ValueRefPtr;
-
 	class Context;
 	typedef std::shared_ptr<Context> ContextPtr;
-
-	struct Arg;
-	typedef std::shared_ptr<Arg> ArgPtr;
 
 	struct Function;
 	typedef std::shared_ptr<Function> FunctionPtr;
@@ -118,5 +117,8 @@ namespace csaw::codegen
 
 	struct NativeInst;
 	typedef std::shared_ptr<NativeInst> NativeInstPtr;
-	typedef std::function<ValueRefPtr(ContextPtr context, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)> NativeFunction;
+	typedef std::function<ValuePtr(ContextPtr context, ValuePtr callee, const std::vector<ValuePtr>& args)> NativeFunction;
+
+	void WAssert(const char* expr, ContextPtr context, csaw::lang::StmtPtr ptr);
+#define Assert(expression, context, ptr) (void)((!!(expression)) || (WAssert(#expression, context, ptr), 0))
 }

@@ -3,27 +3,6 @@
 
 #include <iostream>
 
-csaw::codegen::ValueRef::ValueRef(TypePtr type, const std::string& name)
-	: ValueRef(Value::Default(type, name))
-{
-}
-
-csaw::codegen::ValueRef::ValueRef(ValuePtr value)
-	: Value(value)
-{
-}
-
-csaw::codegen::TypePtr csaw::codegen::ValueRef::Type(TypePtr def) const
-{
-	return Value ? Value->Type : def;
-}
-
-std::ostream& csaw::codegen::ValueRef::Print(std::ostream& out) const
-{
-	if (Value) return Value->Print(out);
-	return out << "empty";
-}
-
 csaw::codegen::ValuePtr csaw::codegen::Value::Default(TypePtr type, const std::string& name)
 {
 	std::string n = name;

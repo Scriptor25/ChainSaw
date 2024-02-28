@@ -7,18 +7,6 @@
 
 namespace csaw::codegen
 {
-	struct ValueRef
-	{
-		ValueRef(TypePtr type, const std::string& name = "");
-		ValueRef(ValuePtr value);
-
-		TypePtr Type(TypePtr def = nullptr) const;
-
-		std::ostream& Print(std::ostream& out) const;
-
-		ValuePtr Value;
-	};
-
 	struct Value
 		: std::enable_shared_from_this<Value>
 	{
@@ -35,6 +23,11 @@ namespace csaw::codegen
 
 		std::string Name;
 		TypePtr Type;
+	};
+
+	struct Arg : Value
+	{
+		Arg(TypePtr type, const std::string& name = "");
 	};
 
 	struct Const : Value

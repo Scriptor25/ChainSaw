@@ -1,15 +1,10 @@
 ﻿add_executable (ChainSaw
 	"src/ChainSaw.cpp"
 
-	"include/codegen/Assert.h"
 	"include/codegen/Context.h"
 	"include/codegen/Def.h"
-	"include/codegen/Function.h"
-	"include/codegen/GenExpr.h"
-	"include/codegen/GenOp.h"
-	"include/codegen/GenStmt.h"
+	"include/codegen/CodeGen.h"
 	"include/codegen/Instruction.h"
-	"include/codegen/Native.h"
 	"include/codegen/Type.h"
 	"include/codegen/Value.h"
 	"src/codegen/Assert.cpp"

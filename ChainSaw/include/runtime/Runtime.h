@@ -33,17 +33,17 @@ namespace csaw::runtime
 		ContextPtr Context();
 
 		bool PreStart();
-		ValueRefPtr Call(const std::string& name, ValueRefPtr callee, const std::vector<ValueRefPtr>& args);
+		ValuePtr Call(const std::string& name, ValuePtr callee, const std::vector<ValuePtr>& args);
 
 	private:
 		RuntimePtr GetGlobal();
 
-		ValueRefPtr Create(const std::string& name, ValueRefPtr ref);
-		ValueRefPtr Get(const std::string& name);
-		ValueRefPtr Set(const std::string& name, ValueRefPtr ref);
-		ValueRefPtr& GetRef(const std::string& name);
+		ValuePtr Create(const std::string& name, ValuePtr ref);
+		ValuePtr Get(const std::string& name);
+		ValuePtr Set(const std::string& name, ValuePtr ref);
+		ValuePtr& GetRef(const std::string& name);
 
-		ValueRefPtr Call(RuntimePtr runtime, FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args);
+		ValuePtr Call(RuntimePtr runtime, FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args);
 
 		InstructionPtr Evaluate(InstructionPtr ptr);
 
@@ -73,10 +73,10 @@ namespace csaw::runtime
 		ContextPtr m_Context;
 		RuntimePtr m_Parent;
 
-		std::map<std::string, ValueRefPtr> m_References;
+		std::map<std::string, ValuePtr> m_References;
 
-		ValueRefPtr m_Callee;
-		std::vector<ValueRefPtr> m_Args;
-		ValueRefPtr m_Result;
+		ValuePtr m_Callee;
+		std::vector<ValuePtr> m_Args;
+		ValuePtr m_Result;
 	};
 }

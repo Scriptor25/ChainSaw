@@ -1,5 +1,4 @@
 #include <codegen/Context.h>
-#include <codegen/Function.h>
 #include <codegen/Instruction.h>
 
 csaw::codegen::BranchPtr csaw::codegen::Context::CreateBranch(const std::string& name)
@@ -8,7 +7,7 @@ csaw::codegen::BranchPtr csaw::codegen::Context::CreateBranch(const std::string&
 	return function->CreateBranch(name);
 }
 
-void csaw::codegen::Context::CreateSplit(ValueRefPtr condition, BranchPtr _true, BranchPtr _false)
+void csaw::codegen::Context::CreateSplit(ValuePtr condition, BranchPtr _true, BranchPtr _false)
 {
 	auto inst = std::make_shared<SplitInst>(condition, _true, _false);
 	m_InsertPoint->Insert(inst);

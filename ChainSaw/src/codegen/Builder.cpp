@@ -1,5 +1,4 @@
 #include <codegen/Context.h>
-#include <codegen/Function.h>
 #include <codegen/Instruction.h>
 #include <codegen/Type.h>
 #include <codegen/Value.h>
@@ -57,10 +56,10 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetInsertFunction()
 	return std::dynamic_pointer_cast<Function>(ptr);
 }
 
-void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValueRefPtr value)
+void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValuePtr value)
 {
 	if (!type) throw;
-	if (!value) value = std::make_shared<ValueRef>(type, name);
+	if (!value) value = std::make_shared<Value>(type, name);
 	CreateVariable(name, type);
 	auto inst = std::make_shared<CreateVarInst>(name, type, value);
 	m_InsertPoint->Insert(inst);
@@ -68,42 +67,42 @@ void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, Va
 
 void csaw::codegen::Context::CreateEmptyRet()
 {
-	auto inst = std::make_shared<RetInst>(std::make_shared<ValueRef>(GetEmptyType()));
+	auto inst = std::make_shared<RetInst>(std::make_shared<Value>(GetEmptyType()));
 	m_InsertPoint->Insert(inst);
 }
 
-void csaw::codegen::Context::CreateRet(ValueRefPtr value)
+void csaw::codegen::Context::CreateRet(ValuePtr value)
 {
 	auto inst = std::make_shared<RetInst>(value);
 	m_InsertPoint->Insert(inst);
 }
 
-csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateCall(FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateCall(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args)
 {
-	auto result = std::make_shared<ValueRef>(function->Type->Result);
+	auto result = std::make_shared<Value>(function->Type->Result);
 	auto inst = std::make_shared<CallInst>(function, callee, args, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }
 
-csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateGetElement(ValueRefPtr thing, const std::string& element)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetElement(ValuePtr thing, const std::string& element)
 {
-	auto result = std::make_shared<ValueRef>(thing->Type()->AsThing()->Elements[element]);
+	auto result = std::make_shared<Value>(thing->Type->AsThing()->Elements[element]);
 	auto inst = std::make_shared<GetElementInst>(thing, element, result);
 	m_InsertPoint->Insert(inst);
 	return result;
 }
 
-csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateAssign(ValueRefPtr var, ValueRefPtr value)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateAssign(ValuePtr var, ValuePtr value)
 {
 	auto inst = std::make_shared<AssignVarInst>(var, value);
 	m_InsertPoint->Insert(inst);
 	return var;
 }
 
-csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateSel(ValueRefPtr condition, TypePtr type, ValueRefPtr _true, ValueRefPtr _false)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateSel(ValuePtr condition, TypePtr type, ValuePtr _true, ValuePtr _false)
 {
-	auto result = std::make_shared<ValueRef>(type);
+	auto result = std::make_shared<Value>(type);
 	auto inst = std::make_shared<SelInst>(condition, _true, _false, result);
 	m_InsertPoint->Insert(inst);
 	return result;

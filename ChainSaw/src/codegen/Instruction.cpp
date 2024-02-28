@@ -1,6 +1,4 @@
-#include <codegen/Function.h>
 #include <codegen/Instruction.h>
-#include <codegen/Native.h>
 #include <codegen/Type.h>
 #include <codegen/Value.h>
 
@@ -26,7 +24,7 @@ std::ostream& csaw::codegen::Instruction::Print() const
 	return Print(std::cout);
 }
 
-csaw::codegen::CreateVarInst::CreateVarInst(const std::string& name, TypePtr type, ValueRefPtr value)
+csaw::codegen::CreateVarInst::CreateVarInst(const std::string& name, TypePtr type, ValuePtr value)
 	: Name(name), Type(type), Value(value)
 {
 }
@@ -37,7 +35,7 @@ std::ostream& csaw::codegen::CreateVarInst::Print(std::ostream& out) const
 	return Value->Print(out << "create " << Name << ", ");
 }
 
-csaw::codegen::RetInst::RetInst(ValueRefPtr value)
+csaw::codegen::RetInst::RetInst(ValuePtr value)
 	: Value(value)
 {
 }
@@ -55,7 +53,7 @@ std::ostream& csaw::codegen::RetInst::Print(std::ostream& out) const
 	return out;
 }
 
-csaw::codegen::SplitInst::SplitInst(ValueRefPtr condition, BranchPtr _true, BranchPtr _false)
+csaw::codegen::SplitInst::SplitInst(ValuePtr condition, BranchPtr _true, BranchPtr _false)
 	: Condition(condition), True(_true), False(_false)
 {
 }
@@ -87,7 +85,7 @@ std::ostream& csaw::codegen::FlowInst::Print(std::ostream& out) const
 	return out << "flow $" << Branch->Name;
 }
 
-csaw::codegen::CallInst::CallInst(FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args, ValueRefPtr result)
+csaw::codegen::CallInst::CallInst(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args, ValuePtr result)
 	: Function(function), Callee(callee), Args(args), Result(result)
 {
 }
@@ -96,7 +94,7 @@ std::ostream& csaw::codegen::CallInst::Print(std::ostream& out) const
 {
 	// result = call function, callee, args
 
-	if (!Result->Type()->IsEmpty()) Result->Print(out) << " = ";
+	if (!Result->Type->IsEmpty()) Result->Print(out) << " = ";
 
 	Function->PrintShort(out << "call ") << ", ";
 	if (Callee) Callee->Print(out);
@@ -108,7 +106,7 @@ std::ostream& csaw::codegen::CallInst::Print(std::ostream& out) const
 	return out;
 }
 
-csaw::codegen::GetElementInst::GetElementInst(ValueRefPtr thing, const std::string& element, ValueRefPtr result)
+csaw::codegen::GetElementInst::GetElementInst(ValuePtr thing, const std::string& element, ValuePtr result)
 	: Thing(thing), Element(element), Result(result)
 {
 }
@@ -119,7 +117,7 @@ std::ostream& csaw::codegen::GetElementInst::Print(std::ostream& out) const
 	return Thing->Print(Result->Print(out) << " = getelement ") << ", " << Element;
 }
 
-csaw::codegen::AssignVarInst::AssignVarInst(ValueRefPtr var, ValueRefPtr value)
+csaw::codegen::AssignVarInst::AssignVarInst(ValuePtr var, ValuePtr value)
 	: Var(var), Value(value)
 {
 }
@@ -130,7 +128,7 @@ std::ostream& csaw::codegen::AssignVarInst::Print(std::ostream& out) const
 	return Value->Print(Var->Print(out << "assign ") << ", ");
 }
 
-csaw::codegen::AddInst::AddInst(MathInstMode mode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::AddInst::AddInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result)
 	: Mode(mode), Left(left), Right(right), Result(result)
 {
 }
@@ -141,7 +139,7 @@ std::ostream& csaw::codegen::AddInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = add " << Mode << ", ") << ", ");
 }
 
-csaw::codegen::SubInst::SubInst(MathInstMode mode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::SubInst::SubInst(MathInstMode mode, ValuePtr left, ValuePtr right, ValuePtr result)
 	: Mode(mode), Left(left), Right(right), Result(result)
 {
 }
@@ -152,7 +150,7 @@ std::ostream& csaw::codegen::SubInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = sub " << Mode << ", ") << ", ");
 }
 
-csaw::codegen::MulInst::MulInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::MulInst::MulInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
@@ -163,7 +161,7 @@ std::ostream& csaw::codegen::MulInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = mul ") << ", ");
 }
 
-csaw::codegen::DivInst::DivInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::DivInst::DivInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
@@ -174,7 +172,7 @@ std::ostream& csaw::codegen::DivInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = div ") << ", ");
 }
 
-csaw::codegen::NegInst::NegInst(ValueRefPtr value, ValueRefPtr result)
+csaw::codegen::NegInst::NegInst(ValuePtr value, ValuePtr result)
 	: Value(value), Result(result)
 {
 }
@@ -185,7 +183,7 @@ std::ostream& csaw::codegen::NegInst::Print(std::ostream& out) const
 	return Value->Print(Result->Print(out) << " = ");
 }
 
-csaw::codegen::CmpInst::CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::CmpInst::CmpInst(MathInstMode mode, CmpInstMode cmpmode, ValuePtr left, ValuePtr right, ValuePtr result)
 	: Mode(mode), CMPMode(cmpmode), Left(left), Right(right), Result(result)
 {
 }
@@ -196,7 +194,7 @@ std::ostream& csaw::codegen::CmpInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = cmp " << CMPMode << ", " << Mode << ", ") << ", ");
 }
 
-csaw::codegen::SelInst::SelInst(ValueRefPtr condition, ValueRefPtr _true, ValueRefPtr _false, ValueRefPtr result)
+csaw::codegen::SelInst::SelInst(ValuePtr condition, ValuePtr _true, ValuePtr _false, ValuePtr result)
 	: Condition(condition), True(_true), False(_false), Result(result)
 {
 }
@@ -207,7 +205,7 @@ std::ostream& csaw::codegen::SelInst::Print(std::ostream& out) const
 	return False->Print(True->Print(Condition->Print(Result->Print(out) << " = sel ") << ", ") << ", ");
 }
 
-csaw::codegen::LAndInst::LAndInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::LAndInst::LAndInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
@@ -218,7 +216,7 @@ std::ostream& csaw::codegen::LAndInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = land ") << ", ");
 }
 
-csaw::codegen::ShLInst::ShLInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::ShLInst::ShLInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
@@ -229,7 +227,7 @@ std::ostream& csaw::codegen::ShLInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = shl ") << ", ");
 }
 
-csaw::codegen::AndInst::AndInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::AndInst::AndInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
@@ -240,7 +238,7 @@ std::ostream& csaw::codegen::AndInst::Print(std::ostream& out) const
 	return Right->Print(Left->Print(Result->Print(out) << " = and ") << ", ");
 }
 
-csaw::codegen::OrInst::OrInst(ValueRefPtr left, ValueRefPtr right, ValueRefPtr result)
+csaw::codegen::OrInst::OrInst(ValuePtr left, ValuePtr right, ValuePtr result)
 	: Left(left), Right(right), Result(result)
 {
 }
