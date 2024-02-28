@@ -1,28 +1,13 @@
 #pragma once
 
+#include <codegen/Def.h>
+
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace csaw::codegen
 {
-	struct Type;
-	struct NumType;
-	struct ChrType;
-	struct StrType;
-	struct EmptyType;
-	struct ThingType;
-	struct FunctionType;
-
-	typedef std::shared_ptr<Type> TypePtr;
-	typedef std::shared_ptr<NumType> NumTypePtr;
-	typedef std::shared_ptr<ChrType> ChrTypePtr;
-	typedef std::shared_ptr<StrType> StrTypePtr;
-	typedef std::shared_ptr<EmptyType> EmptyTypePtr;
-	typedef std::shared_ptr<ThingType> ThingTypePtr;
-	typedef std::shared_ptr<FunctionType> FunctionTypePtr;
-
 	struct Type
 		: std::enable_shared_from_this<Type>
 	{

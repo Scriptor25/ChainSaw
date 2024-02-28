@@ -1,4 +1,5 @@
 #include <codegen/Assert.h>
+#include <codegen/Context.h>
 
 #include <lang/Stmt.h>
 

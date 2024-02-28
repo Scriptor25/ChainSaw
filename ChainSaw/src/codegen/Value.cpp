@@ -1,6 +1,28 @@
+#include <codegen/Type.h>
 #include <codegen/Value.h>
 
 #include <iostream>
+
+csaw::codegen::ValueRef::ValueRef(TypePtr type, const std::string& name)
+	: ValueRef(Value::Default(type, name))
+{
+}
+
+csaw::codegen::ValueRef::ValueRef(ValuePtr value)
+	: Value(value)
+{
+}
+
+csaw::codegen::TypePtr csaw::codegen::ValueRef::Type(TypePtr def) const
+{
+	return Value ? Value->Type : def;
+}
+
+std::ostream& csaw::codegen::ValueRef::Print(std::ostream& out) const
+{
+	if (Value) return Value->Print(out);
+	return out << "empty";
+}
 
 csaw::codegen::ValuePtr csaw::codegen::Value::Default(TypePtr type, const std::string& name)
 {
@@ -48,4 +70,9 @@ std::ostream& csaw::codegen::Value::Print(std::ostream& out) const
 {
 	if (!Type->IsEmpty()) out << Type->GetName() << " ";
 	return out << "%" << Name;
+}
+
+csaw::codegen::ConstPtr csaw::codegen::Value::AsConst()
+{
+	return std::dynamic_pointer_cast<Const>(shared_from_this());
 }

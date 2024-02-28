@@ -1,5 +1,8 @@
 #include <codegen/Assert.h>
 #include <codegen/Context.h>
+#include <codegen/Function.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <iostream>
 
@@ -208,10 +211,10 @@ void csaw::codegen::Context::ClearVariables()
 	m_Variables.clear();
 }
 
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
+csaw::codegen::ValueRefPtr csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
 {
 	if (!type) throw;
-	auto value = std::make_shared<Value>(type);
+	auto value = std::make_shared<ValueRef>(type);
 	if (m_InsertPoint == m_GlobalInsertPoint)
 	{
 		if (m_GlobalVariables[name]) throw;
@@ -223,7 +226,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateVariable(const std::string
 	return value;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::Context::GetVariable(const std::string& name)
+csaw::codegen::ValueRefPtr csaw::codegen::Context::GetVariable(const std::string& name)
 {
 	if (m_InsertPoint == m_GlobalInsertPoint)
 	{
@@ -241,5 +244,5 @@ csaw::codegen::ValuePtr csaw::codegen::Context::GetVariable(const std::string& n
 void csaw::codegen::Context::CreateArgs(const std::vector<ArgPtr>& args)
 {
 	for (auto& arg : args)
-		m_Variables[arg->Name] = arg;
+		m_Variables[arg->Name] = std::make_shared<ValueRef>(arg);
 }

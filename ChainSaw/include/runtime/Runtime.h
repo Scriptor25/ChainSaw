@@ -1,8 +1,8 @@
 #pragma once
 
-#include <codegen/Context.h>
-#include <codegen/Native.h>
+#include <codegen/Def.h>
 
+#include <map>
 #include <string>
 
 namespace csaw::codegen
@@ -33,20 +33,17 @@ namespace csaw::runtime
 		ContextPtr Context();
 
 		bool PreStart();
-		ConstPtr Call(const std::string& name, ConstPtr callee, const std::vector<ConstPtr>& args);
-
-		ConstPtr GetConst(ValuePtr value);
-		std::vector<ConstPtr> GetConst(const std::vector<ValuePtr>& values);
+		ValueRefPtr Call(const std::string& name, ValueRefPtr callee, const std::vector<ValueRefPtr>& args);
 
 	private:
 		RuntimePtr GetGlobal();
 
-		ConstPtr Create(const std::string& name, ValuePtr ptr, ConstPtr value);
-		ConstPtr Get(const std::string& name);
-		ConstPtr Set(const std::string& name, ConstPtr value);
-		ValuePtr& GetEntry(const std::string& name);
+		ValueRefPtr Create(const std::string& name, ValueRefPtr ref);
+		ValueRefPtr Get(const std::string& name);
+		ValueRefPtr Set(const std::string& name, ValueRefPtr ref);
+		ValueRefPtr& GetRef(const std::string& name);
 
-		ConstPtr Call(RuntimePtr runtime, FunctionPtr function, ConstPtr callee, const std::vector<ConstPtr>& args);
+		ValueRefPtr Call(RuntimePtr runtime, FunctionPtr function, ValueRefPtr callee, const std::vector<ValueRefPtr>& args);
 
 		InstructionPtr Evaluate(InstructionPtr ptr);
 
@@ -76,11 +73,10 @@ namespace csaw::runtime
 		ContextPtr m_Context;
 		RuntimePtr m_Parent;
 
-		std::map<std::string, ValuePtr> m_Variables;
-		std::map<ValuePtr, ConstPtr> m_Values;
+		std::map<std::string, ValueRefPtr> m_References;
 
-		ConstPtr m_Callee;
-		std::vector<ConstPtr> m_Args;
-		ConstPtr m_Result;
+		ValueRefPtr m_Callee;
+		std::vector<ValueRefPtr> m_Args;
+		ValueRefPtr m_Result;
 	};
 }

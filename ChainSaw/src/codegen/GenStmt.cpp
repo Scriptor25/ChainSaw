@@ -1,6 +1,10 @@
 #include <codegen/Assert.h>
+#include <codegen/Context.h>
+#include <codegen/Function.h>
 #include <codegen/GenExpr.h>
 #include <codegen/GenStmt.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <lang/Expr.h>
 #include <lang/Parser.h>
@@ -124,7 +128,7 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarStmtPtr ptr)
 	auto value =
 		ptr->Value
 		? CodeGen(context, ptr->Value)
-		: Const::Default(type);
+		: std::make_shared<ValueRef>(type);
 	context->CreateVar(ptr->Name, type, value);
 }
 

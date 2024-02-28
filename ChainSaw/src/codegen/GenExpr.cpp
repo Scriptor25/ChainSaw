@@ -1,10 +1,14 @@
 #include <codegen/Assert.h>
+#include <codegen/Context.h>
+#include <codegen/Function.h>
 #include <codegen/GenExpr.h>
 #include <codegen/GenOp.h>
+#include <codegen/Type.h>
+#include <codegen/Value.h>
 
 #include <lang/Expr.h>
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ExprPtr ptr)
 {
 	if (auto p = std::dynamic_pointer_cast<csaw::lang::CallExpr>(ptr))
 		return CodeGen(context, p);
@@ -32,10 +36,10 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::E
 	throw;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::CallExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::CallExprPtr ptr)
 {
 	std::string name;
-	ValuePtr callee;
+	ValueRefPtr callee;
 
 	if (auto p = std::dynamic_pointer_cast<csaw::lang::IdentExpr>(ptr->Callee))
 		name = p->Id;
@@ -45,47 +49,47 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::C
 		callee = CodeGen(context, p->Object);
 	}
 
-	std::vector<ValuePtr> args;
+	std::vector<ValueRefPtr> args;
 	std::vector<TypePtr> argtypes;
 	for (auto& arg : ptr->Args)
 	{
 		auto value = CodeGen(context, arg);
 		args.push_back(value);
-		argtypes.push_back(value->Type);
+		argtypes.push_back(value->Type());
 	}
 
-	auto function = context->GetFunction(name, callee ? callee->Type : context->GetEmptyType(), argtypes);
+	auto function = context->GetFunction(name, callee->Type(context->GetEmptyType()), argtypes);
 	Assert(function, context, ptr);
 	return context->CreateCall(function, callee, args);
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::NumExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::NumExprPtr ptr)
 {
-	return context->GetConstNum(ptr->Value);
+	return std::make_shared<ValueRef>(context->GetConstNum(ptr->Value));
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ChrExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::ChrExprPtr ptr)
 {
 	throw;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::StrExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::StrExprPtr ptr)
 {
-	return context->GetConstStr(ptr->Value);
+	return std::make_shared<ValueRef>(context->GetConstStr(ptr->Value));
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IdentExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IdentExprPtr ptr)
 {
 	return context->GetVariable(ptr->Id);
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::BinExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::BinExprPtr ptr)
 {
 	auto left = CodeGen(context, ptr->Left);
 	auto right = CodeGen(context, ptr->Right);
 	std::string op = ptr->Operator;
 
-	if (auto function = context->GetFunction(op, context->GetEmptyType(), { left->Type, right->Type }))
+	if (auto function = context->GetFunction(op, context->GetEmptyType(), { left->Type(), right->Type() }))
 		return context->CreateCall(function, nullptr, { left, right });
 
 	if (op == "=") return CodeGenAssign(context, left, right);
@@ -97,14 +101,14 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::B
 	if (op == "==") return CodeGenOpEQ(context, left, right);
 	if (op == "!=") return CodeGenOpNE(context, left, right);
 
-	if (auto function = context->GetFunction(op, left->Type, { right->Type }))
+	if (auto function = context->GetFunction(op, left->Type(), { right->Type() }))
 		return context->CreateCall(function, left, { right });
 
 	size_t assignpos = op.find('=');
 	bool assign = assignpos != std::string::npos;
 	auto o = op.substr(0, assignpos);
 
-	ValuePtr value;
+	ValueRefPtr value;
 	if (o == "+") value = CodeGenOpAdd(context, left, right);
 	else if (o == "-") value = CodeGenOpSub(context, left, right);
 	else if (o == "*") value = CodeGenOpMul(context, left, right);
@@ -123,26 +127,26 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::B
 	return value;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::UnExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::UnExprPtr ptr)
 {
 	auto value = CodeGen(context, ptr->Value);
 	std::string op = ptr->Operator;
 
-	std::vector<ValuePtr> arg;
+	std::vector<ValueRefPtr> arg;
 	std::vector<TypePtr> argtype;
 
 	if (ptr->RightOp)
 	{
 		arg.push_back(value);
-		argtype.push_back(value->Type);
+		argtype.push_back(value->Type());
 	}
 
-	if (auto function = context->GetFunction(op, ptr->RightOp ? context->GetEmptyType() : value->Type, argtype))
+	if (auto function = context->GetFunction(op, ptr->RightOp ? context->GetEmptyType() : value->Type(), argtype))
 		return context->CreateCall(function, ptr->RightOp ? nullptr : value, arg);
 
 	if (op == "++")
 	{
-		auto val = CodeGenOpAdd(context, value, context->GetConstNum(1));
+		auto val = CodeGenOpAdd(context, value, std::make_shared<ValueRef>(context->GetConstNum(1)));
 		if (ptr->RightOp)
 		{
 			CodeGenAssign(context, value, val);
@@ -152,7 +156,7 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::U
 	}
 	if (op == "--")
 	{
-		auto val = CodeGenOpSub(context, value, context->GetConstNum(1));
+		auto val = CodeGenOpSub(context, value, std::make_shared<ValueRef>(context->GetConstNum(1)));
 		if (ptr->RightOp)
 		{
 			CodeGenAssign(context, value, val);
@@ -167,23 +171,23 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::U
 	throw;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IndexExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::IndexExprPtr ptr)
 {
 	throw;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::MemberExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::MemberExprPtr ptr)
 {
 	auto thing = CodeGen(context, ptr->Object);
 	return context->CreateGetElement(thing, ptr->Member);
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarArgExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarArgExprPtr ptr)
 {
 	throw;
 }
 
-csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::SelExprPtr ptr)
+csaw::codegen::ValueRefPtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::SelExprPtr ptr)
 {
 	auto tbr = context->CreateBranch();
 	auto fbr = context->CreateBranch();
@@ -202,8 +206,8 @@ csaw::codegen::ValuePtr csaw::codegen::CodeGen(ContextPtr context, csaw::lang::S
 
 	context->SetInsertPoint(ebr);
 
-	Assert(tval->Type == fval->Type, context, ptr);
-	auto merge = context->CreateSel(condition, tval->Type, tval, fval);
+	Assert(tval->Type() == fval->Type(), context, ptr);
+	auto merge = context->CreateSel(condition, tval->Type(), tval, fval);
 
 	return merge;
 }

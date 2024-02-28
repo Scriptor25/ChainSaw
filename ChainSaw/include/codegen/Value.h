@@ -1,28 +1,23 @@
 #pragma once
 
-#include <codegen/Type.h>
+#include <codegen/Def.h>
 
 #include <map>
-#include <memory>
 #include <string>
 
 namespace csaw::codegen
 {
-	struct Value;
+	struct ValueRef
+	{
+		ValueRef(TypePtr type, const std::string& name = "");
+		ValueRef(ValuePtr value);
 
-	struct Const;
-	struct ConstNum;
-	struct ConstChr;
-	struct ConstStr;
-	struct ConstThing;
+		TypePtr Type(TypePtr def = nullptr) const;
 
-	typedef std::shared_ptr<Value> ValuePtr;
+		std::ostream& Print(std::ostream& out) const;
 
-	typedef std::shared_ptr<Const> ConstPtr;
-	typedef std::shared_ptr<ConstNum> ConstNumPtr;
-	typedef std::shared_ptr<ConstChr> ConstChrPtr;
-	typedef std::shared_ptr<ConstStr> ConstStrPtr;
-	typedef std::shared_ptr<ConstThing> ConstThingPtr;
+		ValuePtr Value;
+	};
 
 	struct Value
 		: std::enable_shared_from_this<Value>
@@ -35,6 +30,8 @@ namespace csaw::codegen
 
 		std::ostream& Print() const;
 		virtual std::ostream& Print(std::ostream& out) const;
+
+		ConstPtr AsConst();
 
 		std::string Name;
 		TypePtr Type;

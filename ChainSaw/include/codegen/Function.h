@@ -1,23 +1,14 @@
 #pragma once
 
+#include <codegen/Def.h>
 #include <codegen/Instruction.h>
-#include <codegen/Type.h>
 #include <codegen/Value.h>
 
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace csaw::codegen
 {
-	struct Arg;
-	struct Function;
-	struct Branch;
-
-	typedef std::shared_ptr<Arg> ArgPtr;
-	typedef std::shared_ptr<Function> FunctionPtr;
-	typedef std::shared_ptr<Branch> BranchPtr;
-
 	struct Arg : Value
 	{
 		Arg(TypePtr type, const std::string& name = "");
