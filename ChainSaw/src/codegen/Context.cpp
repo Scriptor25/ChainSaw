@@ -210,10 +210,9 @@ void csaw::codegen::Context::ClearVariables()
 	m_Variables.clear();
 }
 
-csaw::codegen::ValuePtr csaw::codegen::Context::CreateVariable(const std::string& name, TypePtr type)
+csaw::codegen::ValuePtr csaw::codegen::Context::CreateVariable(const std::string& name, ValuePtr value)
 {
-	if (!type) throw;
-	auto value = std::make_shared<Value>(type);
+	if (!value) throw;
 	if (m_InsertPoint == m_GlobalInsertPoint)
 	{
 		if (m_GlobalVariables[name]) throw;

@@ -33,7 +33,7 @@ void csaw::codegen::Context::SetInsertGlobal()
 	m_InsertPoint = m_GlobalInsertPoint;
 }
 
-bool csaw::codegen::Context::IsInsertGlobal()
+bool csaw::codegen::Context::IsInsertGlobal() const
 {
 	return m_InsertPoint == m_GlobalInsertPoint;
 }
@@ -43,7 +43,7 @@ csaw::codegen::InstructionPtr csaw::codegen::Context::GetInsertPoint()
 	return m_InsertPoint;
 }
 
-csaw::codegen::BranchPtr csaw::codegen::Context::GetInsertBranch()
+csaw::codegen::BranchPtr csaw::codegen::Context::GetInsertBranch() const
 {
 	return std::dynamic_pointer_cast<Branch>(m_InsertPoint);
 }
@@ -59,15 +59,15 @@ csaw::codegen::FunctionPtr csaw::codegen::Context::GetInsertFunction()
 void csaw::codegen::Context::CreateVar(const std::string& name, TypePtr type, ValuePtr value)
 {
 	if (!type) throw;
-	if (!value) value = std::make_shared<Value>(type, name);
-	CreateVariable(name, type);
+	if (!value) value = Value::Default(type, name);
+	CreateVariable(name, value);
 	auto inst = std::make_shared<CreateVarInst>(name, type, value);
 	m_InsertPoint->Insert(inst);
 }
 
 void csaw::codegen::Context::CreateEmptyRet()
 {
-	auto inst = std::make_shared<RetInst>(std::make_shared<Value>(GetEmptyType()));
+	auto inst = std::make_shared<RetInst>(ValuePtr());
 	m_InsertPoint->Insert(inst);
 }
 
@@ -79,7 +79,8 @@ void csaw::codegen::Context::CreateRet(ValuePtr value)
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateCall(FunctionPtr function, ValuePtr callee, const std::vector<ValuePtr>& args)
 {
-	auto result = std::make_shared<Value>(function->Type->Result);
+	auto& type = function->Type->Result;
+	auto result = type->IsEmpty() ? ValuePtr() : Value::Default(type);
 	auto inst = std::make_shared<CallInst>(function, callee, args, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -87,7 +88,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateCall(FunctionPtr function,
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateGetElement(ValuePtr thing, const std::string& element)
 {
-	auto result = std::make_shared<Value>(thing->Type->AsThing()->Elements[element]);
+	auto result = Value::Default(thing->Type->AsThing()->Elements[element]);
 	auto inst = std::make_shared<GetElementInst>(thing, element, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -102,7 +103,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateAssign(ValuePtr var, Value
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateSel(ValuePtr condition, TypePtr type, ValuePtr _true, ValuePtr _false)
 {
-	auto result = std::make_shared<Value>(type);
+	auto result = Value::Default(type);
 	auto inst = std::make_shared<SelInst>(condition, _true, _false, result);
 	m_InsertPoint->Insert(inst);
 	return result;

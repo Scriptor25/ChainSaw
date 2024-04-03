@@ -41,7 +41,7 @@ namespace csaw::codegen
 		void PopFilepath();
 
 		void ClearVariables();
-		ValuePtr CreateVariable(const std::string& name, TypePtr type);
+		ValuePtr CreateVariable(const std::string& name, ValuePtr value);
 		ValuePtr GetVariable(const std::string& name);
 		void CreateArgs(const std::vector<ArgPtr>& args);
 
@@ -52,9 +52,9 @@ namespace csaw::codegen
 
 		void SetInsertPoint(InstructionPtr insertpoint);
 		void SetInsertGlobal();
-		bool IsInsertGlobal();
+		bool IsInsertGlobal() const;
 		InstructionPtr GetInsertPoint();
-		BranchPtr GetInsertBranch();
+		BranchPtr GetInsertBranch() const;
 		FunctionPtr GetInsertFunction();
 		BranchPtr CreateBranch(const std::string& name = "");
 

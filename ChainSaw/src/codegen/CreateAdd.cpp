@@ -5,7 +5,7 @@
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddNN(ValuePtr left, ValuePtr right)
 {
-	auto result = std::make_shared<Value>(GetNumType());
+	auto result = Value::Default(GetNumType());
 	auto inst = std::make_shared<AddInst>(MODE_NN, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -18,7 +18,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddCC(ValuePtr left, Value
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddSS(ValuePtr left, ValuePtr right)
 {
-	auto result = std::make_shared<Value>(GetStrType());
+	auto result = Value::Default(GetStrType());
 	auto inst = std::make_shared<AddInst>(MODE_SS, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -26,7 +26,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddSS(ValuePtr left, Value
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddNS(ValuePtr left, ValuePtr right)
 {
-	auto result = std::make_shared<Value>(GetStrType());
+	auto result = Value::Default(GetStrType());
 	auto inst = std::make_shared<AddInst>(MODE_NS, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
@@ -39,7 +39,7 @@ csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddCS(ValuePtr left, Value
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateAddSN(ValuePtr left, ValuePtr right)
 {
-	auto result = std::make_shared<Value>(GetStrType());
+	auto result = Value::Default(GetStrType());
 	auto inst = std::make_shared<AddInst>(MODE_SN, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;

@@ -126,7 +126,7 @@ void csaw::codegen::CodeGen(ContextPtr context, csaw::lang::VarStmtPtr ptr)
 	auto value =
 		ptr->Value
 		? CodeGen(context, ptr->Value)
-		: std::make_shared<Value>(type);
+		: Value::Default(type);
 	context->CreateVar(ptr->Name, type, value);
 }
 

@@ -3,28 +3,9 @@
 
 #include <iostream>
 
-csaw::codegen::ConstPtr csaw::codegen::Const::Default(TypePtr type, const std::string& name)
+csaw::codegen::Const::Const(TypePtr type, const std::string& name)
+	: Value(type, name)
 {
-	std::string n = name;
-	if (n.empty())
-		n = CreateName();
-
-	if (type->IsNum())
-		return std::make_shared<ConstNum>(type->AsNum(), 0.0, n);
-	if (type->IsChr())
-		return std::make_shared<ConstChr>(type->AsChr(), '\0', n);
-	if (type->IsStr())
-		return std::make_shared<ConstStr>(type->AsStr(), "", n);
-	if (type->IsThing())
-	{
-		auto thingty = type->AsThing();
-		std::map<std::string, ValuePtr> elements;
-		for (auto& entry : thingty->Elements)
-			elements[entry.first] = Default(entry.second, n + "." + entry.first);
-		return std::make_shared<ConstThing>(thingty, elements, n);
-	}
-
-	throw;
 }
 
 csaw::codegen::ConstNumPtr csaw::codegen::Const::AsNum()
@@ -47,14 +28,15 @@ csaw::codegen::ConstThingPtr csaw::codegen::Const::AsThing()
 	return std::dynamic_pointer_cast<ConstThing>(shared_from_this());
 }
 
-csaw::codegen::Const::Const(TypePtr type, const std::string& name)
-	: Value(type, name)
-{
-}
-
 csaw::codegen::ConstNum::ConstNum(NumTypePtr type, double value, const std::string& name)
 	: Const(type, name), Value(value)
 {
+}
+
+void csaw::codegen::ConstNum::Set(ValuePtr other)
+{
+	if (other->Type != Type) throw;
+	Value = other->AsConst()->AsNum()->Value;
 }
 
 std::ostream& csaw::codegen::ConstNum::Print(std::ostream& out) const
@@ -72,6 +54,12 @@ csaw::codegen::ConstChr::ConstChr(ChrTypePtr type, char value, const std::string
 {
 }
 
+void csaw::codegen::ConstChr::Set(ValuePtr other)
+{
+	if (other->Type != Type) throw;
+	Value = other->AsConst()->AsChr()->Value;
+}
+
 std::ostream& csaw::codegen::ConstChr::Print(std::ostream& out) const
 {
 	return PrintValue(out << Type->GetName() << " '") << "'";
@@ -85,6 +73,12 @@ std::ostream& csaw::codegen::ConstChr::PrintValue(std::ostream& out) const
 csaw::codegen::ConstStr::ConstStr(StrTypePtr type, const std::string& value, const std::string& name)
 	: Const(type, name), Value(value)
 {
+}
+
+void csaw::codegen::ConstStr::Set(ValuePtr other)
+{
+	if (other->Type != Type) throw;
+	Value = other->AsConst()->AsStr()->Value;
 }
 
 std::ostream& csaw::codegen::ConstStr::Print(std::ostream& out) const
@@ -113,6 +107,12 @@ std::ostream& csaw::codegen::ConstStr::PrintValue(std::ostream& out) const
 csaw::codegen::ConstThing::ConstThing(ThingTypePtr type, const std::map<std::string, ValuePtr>& elements, const std::string& name)
 	: Const(type, name), Elements(elements)
 {
+}
+
+void csaw::codegen::ConstThing::Set(ValuePtr other)
+{
+	if (other->Type != Type) throw;
+	Elements = other->AsConst()->AsThing()->Elements;
 }
 
 std::ostream& csaw::codegen::ConstThing::Print(std::ostream& out) const

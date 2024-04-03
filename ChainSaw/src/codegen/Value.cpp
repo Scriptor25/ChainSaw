@@ -5,25 +5,21 @@
 
 csaw::codegen::ValuePtr csaw::codegen::Value::Default(TypePtr type, const std::string& name)
 {
-	std::string n = name;
-	if (n.empty())
-		n = CreateName();
-
 	if (type->IsEmpty())
-		return std::make_shared<Value>(type, n);
+		throw;
 	if (type->IsNum())
-		return std::make_shared<ConstNum>(type->AsNum(), 0.0, n);
+		return std::make_shared<ConstNum>(type->AsNum(), 0.0, name);
 	if (type->IsChr())
-		return std::make_shared<ConstChr>(type->AsChr(), '\0', n);
+		return std::make_shared<ConstChr>(type->AsChr(), '\0', name);
 	if (type->IsStr())
-		return std::make_shared<ConstStr>(type->AsStr(), "", n);
+		return std::make_shared<ConstStr>(type->AsStr(), "", name);
 	if (type->IsThing())
 	{
 		auto thingty = type->AsThing();
 		std::map<std::string, ValuePtr> elements;
 		for (auto& entry : thingty->Elements)
-			elements[entry.first] = Default(entry.second, n + "." + entry.first);
-		return std::make_shared<ConstThing>(thingty, elements, n);
+			elements[entry.first] = Default(entry.second, name + "." + entry.first);
+		return std::make_shared<ConstThing>(thingty, elements, name);
 	}
 
 	throw;
@@ -54,4 +50,14 @@ std::ostream& csaw::codegen::Value::Print(std::ostream& out) const
 csaw::codegen::ConstPtr csaw::codegen::Value::AsConst()
 {
 	return std::dynamic_pointer_cast<Const>(shared_from_this());
+}
+
+csaw::codegen::Arg::Arg(TypePtr type, const std::string& name)
+	: Value(type, name)
+{
+}
+
+void csaw::codegen::Arg::Set(ValuePtr other)
+{
+	throw;
 }

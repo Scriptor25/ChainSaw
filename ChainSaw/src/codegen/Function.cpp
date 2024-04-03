@@ -4,11 +4,6 @@
 
 #include <iostream>
 
-csaw::codegen::Arg::Arg(TypePtr type, const std::string& name)
-	: Value(type, name)
-{
-}
-
 csaw::codegen::Function::Function(const std::string& name, FunctionTypePtr type, bool isconstructor, const std::vector<ArgPtr>& args, TypePtr callee)
 	: Name(name), Type(type), IsConstructor(isconstructor), Args(args), Callee(callee)
 {

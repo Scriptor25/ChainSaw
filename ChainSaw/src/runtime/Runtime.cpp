@@ -198,20 +198,21 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(FlowInstPtr ptr)
 InstructionPtr csaw::runtime::Runtime::Evaluate(CallInstPtr ptr)
 {
 	auto runtime = std::make_shared<Runtime>(GetGlobal());
-	ptr->Result = Call(runtime, ptr->Function, ptr->Callee, ptr->Args);
+	auto result = Call(runtime, ptr->Function, ptr->Callee, ptr->Args);
+	if (ptr->Result) ptr->Result->Set(result);
 	return ptr->Next;
 }
 
-InstructionPtr csaw::runtime::Runtime::Evaluate(GetElementInstPtr ptr) // TODO
+InstructionPtr csaw::runtime::Runtime::Evaluate(GetElementInstPtr ptr)
 {
 	auto thing = ptr->Thing->AsConst()->AsThing();
-	ptr->Result = thing->Elements[ptr->Element];
+	ptr->Result->Set(thing->Elements[ptr->Element]);
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(AssignVarInstPtr ptr)
 {
-	ptr->Var = ptr->Value;
+	ptr->Var->Set(ptr->Value);
 	return ptr->Next;
 }
 
@@ -255,7 +256,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(AddInstPtr ptr)
 		throw;
 	}
 
-	ptr->Result = value;
+	ptr->Result->Set(value);
 	return ptr->Next;
 }
 
@@ -284,7 +285,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(SubInstPtr ptr)
 		throw;
 	}
 
-	ptr->Result = value;
+	ptr->Result->Set(value);
 	return ptr->Next;
 }
 
@@ -293,7 +294,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(MulInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(left->Value * right->Value);
+	ptr->Result->Set(m_Context->GetConstNum(left->Value * right->Value));
 	return ptr->Next;
 }
 
@@ -302,14 +303,14 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(DivInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(left->Value / right->Value);
+	ptr->Result->Set(m_Context->GetConstNum(left->Value / right->Value));
 	return ptr->Next;
 }
 
 InstructionPtr csaw::runtime::Runtime::Evaluate(NegInstPtr ptr)
 {
 	auto value = ptr->Value->AsConst()->AsNum();
-	ptr->Result = m_Context->GetConstNum(-value->Value);
+	ptr->Result->Set(m_Context->GetConstNum(-value->Value));
 	return ptr->Next;
 }
 
@@ -378,7 +379,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(CmpInstPtr ptr)
 		throw;
 	}
 
-	ptr->Result = m_Context->GetConstNum(value ? 1.0 : 0.0);
+	ptr->Result->Set(m_Context->GetConstNum(value ? 1.0 : 0.0));
 	return ptr->Next;
 }
 
@@ -386,10 +387,10 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(SelInstPtr ptr)
 {
 	auto condition = ptr->Condition->AsConst()->AsNum();
 
-	ptr->Result =
+	ptr->Result->Set(
 		condition->Value
 		? ptr->True
-		: ptr->False;
+		: ptr->False);
 	return ptr->Next;
 }
 
@@ -398,7 +399,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(LAndInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(left->Value && right->Value ? 1.0 : 0.0);
+	ptr->Result->Set(m_Context->GetConstNum(left->Value && right->Value ? 1.0 : 0.0));
 	return ptr->Next;
 }
 
@@ -407,7 +408,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(ShLInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(long(left->Value) << long(right->Value));
+	ptr->Result->Set(m_Context->GetConstNum(long(left->Value) << long(right->Value)));
 	return ptr->Next;
 }
 
@@ -416,7 +417,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(AndInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(long(left->Value) & long(right->Value));
+	ptr->Result->Set(m_Context->GetConstNum(long(left->Value) & long(right->Value)));
 	return ptr->Next;
 }
 
@@ -425,7 +426,7 @@ InstructionPtr csaw::runtime::Runtime::Evaluate(OrInstPtr ptr)
 	auto left = ptr->Left->AsConst()->AsNum();
 	auto right = ptr->Right->AsConst()->AsNum();
 
-	ptr->Result = m_Context->GetConstNum(long(left->Value) | long(right->Value));
+	ptr->Result->Set(m_Context->GetConstNum(long(left->Value) | long(right->Value)));
 	return ptr->Next;
 }
 

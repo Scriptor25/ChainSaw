@@ -94,7 +94,7 @@ std::ostream& csaw::codegen::CallInst::Print(std::ostream& out) const
 {
 	// result = call function, callee, args
 
-	if (!Result->Type->IsEmpty()) Result->Print(out) << " = ";
+	if (Result) Result->Print(out) << " = ";
 
 	Function->PrintShort(out << "call ") << ", ";
 	if (Callee) Callee->Print(out);

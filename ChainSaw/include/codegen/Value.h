@@ -16,6 +16,8 @@ namespace csaw::codegen
 		Value(TypePtr type, const std::string& name = "");
 		virtual ~Value() {}
 
+		virtual void Set(ValuePtr other) = 0;
+
 		std::ostream& Print() const;
 		virtual std::ostream& Print(std::ostream& out) const;
 
@@ -28,12 +30,12 @@ namespace csaw::codegen
 	struct Arg : Value
 	{
 		Arg(TypePtr type, const std::string& name = "");
+
+		void Set(ValuePtr other) override;
 	};
 
 	struct Const : Value
 	{
-		static ConstPtr Default(TypePtr type, const std::string& name = "");
-
 		Const(TypePtr type, const std::string& name = "");
 
 		virtual std::ostream& PrintValue(std::ostream& out) const = 0;
@@ -48,6 +50,8 @@ namespace csaw::codegen
 	{
 		ConstNum(NumTypePtr type, double value, const std::string& name = "");
 
+		void Set(ValuePtr other) override;
+
 		std::ostream& Print(std::ostream& out) const override;
 		std::ostream& PrintValue(std::ostream& out) const override;
 
@@ -57,6 +61,8 @@ namespace csaw::codegen
 	struct ConstChr : Const
 	{
 		ConstChr(ChrTypePtr type, char value, const std::string& name = "");
+
+		void Set(ValuePtr other) override;
 
 		std::ostream& Print(std::ostream& out) const override;
 		std::ostream& PrintValue(std::ostream& out) const override;
@@ -68,6 +74,8 @@ namespace csaw::codegen
 	{
 		ConstStr(StrTypePtr type, const std::string& value, const std::string& name = "");
 
+		void Set(ValuePtr other) override;
+
 		std::ostream& Print(std::ostream& out) const override;
 		std::ostream& PrintValue(std::ostream& out) const override;
 
@@ -77,6 +85,8 @@ namespace csaw::codegen
 	struct ConstThing : Const
 	{
 		ConstThing(ThingTypePtr type, const std::map<std::string, ValuePtr>& elements, const std::string& name = "");
+
+		void Set(ValuePtr other) override;
 
 		std::ostream& Print(std::ostream& out) const override;
 		std::ostream& PrintValue(std::ostream& out) const override;

@@ -5,7 +5,7 @@
 
 csaw::codegen::ValuePtr csaw::codegen::Context::CreateSubNN(ValuePtr left, ValuePtr right)
 {
-	auto result = std::make_shared<Value>(GetNumType());
+	auto result = Value::Default(GetNumType());
 	auto inst = std::make_shared<SubInst>(MODE_NN, left, right, result);
 	m_InsertPoint->Insert(inst);
 	return result;
