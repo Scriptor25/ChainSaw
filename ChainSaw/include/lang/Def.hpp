@@ -1,5 +1,7 @@
 #pragma once
 
+#include <graphviz/cgraph.h>
+
 #include <iostream>
 #include <memory>
 
@@ -119,4 +121,48 @@ namespace csaw::lang
     std::ostream &operator<<(std::ostream &out, const VarArgExpr &expr);
 
     std::ostream &operator<<(std::ostream &out, const SelExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, StmtPtr ptr);
+
+    Agnode_t *Graph(Agraph_t *g, const FunStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const RetStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const EnclosedStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const ForStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const VarStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const WhileStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const IfStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const ThingStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, const AliasStmt &stmt);
+
+    Agnode_t *Graph(Agraph_t *g, ExprPtr ptr);
+
+    Agnode_t *Graph(Agraph_t *g, const CallExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const NumExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const ChrExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const StrExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const IdentExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const BinExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const UnExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const IndexExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const MemberExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const VarArgExpr &expr);
+
+    Agnode_t *Graph(Agraph_t *g, const SelExpr &expr);
 }

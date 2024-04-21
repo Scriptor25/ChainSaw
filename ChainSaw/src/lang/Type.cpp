@@ -3,6 +3,8 @@
 
 #include <map>
 
+static std::map<std::string, csaw::lang::TypePtr> Types;
+
 csaw::lang::TypePtr csaw::lang::Parser::ParseType()
 {
     auto name = Expect(TK_IDENTIFIER).Value;
@@ -11,9 +13,7 @@ csaw::lang::TypePtr csaw::lang::Parser::ParseType()
 
 csaw::lang::TypePtr csaw::lang::Type::Get(const std::string &name)
 {
-    static std::map<std::string, TypePtr> types;
-
-    auto &type = types[name];
+    auto &type = Types[name];
     if (type) return type;
     return type = std::make_shared<Type>(name);
 }

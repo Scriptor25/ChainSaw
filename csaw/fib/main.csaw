@@ -4,6 +4,6 @@
     ret fib(n - 1) + fib(n - 2);
 }
 
-@main: num {
+@main::num {
     ret fib(10);
 }

@@ -1,12 +1,17 @@
 ## Includes
+\inc "stdlib/bool.csaw"
+\inc "stdlib/io.csaw"
+\inc "stdlib/math.csaw"
+\inc "stdlib/random.csaw"
+
 \inc "random.csaw"
 
 ## Main - Ghost Game
-@main: num {
+@main::num {
 
     printf("Ghost Game\n\n");
 
-    bool still_running = true;
+    still_running: bool = true;
     score: num = 0;
 	
 	door_with_ghost: num;

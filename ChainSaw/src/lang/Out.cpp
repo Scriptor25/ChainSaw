@@ -21,6 +21,40 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, csaw::lang::TypePtr ptr)
     return out << ptr->Name;
 }
 
+std::ostream &csaw::lang::operator<<(std::ostream &out, const StmtPtr ptr)
+{
+    if (!ptr)
+        return out << "nullptr";
+
+    if (auto stmt = std::dynamic_pointer_cast<FunStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<RetStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<EnclosedStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<ForStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<VarStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<WhileStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<IfStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<ThingStmt>(ptr))
+        return out << *stmt;
+    if (auto stmt = std::dynamic_pointer_cast<AliasStmt>(ptr))
+        return out << *stmt;
+
+    if (auto expr = std::dynamic_pointer_cast<Expr>(ptr))
+    {
+        out << expr;
+        if (end) return out << ';';
+        return out;
+    }
+
+    throw;
+}
+
 std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
 {
     if (stmt.Constructor)
@@ -41,7 +75,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
     if (stmt.Callee)
         out << ':' << stmt.Callee;
 
-    if (!stmt.Args.empty())
+    if (!stmt.Args.empty() || !stmt.VarArg.empty())
     {
         out << '(';
         for (size_t i = 0; i < stmt.Args.size(); i++)
@@ -50,11 +84,13 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
                 out << ", ";
             out << stmt.Args[i].first << ": " << stmt.Args[i].second;
         }
+        if (!stmt.VarArg.empty())
+            out << ", " << stmt.VarArg << '?';
         out << ')';
     }
 
     if (stmt.Result)
-        out << ((stmt.Args.empty() && !stmt.Callee) ? "::" : ": ") << stmt.Result;
+        out << ((stmt.Args.empty() && stmt.VarArg.empty() && !stmt.Callee) ? "::" : ": ") << stmt.Result;
 
     if (!stmt.Body)
         return out << ';';
@@ -152,39 +188,34 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const AliasStmt &stmt)
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const StmtPtr ptr)
+std::ostream &csaw::lang::operator<<(std::ostream &out, const ExprPtr ptr)
 {
-    if (!ptr)
-        return out << "nullptr";
-
-    if (auto stmt = std::dynamic_pointer_cast<FunStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<RetStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<EnclosedStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<ForStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<VarStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<WhileStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<IfStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<ThingStmt>(ptr))
-        return out << *stmt;
-    if (auto stmt = std::dynamic_pointer_cast<AliasStmt>(ptr))
-        return out << *stmt;
-
-    if (auto expr = std::dynamic_pointer_cast<Expr>(ptr))
-    {
-        out << expr;
-        if (end) return out << ';';
-        return out;
-    }
+    if (auto expr = std::dynamic_pointer_cast<CallExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<NumExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<ChrExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<StrExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<IdentExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<BinExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<UnExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<IndexExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<MemberExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<VarArgExpr>(ptr))
+        return out << *expr;
+    if (auto expr = std::dynamic_pointer_cast<SelExpr>(ptr))
+        return out << *expr;
 
     throw;
 }
+
 
 std::ostream &csaw::lang::operator<<(std::ostream &out, const CallExpr &expr)
 {
@@ -274,32 +305,4 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const VarArgExpr &expr)
 std::ostream &csaw::lang::operator<<(std::ostream &out, const SelExpr &expr)
 {
     return out << expr.Condition << " ? " << expr.True << " : " << expr.False;
-}
-
-std::ostream &csaw::lang::operator<<(std::ostream &out, const ExprPtr ptr)
-{
-    if (auto expr = std::dynamic_pointer_cast<CallExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<NumExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<ChrExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<StrExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<IdentExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<BinExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<UnExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<IndexExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<MemberExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<VarArgExpr>(ptr))
-        return out << *expr;
-    if (auto expr = std::dynamic_pointer_cast<SelExpr>(ptr))
-        return out << *expr;
-
-    throw;
 }

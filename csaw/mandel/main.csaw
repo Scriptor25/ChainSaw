@@ -5,7 +5,7 @@ SAMPLES:  num =     1;
 WIDTH:    num =    10;
 HEIGHT:   num = WIDTH;
 
-@main: num {
+@main::num {
 
     xc:   num =   num(readf("xc: "));	## -0.5
     yc:   num =   num(readf("yc: "));	##    0
@@ -36,7 +36,7 @@ HEIGHT:   num = WIDTH;
     ret 0;
 }
 
-@mandel(z0: complex, max: num): num {
+@mandel(z0: complex, max: num):num {
     z: complex = z0;
 	t: num = 0;
     for (; (t < max) && (z.abs() <= 2.0); t++)

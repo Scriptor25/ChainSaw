@@ -1,13 +1,19 @@
 ﻿#include <lang/Parser.hpp>
 
+#include <graphviz/cgraph.h>
+#include <graphviz/gvc.h>
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 
+Agraph_t *g = nullptr;
+
 static void callback(csaw::lang::StmtPtr stmt)
 {
     std::cout << stmt << std::endl;
+    Graph(g, stmt);
 }
 
 int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
@@ -85,7 +91,18 @@ int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
     if (!include.empty())
         includePaths.push_back(include);
 
+    g = agopen((char *) "", Agdirected, &AgDefaultDisc);
+
     csaw::lang::Parser::Parse(stream, callback, includePaths);
+
+    std::cout << agnsubg(g) << std::endl;
+
+    GVC_t *gvc = gvContext();
+    gvLayout(gvc, g, "dot");
+    gvRenderFilename(gvc, g, "svg", "test.svg");
+    gvFreeLayout(gvc, g);
+    agclose(g);
+    gvFreeContext(gvc);
 
     stream.close();
     return 0;
