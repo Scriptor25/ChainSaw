@@ -3,39 +3,39 @@ thing: complex {
     imaginary: num,
 }
 
-$complex { my.real = 0; my.imaginary = 0; }
-$complex(real: num, imaginary: num) { my.real = real; my.imaginary = imaginary; }
+$complex { me.real = 0; me.imaginary = 0; }
+$complex(real: num, imaginary: num) { me.real = real; me.imaginary = imaginary; }
 
 @(+=):complex(z: complex): complex {
-    my.real += z.real;
-    my.imaginary += z.imaginary;
-    ret my;
+    me.real += z.real;
+    me.imaginary += z.imaginary;
+    ret me;
 }
 
-@(-=):complex (z: complex): complex {
-    my.real -= z.real;
-    my.imaginary -= z.imaginary;
-    ret my;
+@(-=):complex(z: complex): complex {
+    me.real -= z.real;
+    me.imaginary -= z.imaginary;
+    ret me;
 }
 
-@(*=):complex (z: complex): complex {
-    num real = my.real * z.real - my.imaginary * z.imaginary;
-    num imaginary = my.real * z.imaginary + my.imaginary * z.real;
+@(*=):complex(z: complex): complex {
+    num real = me.real * z.real - me.imaginary * z.imaginary;
+    num imaginary = me.real * z.imaginary + me.imaginary * z.real;
 
-    my.real = real;
-    my.imaginary = imaginary;
+    me.real = real;
+    me.imaginary = imaginary;
 
-    ret my;
+    ret me;
 }
 
 @(/=):complex(z: complex): complex {
-    my *= z.conjugate();
+    me *= z.conjugate();
     num div = 1 / pow(z.mod(), 2);
 
-    my.real *= div;
-    my.imaginary *= div;
+    me.real *= div;
+    me.imaginary *= div;
 
-    ret my;
+    ret me;
 }
 
 @(+)(z1: complex, z2: complex): complex {
@@ -61,21 +61,21 @@ $complex(real: num, imaginary: num) { my.real = real; my.imaginary = imaginary; 
 }
 
 @conjugate:complex: complex {
-    ret complex(my.real, -my.imaginary);
+    ret complex(me.real, -me.imaginary);
 }
 
 @mod:complex: num {
-    ret sqrt(pow(my.real, 2) + pow(my.imaginary, 2));
+    ret sqrt(pow(me.real, 2) + pow(me.imaginary, 2));
 }
 
 @square:complex: complex {
-    num real = my.real * my.real - my.imaginary * my.imaginary;
-    num imaginary = 2 * my.real * my.imaginary;
+    num real = me.real * me.real - me.imaginary * me.imaginary;
+    num imaginary = 2 * me.real * me.imaginary;
     ret complex(real, imaginary);
 }
 
 $str(c: complex) {
-	my = format("{} {}{}i", c.real, (c.imaginary < 0 ? "" : "+ "), c.imaginary);
+	me = format("{} {}{}i", c.real, (c.imaginary < 0 ? "" : "+ "), c.imaginary);
 }
 
 @exp(z: complex): complex {
@@ -120,13 +120,13 @@ $str(c: complex) {
 }
 
 @arg:complex: num {
-    ret atan2(my.imaginary, my.real);
+    ret atan2(me.imaginary, me.real);
 }
 
 @inverse:complex: complex {
-    ret complex(1, 0) / my;
+    ret complex(1, 0) / me;
 }
 
 @abs:complex: num {
-    ret sqrt(my.real * my.real + my.imaginary * my.imaginary);
+    ret sqrt(me.real * me.real + me.imaginary * me.imaginary);
 }

@@ -1,12 +1,12 @@
 ## Includes
-%inc "random.csaw"
+\inc "random.csaw"
 
 ## Main - Ghost Game
 @main: num {
 
     printf("Ghost Game\n\n");
 
-    num still_running = true;
+    bool still_running = true;
     num score = 0;
 	
 	num door_with_ghost;

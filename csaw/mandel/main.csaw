@@ -1,4 +1,4 @@
-%inc "complex.csaw"
+\inc "complex.csaw"
 
 num MAX_ITER =  10;
 num SAMPLES  =   1;
