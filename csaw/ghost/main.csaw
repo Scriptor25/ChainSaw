@@ -7,11 +7,11 @@
     printf("Ghost Game\n\n");
 
     bool still_running = true;
-    num score = 0;
+    score: num = 0;
 	
-	num door_with_ghost;
-	str door;
-	num door_num;
+	door_with_ghost: num;
+	door: str;
+	door_num: num;
 
     while (still_running) {
         door_with_ghost = randomInt(1, 3);

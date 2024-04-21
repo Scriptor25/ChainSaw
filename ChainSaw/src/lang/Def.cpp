@@ -1,6 +1,7 @@
 #include <lang/Def.hpp>
-#include <lang/Stmt.hpp>
 #include <lang/Expr.hpp>
+#include <lang/Stmt.hpp>
+#include <lang/Type.hpp>
 
 #include <string>
 
@@ -13,6 +14,11 @@ static std::string spaces()
     for (size_t i = 0; i < depth; i++)
         spaces += "    ";
     return spaces;
+}
+
+std::ostream &csaw::lang::operator<<(std::ostream &out, csaw::lang::TypePtr ptr)
+{
+    return out << ptr->Name;
 }
 
 std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
@@ -32,7 +38,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
     out << stmt.Name;
     if (op) out << ')';
 
-    if (!stmt.Callee.empty())
+    if (stmt.Callee)
         out << ':' << stmt.Callee;
 
     if (!stmt.Args.empty())
@@ -47,8 +53,8 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
         out << ')';
     }
 
-    if (!stmt.Result.empty())
-        out << ((stmt.Args.empty() && stmt.Callee.empty()) ? "::" : ": ") << stmt.Result;
+    if (stmt.Result)
+        out << ((stmt.Args.empty() && !stmt.Callee) ? "::" : ": ") << stmt.Result;
 
     if (!stmt.Body)
         return out << ';';
@@ -93,7 +99,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const ForStmt &stmt)
 
 std::ostream &csaw::lang::operator<<(std::ostream &out, const VarStmt &stmt)
 {
-    out << stmt.Type << ' ' << stmt.Name;
+    out << stmt.Name << ": " << stmt.Type;
     if (!stmt.Value)
     {
         if (end) out << ';';
@@ -128,7 +134,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const ThingStmt &stmt)
 
     depth++;
     auto sp = spaces();
-    out << '{' << '\n';
+    out << " {" << '\n';
     size_t i = 0;
     for (auto &e: stmt.Elements)
     {

@@ -17,8 +17,8 @@ csaw::lang::StmtPtr csaw::lang::Parser::ParseStmt(bool end)
     if (At("alias")) return ParseAliasStmt(end);
 
     auto expr = ParseExpr();
-    if (auto vstmt = ParseVarStmt(expr, end))
-        return vstmt;
+    if (auto stmt = ParseVarStmt(expr, end))
+        return stmt;
 
     if (end) Expect(";");
 
@@ -38,10 +38,10 @@ csaw::lang::FunStmtPtr csaw::lang::Parser::ParseFunStmt(bool end)
 
     bool constructor;
     std::string name;
-    std::string callee;
-    std::vector<std::pair<std::string, std::string>> args;
+    TypePtr callee;
+    std::vector<std::pair<std::string, TypePtr>> args;
     std::string vararg;
-    std::string result;
+    TypePtr result;
     EnclosedStmtPtr body;
 
     constructor = NextIfAt("$");
@@ -58,20 +58,20 @@ csaw::lang::FunStmtPtr csaw::lang::Parser::ParseFunStmt(bool end)
 
     if (NextIfAt(":"))
         if (!At(":"))
-            callee = Expect(TK_IDENTIFIER).Value;
+            callee = ParseType();
 
     if (NextIfAt("("))
     {
         while (!At(")") && !AtEOF())
         {
-            std::string aName = Expect(TK_IDENTIFIER).Value;
+            auto aName = Expect(TK_IDENTIFIER).Value;
             if (NextIfAt("?"))
             {
                 vararg = aName;
                 break;
             }
             Expect(":");
-            std::string aType = Expect(TK_IDENTIFIER).Value;
+            auto aType = ParseType();
             args.push_back({aName, aType});
             if (!At(")"))
                 Expect(",");
@@ -80,7 +80,7 @@ csaw::lang::FunStmtPtr csaw::lang::Parser::ParseFunStmt(bool end)
     }
 
     if (NextIfAt(":"))
-        result = Expect(TK_IDENTIFIER).Value;
+        result = ParseType();
 
     if (!At("{"))
     {
@@ -150,24 +150,27 @@ csaw::lang::VarStmtPtr csaw::lang::Parser::ParseVarStmt(ExprPtr expr, bool end)
 {
     auto line = m_Line;
 
-    if (auto type = std::dynamic_pointer_cast<IdentExpr>(expr))
+    if (auto name = std::dynamic_pointer_cast<IdentExpr>(expr))
     {
-        std::string name = Expect(TK_IDENTIFIER).Value;
+        if (!NextIfAt(":"))
+            return nullptr;
+
+        auto type = ParseType();
 
         if (!At("="))
         {
             if (end) Expect(";");
-            return std::make_shared<VarStmt>(line, type->Id, name, ExprPtr());
+            return std::make_shared<VarStmt>(line, name->Id, type, nullptr);
         }
 
         Expect("=");
         auto value = ParseExpr();
 
         if (end) Expect(";");
-        return std::make_shared<VarStmt>(line, type->Id, name, value);
+        return std::make_shared<VarStmt>(line, name->Id, type, value);
     }
 
-    return VarStmtPtr();
+    return nullptr;
 }
 
 csaw::lang::WhileStmtPtr csaw::lang::Parser::ParseWhileStmt()
@@ -217,7 +220,7 @@ csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
     if (NextIfAt(":"))
         group = Expect(TK_IDENTIFIER).Value;
 
-    std::map<std::string, std::string> elements;
+    std::map<std::string, TypePtr> elements;
     if (!At("{"))
     {
         if (end) Expect(";");
@@ -227,10 +230,10 @@ csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
     Expect("{");
     while (!AtEOF() && !At("}"))
     {
-        std::string ename = Expect(TK_IDENTIFIER).Value;
+        auto eName = Expect(TK_IDENTIFIER).Value;
         Expect(":");
-        std::string etype = Expect(TK_IDENTIFIER).Value;
-        elements[ename] = etype;
+        auto eType = ParseType();
+        elements[eName] = eType;
 
         if (!At("}"))
             Expect(",");
@@ -245,9 +248,9 @@ csaw::lang::AliasStmtPtr csaw::lang::Parser::ParseAliasStmt(bool end)
     auto line = m_Line;
 
     Expect("alias");
-    std::string name = Expect(TK_IDENTIFIER).Value;
+    auto name = Expect(TK_IDENTIFIER).Value;
     Expect(":");
-    std::string origin = Expect(TK_IDENTIFIER).Value;
+    auto origin = ParseType();
 
     if (end) Expect(";");
     return std::make_shared<AliasStmt>(line, name, origin);
@@ -266,10 +269,10 @@ csaw::lang::EnclosedStmt::EnclosedStmt(size_t line, const std::vector<StmtPtr> &
 csaw::lang::FunStmt::FunStmt(size_t line,
                              bool constructor,
                              const std::string &name,
-                             const std::string &callee,
-                             const std::vector<std::pair<std::string, std::string>> &args,
+                             const TypePtr callee,
+                             const std::vector<std::pair<std::string, TypePtr>> &args,
                              const std::string &vararg,
-                             const std::string &result,
+                             const TypePtr result,
                              const EnclosedStmtPtr body)
         : Stmt(line),
           Constructor(constructor),
@@ -292,8 +295,8 @@ csaw::lang::ForStmt::ForStmt(size_t line, StmtPtr pre, ExprPtr condition, StmtPt
 {
 }
 
-csaw::lang::VarStmt::VarStmt(size_t line, const std::string &type, const std::string &name, ExprPtr value)
-        : Stmt(line), Type(type), Name(name), Value(value)
+csaw::lang::VarStmt::VarStmt(size_t line, const std::string &name, const TypePtr type, ExprPtr value)
+        : Stmt(line), Name(name), Type(type), Value(value)
 {
 }
 
@@ -307,13 +310,15 @@ csaw::lang::IfStmt::IfStmt(size_t line, ExprPtr condition, StmtPtr _true, StmtPt
 {
 }
 
-csaw::lang::ThingStmt::ThingStmt(size_t line, const std::string &name, const std::string &group,
-                                 const std::map<std::string, std::string> &elements)
+csaw::lang::ThingStmt::ThingStmt(size_t line,
+                                 const std::string &name,
+                                 const std::string &group,
+                                 const std::map<std::string, TypePtr> &elements)
         : Stmt(line), Name(name), Group(group), Elements(elements)
 {
 }
 
-csaw::lang::AliasStmt::AliasStmt(size_t line, const std::string &name, const std::string &origin)
+csaw::lang::AliasStmt::AliasStmt(size_t line, const std::string &name, const TypePtr origin)
         : Stmt(line), Name(name), Origin(origin)
 {
 }

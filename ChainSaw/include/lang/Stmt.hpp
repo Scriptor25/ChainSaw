@@ -23,18 +23,18 @@ namespace csaw::lang
         FunStmt(size_t line,
                 bool constructor,
                 const std::string &name,
-                const std::string &callee,
-                const std::vector<std::pair<std::string, std::string>> &args,
+                TypePtr callee,
+                const std::vector<std::pair<std::string, TypePtr>> &args,
                 const std::string &vararg,
-                const std::string &result,
+                TypePtr result,
                 EnclosedStmtPtr body);
 
         bool Constructor;
         std::string Name;
-        std::string Callee;
-        std::vector<std::pair<std::string, std::string>> Args;
+        TypePtr Callee;
+        std::vector<std::pair<std::string, TypePtr>> Args;
         std::string VarArg;
-        std::string Result;
+        TypePtr Result;
         EnclosedStmtPtr Body;
     };
 
@@ -64,10 +64,10 @@ namespace csaw::lang
 
     struct VarStmt : Stmt
     {
-        VarStmt(size_t line, const std::string &type, const std::string &name, ExprPtr value);
+        VarStmt(size_t line, const std::string &name, TypePtr type, ExprPtr value);
 
-        std::string Type;
         std::string Name;
+        TypePtr Type;
         ExprPtr Value;
     };
 
@@ -90,19 +90,21 @@ namespace csaw::lang
 
     struct ThingStmt : Stmt
     {
-        ThingStmt(size_t line, const std::string &name, const std::string &group,
-                  const std::map<std::string, std::string> &elements);
+        ThingStmt(size_t line,
+                  const std::string &name,
+                  const std::string &group,
+                  const std::map<std::string, TypePtr> &elements);
 
         std::string Name;
         std::string Group;
-        std::map<std::string, std::string> Elements;
+        std::map<std::string, TypePtr> Elements;
     };
 
     struct AliasStmt : Stmt
     {
-        AliasStmt(size_t line, const std::string &name, const std::string &origin);
+        AliasStmt(size_t line, const std::string &name, TypePtr origin);
 
         std::string Name;
-        std::string Origin;
+        TypePtr Origin;
     };
 }

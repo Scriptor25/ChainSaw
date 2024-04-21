@@ -5,6 +5,9 @@
 
 namespace csaw::lang
 {
+    struct Type;
+    typedef std::shared_ptr<Type> TypePtr;
+
     struct Stmt;
     typedef std::shared_ptr<Stmt> StmtPtr;
 
@@ -71,6 +74,10 @@ namespace csaw::lang
     struct SelExpr;
     typedef std::shared_ptr<SelExpr> SelExprPtr;
 
+    std::ostream &operator<<(std::ostream &out, TypePtr ptr);
+
+    std::ostream &operator<<(std::ostream &out, StmtPtr ptr);
+
     std::ostream &operator<<(std::ostream &out, const FunStmt &stmt);
 
     std::ostream &operator<<(std::ostream &out, const RetStmt &stmt);
@@ -89,7 +96,7 @@ namespace csaw::lang
 
     std::ostream &operator<<(std::ostream &out, const AliasStmt &stmt);
 
-    std::ostream &operator<<(std::ostream &out, StmtPtr ptr);
+    std::ostream &operator<<(std::ostream &out, ExprPtr ptr);
 
     std::ostream &operator<<(std::ostream &out, const CallExpr &expr);
 
@@ -112,6 +119,4 @@ namespace csaw::lang
     std::ostream &operator<<(std::ostream &out, const VarArgExpr &expr);
 
     std::ostream &operator<<(std::ostream &out, const SelExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, ExprPtr ptr);
 }

@@ -26,6 +26,8 @@ namespace csaw::lang
         TK_COMP_DIR,
     };
 
+    std::ostream &operator<<(std::ostream &out, const TokenType &type);
+
     struct Token
     {
         Token(TokenType type, const std::string &value, size_t line);
@@ -43,21 +45,21 @@ namespace csaw::lang
 
     std::ostream &operator<<(std::ostream &out, const Token &token);
 
-    std::ostream &operator<<(std::ostream &out, const TokenType &type);
-
     typedef std::function<void(StmtPtr stmt)> ParseCallback;
 
     class Parser
     {
     public:
-        static void
-        Parse(std::istream &stream, const ParseCallback &callback, const std::vector<std::string> &includePaths);
+        static void Parse(std::istream &stream,
+                          const ParseCallback &callback,
+                          const std::vector<std::string> &includePaths);
 
     private:
         static int Escape(int c);
 
     private:
-        explicit Parser(std::istream &stream, const ParseCallback &callback,
+        explicit Parser(std::istream &stream,
+                        const ParseCallback &callback,
                         const std::vector<std::string> &includePaths);
 
         Token &Next();
@@ -78,7 +80,9 @@ namespace csaw::lang
 
         bool NextIfAt(const std::string &value);
 
-        void ParseCompileDirective();
+        void ParseCompileDirective(); // \x
+
+        TypePtr ParseType();
 
         StmtPtr ParseStmt(bool end = true);
 
@@ -103,22 +107,28 @@ namespace csaw::lang
         ExprPtr ParseExpr();
 
         ExprPtr ParseSelExpr(); // x ? y : z
-        ExprPtr ParseBinExpr();
 
-        ExprPtr ParseLogicExpr(); // &, &=, &&, |, |=, ||, ^, ^=
-        ExprPtr ParseCmpExpr(); // =, ==, !=
-        ExprPtr ParseShiftExpr(); // <, >, <=, >=, <<, >>, <<=, >>=
-        ExprPtr ParseSumExpr(); // +, +=, (++), -, -=, (--)
-        ExprPtr ParseProExpr(); // *, *=, /, /=, %, %=
-        ExprPtr ParseIndexExpr();
+        ExprPtr ParseBinExpr(); // x op y
 
-        ExprPtr ParseCallExpr();
+        ExprPtr ParseLogicExpr(); // x [&, &=, &&, |, |=, ||, ^, ^=] y
 
-        ExprPtr ParseMemberExpr();
+        ExprPtr ParseCmpExpr(); // x [=, ==, !=] y
 
-        ExprPtr ParseMemberExpr(ExprPtr expr);
+        ExprPtr ParseShiftExpr(); // x [<, >, <=, >=, <<, >>, <<=, >>=] y
 
-        ExprPtr ParsePrimExpr();
+        ExprPtr ParseSumExpr(); // x [+, +=, (++), -, -=, (--)] y
+
+        ExprPtr ParseProExpr(); // x [*, *=, /, /=, %, %=] y
+
+        ExprPtr ParseIndexExpr(); // x[y]
+
+        ExprPtr ParseCallExpr(); // x(...)
+
+        ExprPtr ParseMemberExpr(); // x.y
+
+        ExprPtr ParseMemberExpr(ExprPtr expr); // x.y
+
+        ExprPtr ParsePrimExpr(); // x
 
     private:
         size_t m_Line = 1;

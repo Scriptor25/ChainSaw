@@ -20,11 +20,6 @@ csaw::lang::Token::Token()
 {
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const Token &token)
-{
-    return out << token.Value << "[" << token.Type << "](" << token.Line << ")";
-}
-
 std::ostream &csaw::lang::operator<<(std::ostream &out, const TokenType &type)
 {
     switch (type)
@@ -40,4 +35,9 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const TokenType &type)
         case TK_COMP_DIR: return out << "COMP DIR";
         default: return out << "UNDEFINED";
     }
+}
+
+std::ostream &csaw::lang::operator<<(std::ostream &out, const Token &token)
+{
+    return out << token.Value << "[" << token.Type << "](" << token.Line << ")";
 }
