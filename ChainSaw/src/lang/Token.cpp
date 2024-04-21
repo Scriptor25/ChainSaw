@@ -16,7 +16,7 @@ csaw::lang::Token::Token(const size_t line)
 }
 
 csaw::lang::Token::Token()
-        : Token(TK_, std::string(), 0)
+        : Token(TK_EOF, std::string(), 0)
 {
 }
 
@@ -37,8 +37,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const TokenType &type)
         case TK_STRING: return out << "STRING";
         case TK_CHAR: return out << "CHAR";
         case TK_OPERATOR: return out << "OPERATOR";
-
-        default:
-        case TK_: return out << "UNDEFINED";
+        case TK_COMP_DIR: return out << "COMP DIR";
+        default: return out << "UNDEFINED";
     }
 }

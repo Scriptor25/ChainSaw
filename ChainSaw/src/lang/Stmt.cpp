@@ -5,7 +5,7 @@
 
 csaw::lang::StmtPtr csaw::lang::Parser::ParseStmt(bool end)
 {
-    while (At("%")) ParseCompileDirective();
+    while (At(TK_COMP_DIR)) ParseCompileDirective();
 
     if (At("@") || At("$")) return ParseFunStmt(end);
     if (At("ret")) return ParseRetStmt(end);

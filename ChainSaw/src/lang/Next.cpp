@@ -36,6 +36,22 @@ csaw::lang::Token &csaw::lang::Parser::Next()
         return Next();
     }
 
+    if (c == '\\')
+    {
+        c = m_Stream.get();
+
+        std::string value;
+        do
+        {
+            value += static_cast<char>(c);
+            c = m_Stream.get();
+        }
+        while (isalnum(c) || c == '_');
+        m_Stream.putback(static_cast<char>(c));
+
+        return m_Token = Token(TK_COMP_DIR, value, m_Line);
+    }
+
     if (c == '"')
     {
         std::string str;

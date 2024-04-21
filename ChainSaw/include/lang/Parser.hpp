@@ -11,7 +11,6 @@ namespace csaw::lang
 {
     enum TokenType
     {
-        TK_,
         TK_EOF,
 
         TK_IDENTIFIER,
@@ -23,6 +22,8 @@ namespace csaw::lang
         TK_STRING,
         TK_CHAR,
         TK_OPERATOR,
+
+        TK_COMP_DIR,
     };
 
     struct Token
@@ -49,13 +50,15 @@ namespace csaw::lang
     class Parser
     {
     public:
-        static void Parse(std::istream &stream, const ParseCallback &callback, const std::vector<std::string> &includePaths);
+        static void
+        Parse(std::istream &stream, const ParseCallback &callback, const std::vector<std::string> &includePaths);
 
     private:
         static int Escape(int c);
 
     private:
-        explicit Parser(std::istream &stream, const ParseCallback &callback, const std::vector<std::string> &includePaths);
+        explicit Parser(std::istream &stream, const ParseCallback &callback,
+                        const std::vector<std::string> &includePaths);
 
         Token &Next();
 

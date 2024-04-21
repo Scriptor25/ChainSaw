@@ -6,8 +6,8 @@
 
 void csaw::lang::Parser::ParseCompileDirective()
 {
-    Expect("%");
-    if (NextIfAt("inc"))
+    auto directive = Expect(TK_COMP_DIR).Value;
+    if (directive == "inc")
     {
         const auto filename = Expect(TK_STRING).Value;
         std::ifstream stream(filename);
