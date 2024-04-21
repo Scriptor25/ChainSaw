@@ -1,0 +1,3 @@
+alias bool: num;
+bool true = 1;
+bool false = 0;

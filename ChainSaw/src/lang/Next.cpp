@@ -1,142 +1,145 @@
-#include <lang/Parser.h>
+#include <lang/Parser.hpp>
 
-csaw::lang::Token& csaw::lang::Parser::Next()
+csaw::lang::Token &csaw::lang::Parser::Next()
 {
-	auto c = Read();
+    auto c = m_Stream.get();
 
-	while (c != EOF && c <= 0x20)
-	{
-		if (c == '\n')
-			m_Line++;
-		c = Read();
-	}
+    while (c != EOF && c <= 0x20)
+    {
+        if (c == '\n')
+            m_Line++;
+        c = m_Stream.get();
+    }
 
-	if (c == EOF)
-		return m_Token = Token(m_Line);
+    if (c == EOF)
+        return m_Token = Token(m_Line);
 
-	if (c == '#')
-	{
-		c = Read();
-		char delim;
-		if (c == '#')
-			delim = '\n';
-		else
-			delim = '#';
+    if (c == '#')
+    {
+        c = m_Stream.get();
+        char delim;
+        if (c == '#')
+            delim = '\n';
+        else
+            delim = '#';
 
-		while (c != EOF && c != delim)
-		{
-			if (c == '\n')
-				m_Line++;
-			c = Read();
-		}
+        while (c != EOF && c != delim)
+        {
+            if (c == '\n')
+                m_Line++;
+            c = m_Stream.get();
+        }
 
-		if (c == '\n')
-			m_Line++;
+        if (c == '\n')
+            m_Line++;
 
-		return Next();
-	}
+        return Next();
+    }
 
-	if (c == '"')
-	{
-		std::string str;
+    if (c == '"')
+    {
+        std::string str;
 
-		c = Read();
-		while (c != EOF && c != '"')
-		{
-			if (c == '\\')
-				c = Escape(Read());
+        c = m_Stream.get();
+        while (c != EOF && c != '"')
+        {
+            if (c == '\\')
+                c = Escape(m_Stream.get());
 
-			str += c;
-			c = Read();
-		}
+            str += static_cast<char>(c);
+            c = m_Stream.get();
+        }
 
-		return m_Token = Token(TK_STRING, str, m_Line);
-	}
+        return m_Token = Token(TK_STRING, str, m_Line);
+    }
 
-	if (c == '\'')
-	{
-		std::string str;
+    if (c == '\'')
+    {
+        std::string str;
 
-		c = Read();
-		while (c != EOF && c != '"')
-		{
-			if (c == '\\')
-				c = Escape(Read());
+        c = m_Stream.get();
+        while (c != EOF && c != '"')
+        {
+            if (c == '\\')
+                c = Escape(m_Stream.get());
 
-			str += c;
-			c = Read();
-		}
+            str += static_cast<char>(c);
+            c = m_Stream.get();
+        }
 
-		return m_Token = Token(TK_CHAR, str, m_Line);
-	}
+        return m_Token = Token(TK_CHAR, str, m_Line);
+    }
 
-	if (c == '0')
-	{
-		Mark();
-		int p = Read();
+    if (c == '0')
+    {
+        int p = m_Stream.get();
 
-		int mode = 0;
-		if (p == 'x' || p == 'X')
-			mode = 1;
-		else if (p == 'b' || p == 'B')
-			mode = 2;
+        int mode = 0;
+        if (p == 'x' || p == 'X')
+            mode = 1;
+        else if (p == 'b' || p == 'B')
+            mode = 2;
 
-		if (mode == 0)
-			Reset();
-		else
-		{
-			std::string str;
+        if (mode == 0)
+            m_Stream.putback(static_cast<char>(p));
+        else
+        {
+            std::string str;
 
-			c = Read();
-			do {
-				str += c;
-				Mark();
-				c = Read();
-			} while (isxdigit(c));
-			Reset();
+            c = m_Stream.get();
+            do
+            {
+                str += static_cast<char>(c);
+                c = m_Stream.get();
+            }
+            while (isxdigit(c));
+            m_Stream.putback(static_cast<char>(c));
 
-			return m_Token = Token(mode == 1 ? TK_HEX : TK_BIN, str, m_Line);
-		}
-	}
+            return m_Token = Token(mode == 1 ? TK_HEX : TK_BIN, str, m_Line);
+        }
+    }
 
-	if (isdigit(c))
-	{
-		std::string str;
+    if (isdigit(c))
+    {
+        std::string str;
 
-		do {
-			str += c;
-			Mark();
-			c = Read();
+        do
+        {
+            str += static_cast<char>(c);
+            c = m_Stream.get();
 
-			if (c == 'e' || c == 'E')
-			{
-				str += c;
-				c = Read();
-				if (c == '-')
-					str += c;
-				Mark();
-				c = Read();
-			}
+            if (c == 'e' || c == 'E')
+            {
+                str += static_cast<char>(c);
+                c = m_Stream.get();
+                if (c == '-')
+                    str += static_cast<char>(c);
+                c = m_Stream.get();
+            }
 
-		} while (isdigit(c) || c == '.');
-		Reset();
+        }
+        while (isdigit(c) || c == '.');
+        m_Stream.putback(static_cast<char>(c));
 
-		return m_Token = Token(TK_DEC, str, m_Line);
-	}
+        return m_Token = Token(TK_DEC, str, m_Line);
+    }
 
-	if (isalpha(c) || c == '_')
-	{
-		std::string str;
+    if (isalpha(c) || c == '_')
+    {
+        std::string str;
 
-		do {
-			str += c;
-			Mark();
-			c = Read();
-		} while (isalnum(c) || c == '_');
-		Reset();
+        do
+        {
+            str += static_cast<char>(c);
+            c = m_Stream.get();
+        }
+        while (isalnum(c) || c == '_');
+        m_Stream.putback(static_cast<char>(c));
 
-		return m_Token = Token(TK_IDENTIFIER, str, m_Line);
-	}
+        return m_Token = Token(TK_IDENTIFIER, str, m_Line);
+    }
 
-	return m_Token = Token(TK_OPERATOR, c, m_Line);
+    return m_Token = Token(TK_OPERATOR, c, m_Line);
 }
+
+

@@ -1,10 +1,15 @@
-@floor: num (x: num);
+@floor(x: num): num;
+@ceil(x: num): num;
 
-@sin: num (x: num);
-@cos: num (x: num);
+@sin(x: num): num;
+@cos(x: num): num;
+@tan(x: num): num;
 
-@atan2: num (y: num, x: num);
+@asin(x: num): num;
+@acos(x: num): num;
+@atan(x: num): num;
+@atan2(y: num, x: num): num;
 
-@exp: num (x: num);
-@pow: num (b: num, p: num);
-@sqrt: num (x: num);
+@exp(x: num): num;
+@pow(b: num, p: num): num;
+@sqrt(x: num): num;

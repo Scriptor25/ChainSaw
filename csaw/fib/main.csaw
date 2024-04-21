@@ -1,5 +1,7 @@
-@fib: num (n: num) {
-    ret (n <= 0) ? 0 : (n == 1) ? 1 : (fib(n - 1) + fib(n - 2));
+@fib(n: num): num {
+    if (n <= 0) ret 0;
+    if (n == 1) ret 1;
+    ret fib(n - 1) + fib(n - 2);
 }
 
 @main: num {

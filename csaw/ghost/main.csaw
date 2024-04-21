@@ -1,10 +1,5 @@
 ## Includes
-inc "bool.csaw";
-inc "random.csaw";
-
-@printf (fmt: str) ?;
-@readf: str (fmt: str) ?;
-@num: num (x: str);
+%inc "random.csaw"
 
 ## Main - Ghost Game
 @main: num {

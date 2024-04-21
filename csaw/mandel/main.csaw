@@ -1,22 +1,15 @@
-inc "complex.csaw";
-inc "../stdlib/io.csaw";
-inc "../stdlib/random.csaw";
-inc "../stdlib/types.csaw";
-inc "../stdlib/math.csaw";
-inc "../stdlib/img.csaw";
+%inc "complex.csaw"
 
 num MAX_ITER =  10;
 num SAMPLES  =   1;
 num WIDTH    =  10;
 num HEIGHT   = WIDTH;
 
-@mandel: num (z0: complex, max: num);
-
 @main: num {
 
-    num xc = #num(readf("xc: "));     # -0.5;
-    num yc = #num(readf("yc: "));     #    0;
-    num size = #num(readf("size: ")); #    2;
+    num xc = num(readf("xc: "));     ## -0.5
+    num yc = num(readf("yc: "));     ##    0
+    num size = num(readf("size: ")); ##    2
 
     img output = img(WIDTH, HEIGHT);
 	
@@ -43,7 +36,7 @@ num HEIGHT   = WIDTH;
     ret 0;
 }
 
-@mandel: num (z0: complex, max: num) {
+@mandel(z0: complex, max: num): num {
     complex z = z0;
 	num t = 0;
     for (; (t < max) && (z.abs() <= 2.0); t++)
