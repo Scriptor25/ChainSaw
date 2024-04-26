@@ -1,10 +1,11 @@
-#include <lang/Assert.hpp>
-#include <lang/Parser.hpp>
+#include <csaw/lang/Assert.hpp>
+#include <csaw/lang/Parser.hpp>
 
 #include <iostream>
 
-void csaw::lang::Parser::Parse(std::istream &stream, const std::function<void(StmtPtr stmt)> &callback,
-                               const std::vector<std::string> &includePaths)
+void csaw::Parser::Parse(std::istream &stream,
+                         const ParseCallback &callback,
+                         const std::vector<std::string> &includePaths)
 {
     Parser parser(stream, callback, includePaths);
 
@@ -16,7 +17,7 @@ void csaw::lang::Parser::Parse(std::istream &stream, const std::function<void(St
     while (!parser.AtEOF());
 }
 
-int csaw::lang::Parser::Escape(int c)
+int csaw::Parser::Escape(int c)
 {
     switch (c)
     {
@@ -31,35 +32,36 @@ int csaw::lang::Parser::Escape(int c)
     }
 }
 
-csaw::lang::Parser::Parser(std::istream &stream, const ParseCallback &callback,
-                           const std::vector<std::string> &includePaths)
+csaw::Parser::Parser(std::istream &stream,
+                     const ParseCallback &callback,
+                     const std::vector<std::string> &includePaths)
         : m_Stream(stream), m_Callback(callback), m_IncludePaths(includePaths)
 {
 }
 
-bool csaw::lang::Parser::AtEOF() const
+bool csaw::Parser::AtEOF() const
 {
     return m_Token.Type == TK_EOF;
 }
 
-bool csaw::lang::Parser::At(const TokenType type) const
+bool csaw::Parser::At(const TokenType type) const
 {
     return m_Token.Type == type;
 }
 
-bool csaw::lang::Parser::At(const std::string &value) const
+bool csaw::Parser::At(const std::string &value) const
 {
     return m_Token.Value == value;
 }
 
-csaw::lang::Token csaw::lang::Parser::Get()
+csaw::Token csaw::Parser::Get()
 {
     Token token = m_Token;
     Next();
     return token;
 }
 
-csaw::lang::Token csaw::lang::Parser::Expect(const TokenType type)
+csaw::Token csaw::Parser::Expect(const TokenType type)
 {
     CHAINSAW_ASSERT(At(type), "Unexpected type");
     Token token = m_Token;
@@ -67,13 +69,13 @@ csaw::lang::Token csaw::lang::Parser::Expect(const TokenType type)
     return token;
 }
 
-void csaw::lang::Parser::Expect(const std::string &value)
+void csaw::Parser::Expect(const std::string &value)
 {
     CHAINSAW_ASSERT(At(value), "Unexpected value");
     Next();
 }
 
-bool csaw::lang::Parser::NextIfAt(const TokenType type)
+bool csaw::Parser::NextIfAt(const TokenType type)
 {
     if (At(type))
     {
@@ -83,7 +85,7 @@ bool csaw::lang::Parser::NextIfAt(const TokenType type)
     return false;
 }
 
-bool csaw::lang::Parser::NextIfAt(const std::string &value)
+bool csaw::Parser::NextIfAt(const std::string &value)
 {
     if (At(value))
     {

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <lang/Def.hpp>
+#include <csaw/lang/Def.hpp>
+#include <csaw/Type.hpp>
 
 #include <functional>
 #include <istream>
 #include <string>
 #include <vector>
 
-namespace csaw::lang
+namespace csaw
 {
     enum TokenType
     {
@@ -45,7 +46,7 @@ namespace csaw::lang
 
     std::ostream &operator<<(std::ostream &out, const Token &token);
 
-    typedef std::function<void(StmtPtr stmt)> ParseCallback;
+    typedef std::function<void(const StmtPtr &stmt)> ParseCallback;
 
     class Parser
     {

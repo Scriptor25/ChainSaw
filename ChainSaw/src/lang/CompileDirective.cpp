@@ -1,10 +1,10 @@
-#include <lang/Assert.hpp>
-#include <lang/Parser.hpp>
+#include <csaw/lang/Assert.hpp>
+#include <csaw/lang/Parser.hpp>
 
 #include <filesystem>
 #include <fstream>
 
-void csaw::lang::Parser::ParseCompileDirective()
+void csaw::Parser::ParseCompileDirective()
 {
     auto directive = Expect(TK_COMP_DIR).Value;
     if (directive == "inc")

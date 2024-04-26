@@ -1,6 +1,6 @@
-#include <lang/Parser.hpp>
+#include <csaw/lang/Parser.hpp>
 
-csaw::lang::Token &csaw::lang::Parser::Next()
+csaw::Token &csaw::Parser::Next()
 {
     auto c = m_Stream.get();
 

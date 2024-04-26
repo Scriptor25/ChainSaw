@@ -1,12 +1,12 @@
 #pragma once
 
-#include <lang/Def.hpp>
-#include <lang/Stmt.hpp>
+#include <csaw/lang/Def.hpp>
+#include <csaw/lang/Stmt.hpp>
 
 #include <string>
 #include <vector>
 
-namespace csaw::lang
+namespace csaw
 {
     struct Expr : Stmt
     {

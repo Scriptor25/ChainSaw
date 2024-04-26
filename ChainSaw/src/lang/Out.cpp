@@ -1,7 +1,7 @@
-#include <lang/Def.hpp>
-#include <lang/Expr.hpp>
-#include <lang/Stmt.hpp>
-#include <lang/Type.hpp>
+#include <csaw/lang/Def.hpp>
+#include <csaw/lang/Expr.hpp>
+#include <csaw/lang/Stmt.hpp>
+#include "csaw/Type.hpp"
 
 #include <string>
 
@@ -16,12 +16,12 @@ static std::string spaces()
     return spaces;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, csaw::lang::TypePtr ptr)
+std::ostream &csaw::operator<<(std::ostream &out, csaw::TypePtr ptr)
 {
     return out << ptr->Name;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const StmtPtr ptr)
+std::ostream &csaw::operator<<(std::ostream &out, const StmtPtr ptr)
 {
     if (!ptr)
         return out << "nullptr";
@@ -55,7 +55,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const StmtPtr ptr)
     throw;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const FunStmt &stmt)
 {
     if (stmt.Constructor)
         out << '$';
@@ -97,7 +97,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const FunStmt &stmt)
     return out << ' ' << *stmt.Body;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const RetStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const RetStmt &stmt)
 {
     out << "ret";
     if (stmt.Value)
@@ -108,7 +108,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const RetStmt &stmt)
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const EnclosedStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const EnclosedStmt &stmt)
 {
     depth++;
     auto sp = spaces();
@@ -119,7 +119,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const EnclosedStmt &stmt
     return out << spaces() << '}';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const ForStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const ForStmt &stmt)
 {
     out << "for (";
     if (stmt.Pre) out << stmt.Pre;
@@ -133,7 +133,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const ForStmt &stmt)
     return out << ") " << stmt.Body;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const VarStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const VarStmt &stmt)
 {
     out << stmt.Name << ": " << stmt.Type;
     if (!stmt.Value)
@@ -146,19 +146,19 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const VarStmt &stmt)
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const WhileStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const WhileStmt &stmt)
 {
     return out << "while (" << stmt.Condition << ") " << stmt.Condition;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const IfStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const IfStmt &stmt)
 {
     out << "if (" << stmt.Condition << ") " << stmt.True;
     if (stmt.False) out << " else " << stmt.False;
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const ThingStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const ThingStmt &stmt)
 {
     out << "thing: " << stmt.Name;
     if (!stmt.Group.empty()) out << " : " << stmt.Group;
@@ -181,14 +181,14 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const ThingStmt &stmt)
     return out << spaces() << "\n}";
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const AliasStmt &stmt)
+std::ostream &csaw::operator<<(std::ostream &out, const AliasStmt &stmt)
 {
     out << "alias " << stmt.Name << ": " << stmt.Origin;
     if (end) out << ';';
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const ExprPtr ptr)
+std::ostream &csaw::operator<<(std::ostream &out, const ExprPtr ptr)
 {
     if (auto expr = std::dynamic_pointer_cast<CallExpr>(ptr))
         return out << *expr;
@@ -217,7 +217,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const ExprPtr ptr)
 }
 
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const CallExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const CallExpr &expr)
 {
     out << expr.Callee << '(';
     for (size_t i = 0; i < expr.Args.size(); i++)
@@ -229,17 +229,17 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const CallExpr &expr)
     return out << ')';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const NumExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const NumExpr &expr)
 {
     return out << expr.Value;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const ChrExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const ChrExpr &expr)
 {
     return out << '\'' << expr.Value << '\'';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const StrExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const StrExpr &expr)
 {
     std::string value;
     for (auto c: expr.Value)
@@ -269,17 +269,17 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const StrExpr &expr)
     return out << '"' << value << '"';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const IdentExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const IdentExpr &expr)
 {
     return out << expr.Id;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const BinExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const BinExpr &expr)
 {
     return out << expr.Left << ' ' << expr.Operator << ' ' << expr.Right;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const UnExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const UnExpr &expr)
 {
     if (!expr.RightOp) out << expr.Operator;
     out << expr.Value;
@@ -287,22 +287,22 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const UnExpr &expr)
     return out;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const IndexExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const IndexExpr &expr)
 {
     return out << expr.Array << '[' << expr.Index << ']';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const MemberExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const MemberExpr &expr)
 {
     return out << expr.Object << '.' << expr.Member;
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const VarArgExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const VarArgExpr &expr)
 {
     return out << '?' << expr.Type << '[' << expr.Index << ']';
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const SelExpr &expr)
+std::ostream &csaw::operator<<(std::ostream &out, const SelExpr &expr)
 {
     return out << expr.Condition << " ? " << expr.True << " : " << expr.False;
 }

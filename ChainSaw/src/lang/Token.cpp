@@ -1,26 +1,26 @@
-#include <lang/Parser.hpp>
+#include <csaw/lang/Parser.hpp>
 
-csaw::lang::Token::Token(const TokenType type, const std::string &value, const size_t line)
+csaw::Token::Token(const TokenType type, const std::string &value, const size_t line)
         : Type(type), Value(value), Line(line)
 {
 }
 
-csaw::lang::Token::Token(const TokenType type, const int value, const size_t line)
+csaw::Token::Token(const TokenType type, const int value, const size_t line)
         : Token(type, std::string(1, value), line)
 {
 }
 
-csaw::lang::Token::Token(const size_t line)
+csaw::Token::Token(const size_t line)
         : Token(TK_EOF, std::string(), line)
 {
 }
 
-csaw::lang::Token::Token()
+csaw::Token::Token()
         : Token(TK_EOF, std::string(), 0)
 {
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const TokenType &type)
+std::ostream &csaw::operator<<(std::ostream &out, const TokenType &type)
 {
     switch (type)
     {
@@ -37,7 +37,7 @@ std::ostream &csaw::lang::operator<<(std::ostream &out, const TokenType &type)
     }
 }
 
-std::ostream &csaw::lang::operator<<(std::ostream &out, const Token &token)
+std::ostream &csaw::operator<<(std::ostream &out, const Token &token)
 {
     return out << token.Value << "[" << token.Type << "](" << token.Line << ")";
 }

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <lang/Def.hpp>
+#include <csaw/lang/Def.hpp>
+#include <csaw/Type.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace csaw::lang
+namespace csaw
 {
     struct Stmt
     {

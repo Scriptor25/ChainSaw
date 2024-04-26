@@ -1,9 +1,9 @@
-#include <lang/Assert.hpp>
-#include <lang/Parser.hpp>
-#include <lang/Stmt.hpp>
-#include <lang/Expr.hpp>
+#include <csaw/lang/Assert.hpp>
+#include <csaw/lang/Parser.hpp>
+#include <csaw/lang/Stmt.hpp>
+#include <csaw/lang/Expr.hpp>
 
-csaw::lang::StmtPtr csaw::lang::Parser::ParseStmt(bool end)
+csaw::StmtPtr csaw::Parser::ParseStmt(bool end)
 {
     while (At(TK_COMP_DIR)) ParseCompileDirective();
 
@@ -32,7 +32,7 @@ csaw::lang::StmtPtr csaw::lang::Parser::ParseStmt(bool end)
 // @name:callee(args...)
 // @name:callee:result
 // @name:callee(args...):result
-csaw::lang::FunStmtPtr csaw::lang::Parser::ParseFunStmt(bool end)
+csaw::FunStmtPtr csaw::Parser::ParseFunStmt(bool end)
 {
     auto line = m_Line;
 
@@ -92,7 +92,7 @@ csaw::lang::FunStmtPtr csaw::lang::Parser::ParseFunStmt(bool end)
     return std::make_shared<FunStmt>(line, constructor, name, callee, args, vararg, result, body);
 }
 
-csaw::lang::RetStmtPtr csaw::lang::Parser::ParseRetStmt(bool end)
+csaw::RetStmtPtr csaw::Parser::ParseRetStmt(bool end)
 {
     auto line = m_Line;
 
@@ -107,7 +107,7 @@ csaw::lang::RetStmtPtr csaw::lang::Parser::ParseRetStmt(bool end)
     return std::make_shared<RetStmt>(line, value);
 }
 
-csaw::lang::EnclosedStmtPtr csaw::lang::Parser::ParseEnclosedStmt()
+csaw::EnclosedStmtPtr csaw::Parser::ParseEnclosedStmt()
 {
     auto line = m_Line;
 
@@ -120,7 +120,7 @@ csaw::lang::EnclosedStmtPtr csaw::lang::Parser::ParseEnclosedStmt()
     return std::make_shared<EnclosedStmt>(line, content);
 }
 
-csaw::lang::ForStmtPtr csaw::lang::Parser::ParseForStmt()
+csaw::ForStmtPtr csaw::Parser::ParseForStmt()
 {
     auto line = m_Line;
 
@@ -146,7 +146,7 @@ csaw::lang::ForStmtPtr csaw::lang::Parser::ParseForStmt()
     return std::make_shared<ForStmt>(line, pre, condition, loop, body);
 }
 
-csaw::lang::VarStmtPtr csaw::lang::Parser::ParseVarStmt(ExprPtr expr, bool end)
+csaw::VarStmtPtr csaw::Parser::ParseVarStmt(ExprPtr expr, bool end)
 {
     auto line = m_Line;
 
@@ -173,7 +173,7 @@ csaw::lang::VarStmtPtr csaw::lang::Parser::ParseVarStmt(ExprPtr expr, bool end)
     return nullptr;
 }
 
-csaw::lang::WhileStmtPtr csaw::lang::Parser::ParseWhileStmt()
+csaw::WhileStmtPtr csaw::Parser::ParseWhileStmt()
 {
     auto line = m_Line;
 
@@ -189,7 +189,7 @@ csaw::lang::WhileStmtPtr csaw::lang::Parser::ParseWhileStmt()
     return std::make_shared<WhileStmt>(line, condition, body);
 }
 
-csaw::lang::IfStmtPtr csaw::lang::Parser::ParseIfStmt()
+csaw::IfStmtPtr csaw::Parser::ParseIfStmt()
 {
     auto line = m_Line;
 
@@ -208,7 +208,7 @@ csaw::lang::IfStmtPtr csaw::lang::Parser::ParseIfStmt()
     return std::make_shared<IfStmt>(line, condition, _true, _false);
 }
 
-csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
+csaw::ThingStmtPtr csaw::Parser::ParseThingStmt(bool end)
 {
     auto line = m_Line;
 
@@ -243,7 +243,7 @@ csaw::lang::ThingStmtPtr csaw::lang::Parser::ParseThingStmt(bool end)
     return std::make_shared<ThingStmt>(line, name, group, elements);
 }
 
-csaw::lang::AliasStmtPtr csaw::lang::Parser::ParseAliasStmt(bool end)
+csaw::AliasStmtPtr csaw::Parser::ParseAliasStmt(bool end)
 {
     auto line = m_Line;
 
@@ -256,24 +256,24 @@ csaw::lang::AliasStmtPtr csaw::lang::Parser::ParseAliasStmt(bool end)
     return std::make_shared<AliasStmt>(line, name, origin);
 }
 
-csaw::lang::Stmt::Stmt(size_t line)
+csaw::Stmt::Stmt(size_t line)
         : Line(line)
 {
 }
 
-csaw::lang::EnclosedStmt::EnclosedStmt(size_t line, const std::vector<StmtPtr> &content)
+csaw::EnclosedStmt::EnclosedStmt(size_t line, const std::vector<StmtPtr> &content)
         : Stmt(line), Content(content)
 {
 }
 
-csaw::lang::FunStmt::FunStmt(size_t line,
-                             bool constructor,
-                             const std::string &name,
-                             const TypePtr callee,
-                             const std::vector<std::pair<std::string, TypePtr>> &args,
-                             const std::string &vararg,
-                             const TypePtr result,
-                             const EnclosedStmtPtr body)
+csaw::FunStmt::FunStmt(size_t line,
+                       bool constructor,
+                       const std::string &name,
+                       const TypePtr callee,
+                       const std::vector<std::pair<std::string, TypePtr>> &args,
+                       const std::string &vararg,
+                       const TypePtr result,
+                       const EnclosedStmtPtr body)
         : Stmt(line),
           Constructor(constructor),
           Name(name),
@@ -285,40 +285,40 @@ csaw::lang::FunStmt::FunStmt(size_t line,
 {
 }
 
-csaw::lang::RetStmt::RetStmt(size_t line, ExprPtr value)
+csaw::RetStmt::RetStmt(size_t line, ExprPtr value)
         : Stmt(line), Value(value)
 {
 }
 
-csaw::lang::ForStmt::ForStmt(size_t line, StmtPtr pre, ExprPtr condition, StmtPtr loop, StmtPtr body)
+csaw::ForStmt::ForStmt(size_t line, StmtPtr pre, ExprPtr condition, StmtPtr loop, StmtPtr body)
         : Stmt(line), Pre(pre), Condition(condition), Loop(loop), Body(body)
 {
 }
 
-csaw::lang::VarStmt::VarStmt(size_t line, const std::string &name, const TypePtr type, ExprPtr value)
+csaw::VarStmt::VarStmt(size_t line, const std::string &name, const TypePtr type, ExprPtr value)
         : Stmt(line), Name(name), Type(type), Value(value)
 {
 }
 
-csaw::lang::WhileStmt::WhileStmt(size_t line, ExprPtr condition, StmtPtr body)
+csaw::WhileStmt::WhileStmt(size_t line, ExprPtr condition, StmtPtr body)
         : Stmt(line), Condition(condition), Body(body)
 {
 }
 
-csaw::lang::IfStmt::IfStmt(size_t line, ExprPtr condition, StmtPtr _true, StmtPtr _false)
+csaw::IfStmt::IfStmt(size_t line, ExprPtr condition, StmtPtr _true, StmtPtr _false)
         : Stmt(line), Condition(condition), True(_true), False(_false)
 {
 }
 
-csaw::lang::ThingStmt::ThingStmt(size_t line,
-                                 const std::string &name,
-                                 const std::string &group,
-                                 const std::map<std::string, TypePtr> &elements)
+csaw::ThingStmt::ThingStmt(size_t line,
+                           const std::string &name,
+                           const std::string &group,
+                           const std::map<std::string, TypePtr> &elements)
         : Stmt(line), Name(name), Group(group), Elements(elements)
 {
 }
 
-csaw::lang::AliasStmt::AliasStmt(size_t line, const std::string &name, const TypePtr origin)
+csaw::AliasStmt::AliasStmt(size_t line, const std::string &name, const TypePtr origin)
         : Stmt(line), Name(name), Origin(origin)
 {
 }

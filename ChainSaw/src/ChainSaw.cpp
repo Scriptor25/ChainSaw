@@ -1,19 +1,18 @@
-﻿#include <lang/Parser.hpp>
-
-#include <graphviz/cgraph.h>
-#include <graphviz/gvc.h>
+﻿#include <csaw/codegen/Def.hpp>
+#include <csaw/codegen/Builder.hpp>
+#include <csaw/lang/Parser.hpp>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 
-Agraph_t *g = nullptr;
+csaw::Builder builder;
 
-static void callback(csaw::lang::StmtPtr stmt)
+static void callback(const csaw::StmtPtr &ptr)
 {
-    std::cout << stmt << std::endl;
-    Graph(g, stmt);
+    std::cout << ptr << std::endl;
+    csaw::CodeGen(builder, ptr);
 }
 
 int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
@@ -91,18 +90,7 @@ int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
     if (!include.empty())
         includePaths.push_back(include);
 
-    g = agopen((char *) "", Agdirected, &AgDefaultDisc);
-
-    csaw::lang::Parser::Parse(stream, callback, includePaths);
-
-    std::cout << agnsubg(g) << std::endl;
-
-    GVC_t *gvc = gvContext();
-    gvLayout(gvc, g, "dot");
-    gvRenderFilename(gvc, g, "svg", "test.svg");
-    gvFreeLayout(gvc, g);
-    agclose(g);
-    gvFreeContext(gvc);
+    csaw::Parser::Parse(stream, callback, includePaths);
 
     stream.close();
     return 0;
