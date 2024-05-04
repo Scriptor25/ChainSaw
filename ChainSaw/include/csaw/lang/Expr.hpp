@@ -1,106 +1,109 @@
 #pragma once
 
+#include <vector>
 #include <csaw/lang/Def.hpp>
 #include <csaw/lang/Stmt.hpp>
 
-#include <string>
-#include <vector>
-
 namespace csaw
 {
-    struct Expr : Stmt
+    struct Expression : Statement
     {
-        explicit Expr(size_t line);
+        explicit Expression(size_t line);
     };
 
-    struct CallExpr : Expr
+    struct BinaryExpression : Expression
     {
-        CallExpr(size_t line, ExprPtr callee, const std::vector<ExprPtr> &args);
+        BinaryExpression(size_t line, const std::string& op, const ExpressionPtr& left, const ExpressionPtr& right);
 
-        ExprPtr Callee;
-        std::vector<ExprPtr> Args;
+        std::string Operator;
+        ExpressionPtr Left;
+        ExpressionPtr Right;
     };
 
-    struct NumExpr : Expr
+    struct CallExpression : Expression
     {
-        NumExpr(size_t line, double value);
+        CallExpression(size_t line, const ExpressionPtr& callee, const std::vector<ExpressionPtr>& args);
 
-        NumExpr(size_t line, const std::string &value, int base);
-
-        double Value;
+        ExpressionPtr Callee;
+        std::vector<ExpressionPtr> Args;
     };
 
-    struct ChrExpr : Expr
+    struct CastExpression : Expression
     {
-        ChrExpr(size_t line, char value);
+        CastExpression(size_t line, const TypePtr& type, const ExpressionPtr& castee);
 
-        ChrExpr(size_t line, const std::string &value);
+        TypePtr Type;
+        ExpressionPtr Castee;
+    };
+
+    struct CharExpression : Expression
+    {
+        CharExpression(size_t line, char value);
+        CharExpression(size_t line, const std::string& value);
 
         char Value;
     };
 
-    struct StrExpr : Expr
+    struct IdentifierExpression : Expression
     {
-        StrExpr(size_t line, const std::string &value);
-
-        std::string Value;
-    };
-
-    struct IdentExpr : Expr
-    {
-        IdentExpr(size_t line, const std::string &id);
+        IdentifierExpression(size_t line, const std::string& id);
 
         std::string Id;
     };
 
-    struct BinExpr : Expr
+    struct IndexExpression : Expression
     {
-        BinExpr(size_t line, const std::string &op, ExprPtr left, ExprPtr right);
+        IndexExpression(size_t line, const ExpressionPtr& array, const ExpressionPtr& index);
 
-        std::string Operator;
-        ExprPtr Left;
-        ExprPtr Right;
+        ExpressionPtr Array;
+        ExpressionPtr Index;
     };
 
-    struct UnExpr : Expr
+    struct MemberExpression : Expression
     {
-        UnExpr(size_t line, const std::string &op, ExprPtr value, bool rightop);
+        MemberExpression(size_t line, const ExpressionPtr& object, const std::string& member);
 
-        std::string Operator;
-        ExprPtr Value;
-        bool RightOp;
-    };
-
-    struct IndexExpr : Expr
-    {
-        IndexExpr(size_t line, ExprPtr array, ExprPtr index);
-
-        ExprPtr Array;
-        ExprPtr Index;
-    };
-
-    struct MemberExpr : Expr
-    {
-        MemberExpr(size_t line, ExprPtr object, const std::string &member);
-
-        ExprPtr Object;
+        ExpressionPtr Object;
         std::string Member;
     };
 
-    struct VarArgExpr : Expr
+    struct NumberExpression : Expression
     {
-        VarArgExpr(size_t line, const std::string &type, ExprPtr index);
+        NumberExpression(size_t line, double value);
+        NumberExpression(size_t line, const std::string& value, int base);
 
-        std::string Type;
-        ExprPtr Index;
+        double Value;
     };
 
-    struct SelExpr : Expr
+    struct SelectExpression : Expression
     {
-        SelExpr(size_t line, ExprPtr condition, ExprPtr _true, ExprPtr _false);
+        SelectExpression(size_t line, const ExpressionPtr& condition, const ExpressionPtr& _true, const ExpressionPtr& _false);
 
-        ExprPtr Condition;
-        ExprPtr True;
-        ExprPtr False;
+        ExpressionPtr Condition;
+        ExpressionPtr True;
+        ExpressionPtr False;
+    };
+
+    struct StringExpression : Expression
+    {
+        StringExpression(size_t line, const std::string& value);
+
+        std::string Value;
+    };
+
+    struct VarArgExpression : Expression
+    {
+        VarArgExpression(size_t line, const TypePtr& type);
+
+        TypePtr Type;
+    };
+
+    struct UnaryExpression : Expression
+    {
+        UnaryExpression(size_t line, const std::string& op, const ExpressionPtr& value, bool rightop);
+
+        std::string Operator;
+        ExpressionPtr Value;
+        bool RightOp;
     };
 }

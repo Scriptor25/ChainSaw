@@ -1,12 +1,11 @@
-#include <csaw/lang/Assert.hpp>
-#include <csaw/lang/Parser.hpp>
-
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <csaw/lang/Parser.hpp>
 
 void csaw::Parser::ParseCompileDirective()
 {
-    auto directive = Expect(TK_COMP_DIR).Value;
+    const auto directive = Expect(TK_COMPILE_DIRECTIVE).Value;
     if (directive == "inc")
     {
         const auto filename = Expect(TK_STRING).Value;
@@ -17,10 +16,14 @@ void csaw::Parser::ParseCompileDirective()
             path = path / filename;
             stream.open(path);
         }
-        CHAINSAW_ASSERT(stream.is_open(), "Failed to include file");
+
+        if (!stream.is_open())
+            throw std::runtime_error("failed to open include file");
 
         Parse(stream, m_Callback, m_IncludePaths);
         stream.close();
         return;
     }
+
+    std::cerr << "Unhandled compile directive '" << directive << "'" << std::endl;
 }

@@ -1,7 +1,7 @@
-@random(minc: num, mexc: num): num {
+@random(minc: flt64, mexc: flt64): flt64 {
     ret minc + (mexc - minc) * random();
 }
 
-@randomInt(minc: num, mexc: num): num {
-    ret floor(random(minc, mexc));
+@randomInt(minc: int32, mexc: int32): int32 {
+    ret [int32]random(minc, mexc);
 }

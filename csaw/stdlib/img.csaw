@@ -1,6 +1,6 @@
-thing: img;
+def img;
 
-$img(width: num, height: num);
+$img(width: int32, height: int32);
 
-@set:img(x: num, y: num, argb: num);
-@write:img(format: str, filename: str);
+@set:img(x: int32, y: int32, argb: int32);
+@write:img(format: int8*, filename: int8*);

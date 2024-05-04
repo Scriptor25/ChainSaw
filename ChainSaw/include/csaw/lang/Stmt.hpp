@@ -1,34 +1,47 @@
 #pragma once
 
-#include <csaw/lang/Def.hpp>
-#include <csaw/Type.hpp>
-
-#include <map>
-#include <memory>
-#include <string>
 #include <vector>
+#include <csaw/Type.hpp>
+#include <csaw/lang/Def.hpp>
 
 namespace csaw
 {
-    struct Stmt
+    struct Statement
     {
-        explicit Stmt(size_t line);
-
-        virtual ~Stmt() = default;
+        explicit Statement(size_t line);
+        virtual ~Statement() = default;
 
         size_t Line;
     };
 
-    struct FunStmt : Stmt
+    struct AliasStmt : Statement
     {
-        FunStmt(size_t line,
-                bool constructor,
-                const std::string &name,
-                TypePtr callee,
-                const std::vector<std::pair<std::string, TypePtr>> &args,
-                const std::string &vararg,
-                TypePtr result,
-                EnclosedStmtPtr body);
+        AliasStmt(size_t line, const std::string& name, const TypePtr& origin);
+
+        std::string Name;
+        TypePtr Origin;
+    };
+
+    struct ScopeStatement : Statement
+    {
+        ScopeStatement(size_t line, const std::vector<StatementPtr>& content);
+
+        std::vector<StatementPtr> Body;
+    };
+
+    struct ForStatement : Statement
+    {
+        ForStatement(size_t line, const StatementPtr& pre, const ExpressionPtr& condition, const StatementPtr& loop, const StatementPtr& body);
+
+        StatementPtr Pre;
+        ExpressionPtr Condition;
+        StatementPtr Loop;
+        StatementPtr Body;
+    };
+
+    struct FunctionStatement : Statement
+    {
+        FunctionStatement(size_t line, bool constructor, const std::string& name, const TypePtr& callee, const std::vector<std::pair<std::string, TypePtr>>& args, const std::string& vararg, const TypePtr& result, const StatementPtr& body);
 
         bool Constructor;
         std::string Name;
@@ -36,76 +49,50 @@ namespace csaw
         std::vector<std::pair<std::string, TypePtr>> Args;
         std::string VarArg;
         TypePtr Result;
-        EnclosedStmtPtr Body;
+        StatementPtr Body;
     };
 
-    struct RetStmt : Stmt
+    struct IfStatement : Statement
     {
-        RetStmt(size_t line, ExprPtr value);
+        IfStatement(size_t line, const ExpressionPtr& condition, const StatementPtr& _true, const StatementPtr& _false);
 
-        ExprPtr Value;
+        ExpressionPtr Condition;
+        StatementPtr True;
+        StatementPtr False;
     };
 
-    struct EnclosedStmt : Stmt
+    struct RetStatement : Statement
     {
-        EnclosedStmt(size_t line, const std::vector<StmtPtr> &content);
+        RetStatement(size_t line, const ExpressionPtr& value);
 
-        std::vector<StmtPtr> Content;
+        ExpressionPtr Value;
     };
 
-    struct ForStmt : Stmt
+    struct DefStatement : Statement
     {
-        ForStmt(size_t line, StmtPtr pre, ExprPtr condition, StmtPtr loop, StmtPtr body);
+        DefStatement(size_t line, const std::string& name);
+        DefStatement(size_t line, const std::string& name, const TypePtr& origin);
+        DefStatement(size_t line, const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);
 
-        StmtPtr Pre;
-        ExprPtr Condition;
-        StmtPtr Loop;
-        StmtPtr Body;
+        std::string Name;
+        std::vector<std::pair<std::string, TypePtr>> Elements;
+        TypePtr Origin;
     };
 
-    struct VarStmt : Stmt
+    struct VariableStatement : Statement
     {
-        VarStmt(size_t line, const std::string &name, TypePtr type, ExprPtr value);
+        VariableStatement(size_t line, const std::string& name, const TypePtr& type, const ExpressionPtr& value);
 
         std::string Name;
         TypePtr Type;
-        ExprPtr Value;
+        ExpressionPtr Value;
     };
 
-    struct WhileStmt : Stmt
+    struct WhileStatement : Statement
     {
-        WhileStmt(size_t line, ExprPtr condition, StmtPtr body);
+        WhileStatement(size_t line, const ExpressionPtr& condition, const StatementPtr& body);
 
-        ExprPtr Condition;
-        StmtPtr Body;
-    };
-
-    struct IfStmt : Stmt
-    {
-        IfStmt(size_t line, ExprPtr condition, StmtPtr _true, StmtPtr _false);
-
-        ExprPtr Condition;
-        StmtPtr True;
-        StmtPtr False;
-    };
-
-    struct ThingStmt : Stmt
-    {
-        ThingStmt(size_t line,
-                  const std::string &name,
-                  const std::string &group,
-                  const std::map<std::string, TypePtr> &elements);
-
-        std::string Name;
-        std::string Group;
-        std::map<std::string, TypePtr> Elements;
-    };
-
-    struct AliasStmt : Stmt
-    {
-        AliasStmt(size_t line, const std::string &name, TypePtr origin);
-
-        std::string Name;
-        TypePtr Origin;
+        ExpressionPtr Condition;
+        StatementPtr Body;
     };
 }

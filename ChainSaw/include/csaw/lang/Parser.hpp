@@ -1,12 +1,10 @@
 #pragma once
 
-#include <csaw/lang/Def.hpp>
-#include <csaw/Type.hpp>
-
 #include <functional>
-#include <istream>
 #include <string>
 #include <vector>
+#include <csaw/Type.hpp>
+#include <csaw/lang/Def.hpp>
 
 namespace csaw
 {
@@ -24,19 +22,17 @@ namespace csaw
         TK_CHAR,
         TK_OPERATOR,
 
-        TK_COMP_DIR,
+        TK_COMPILE_DIRECTIVE,
     };
 
-    std::ostream &operator<<(std::ostream &out, const TokenType &type);
+    const char* ToString(TokenType type);
+    std::ostream& operator<<(std::ostream& out, const TokenType& type);
 
     struct Token
     {
-        Token(TokenType type, const std::string &value, size_t line);
-
+        Token(TokenType type, const std::string& value, size_t line);
         Token(TokenType type, int value, size_t line);
-
         explicit Token(size_t line);
-
         Token();
 
         TokenType Type;
@@ -44,99 +40,67 @@ namespace csaw
         size_t Line;
     };
 
-    std::ostream &operator<<(std::ostream &out, const Token &token);
+    std::ostream& operator<<(std::ostream& out, const Token& token);
 
-    typedef std::function<void(const StmtPtr &stmt)> ParseCallback;
+    typedef std::function<void(const StatementPtr& ptr)> ParseCallback;
 
     class Parser
     {
     public:
-        static void Parse(std::istream &stream,
-                          const ParseCallback &callback,
-                          const std::vector<std::string> &includePaths);
+        static void Parse(std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
 
     private:
         static int Escape(int c);
 
     private:
-        explicit Parser(std::istream &stream,
-                        const ParseCallback &callback,
-                        const std::vector<std::string> &includePaths);
+        explicit Parser(std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
 
-        Token &Next();
+        Token& Next();
 
         [[nodiscard]] bool AtEOF() const;
-
         [[nodiscard]] bool At(TokenType type) const;
-
-        [[nodiscard]] bool At(const std::string &value) const;
+        [[nodiscard]] bool At(const std::string& value) const;
 
         Token Get();
-
         Token Expect(TokenType type);
-
-        void Expect(const std::string &value);
-
-        bool NextIfAt(TokenType type);
-
-        bool NextIfAt(const std::string &value);
+        void Expect(const std::string& value);
+        bool NextIfAt(const std::string& value);
 
         void ParseCompileDirective(); // \x
 
         TypePtr ParseType();
+        TypePtr ParseType(const TypePtr& base);
 
-        StmtPtr ParseStmt(bool end = true);
+        StatementPtr ParseStatement(bool end = true);
+        FunctionStatementPtr ParseFunctionStatement();
+        RetStatementPtr ParseRetStatement(bool end);
+        ScopeStatementPtr ParseScopeStatement();
+        ForStatementPtr ParseForStatement();
+        VariableStatementPtr ParseVariableStatement(const ExpressionPtr& expr, bool end);
+        WhileStatementPtr ParseWhileStatement();
+        IfStatementPtr ParseIfStatement();
+        DefStatementPtr ParseDefStatement();
 
-        FunStmtPtr ParseFunStmt(bool end);
-
-        RetStmtPtr ParseRetStmt(bool end);
-
-        EnclosedStmtPtr ParseEnclosedStmt();
-
-        ForStmtPtr ParseForStmt();
-
-        VarStmtPtr ParseVarStmt(ExprPtr expr, bool end);
-
-        WhileStmtPtr ParseWhileStmt();
-
-        IfStmtPtr ParseIfStmt();
-
-        ThingStmtPtr ParseThingStmt(bool end);
-
-        AliasStmtPtr ParseAliasStmt(bool end);
-
-        ExprPtr ParseExpr();
-
-        ExprPtr ParseSelExpr(); // x ? y : z
-
-        ExprPtr ParseBinExpr(); // x op y
-
-        ExprPtr ParseLogicExpr(); // x [&, &=, &&, |, |=, ||, ^, ^=] y
-
-        ExprPtr ParseCmpExpr(); // x [=, ==, !=] y
-
-        ExprPtr ParseShiftExpr(); // x [<, >, <=, >=, <<, >>, <<=, >>=] y
-
-        ExprPtr ParseSumExpr(); // x [+, +=, (++), -, -=, (--)] y
-
-        ExprPtr ParseProExpr(); // x [*, *=, /, /=, %, %=] y
-
-        ExprPtr ParseIndexExpr(); // x[y]
-
-        ExprPtr ParseCallExpr(); // x(...)
-
-        ExprPtr ParseMemberExpr(); // x.y
-
-        ExprPtr ParseMemberExpr(ExprPtr expr); // x.y
-
-        ExprPtr ParsePrimExpr(); // x
+        ExpressionPtr ParseExpression();
+        ExpressionPtr ParseSelectExpression(); // x ? y : z
+        ExpressionPtr ParseBinaryExpression(); // x op y
+        ExpressionPtr ParseLogicExpression(); // x [&, &=, &&, |, |=, ||, ^, ^=] y
+        ExpressionPtr ParseCompareExpression(); // x [=, ==, !=] y
+        ExpressionPtr ParseShiftExpression(); // x [<, >, <=, >=, <<, >>, <<=, >>=] y
+        ExpressionPtr ParseSumExpression(); // x [+, +=, (++), -, -=, (--)] y
+        ExpressionPtr ParseProductExpression(); // x [*, *=, /, /=, %, %=] y
+        ExpressionPtr ParseIndexExpression(); // x[y]
+        ExpressionPtr ParseCallExpression(); // x(...)
+        ExpressionPtr ParseMemberExpression(); // x.y
+        ExpressionPtr ParseMemberExpression(ExpressionPtr expr); // x.y
+        ExpressionPtr ParsePrimaryExpression(); // x
 
     private:
         size_t m_Line = 1;
         Token m_Token;
 
-        std::istream &m_Stream;
+        std::istream& m_Stream;
         ParseCallback m_Callback;
-        const std::vector<std::string> &m_IncludePaths;
+        const std::vector<std::string>& m_IncludePaths;
     };
 }

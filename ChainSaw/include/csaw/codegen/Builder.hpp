@@ -1,84 +1,51 @@
 #pragma once
 
-#include <csaw/codegen/Def.hpp>
-#include <csaw/Type.hpp>
-
-#include <map>
 #include <memory>
-#include <vector>
+#include <csaw/Type.hpp>
+#include <csaw/lang/Def.hpp>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 
 namespace csaw
 {
     class Builder
     {
     public:
-        Builder();
+        explicit Builder(const std::string& moduleName);
 
-        FunctionPtr CreateFunction(const std::string &name, const FunTypePtr &type, bool constructor);
-
-        FunctionPtr GetFunction(const std::string &name, const FunTypePtr &type);
-
-        FunctionPtr GetFunction(const TypePtr &callee, const std::string &name, const std::vector<TypePtr> &args);
-
-        void SetInsertPoint(const BlockPtr &ptr);
-
-        BlockPtr GetInsertPoint();
-
-        void ClearValues();
-
-        void SetValue(const std::string &name, const ValuePtr &value);
-
-        ValuePtr GetValue(const std::string &name);
-
-        ValuePtr CreateStore(const ValuePtr &dst, const ValuePtr &src);
-
-        ValuePtr CreateCmpEQ(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCmpNE(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCmpLT(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCmpGT(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCmpLE(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCmpGE(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateAnd(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateLAnd(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateOr(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateLOr(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateXOr(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateShL(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateShR(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateAdd(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateSub(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateMul(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateDiv(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateRem(const ValuePtr &left, const ValuePtr &right);
-
-        ValuePtr CreateCall(const FunctionPtr &function, const ValuePtr &callee, const std::vector<ValuePtr> &args);
-
-        ValuePtr CreateConstNum(double x);
-
-        void CreateBranch(const ValuePtr &condition, const std::vector<BlockPtr> &blocks);
-
-        void CreateRet(const ValuePtr &value);
+        void Gen(const StatementPtr& ptr);
 
     private:
-        std::map<std::pair<std::string, FunTypePtr>, FunctionPtr> m_Functions;
-        std::map<std::string, ValuePtr> m_Values;
-        BlockPtr m_InsertPoint;
+        void Gen(const ScopeStatement& statement);
+        void Gen(const ForStatement& statement);
+        void Gen(const FunctionStatement& statement);
+        void Gen(const IfStatement& statement);
+        void Gen(const RetStatement& statement);
+        void Gen(const DefStatement& statement);
+        void Gen(const VariableStatement& statement);
+        void Gen(const WhileStatement& statement);
+
+        llvm::Value* Gen(const ExpressionPtr& ptr);
+        llvm::Value* Gen(const BinaryExpression& expression);
+        llvm::Value* Gen(const CallExpression& expression);
+        llvm::Value* Gen(const CharExpression& expression);
+        llvm::Value* Gen(const IdentifierExpression& expression);
+        llvm::Value* Gen(const IndexExpression& expression);
+        llvm::Value* Gen(const MemberExpression& expression);
+        llvm::Value* Gen(const NumberExpression& expression);
+        llvm::Value* Gen(const SelectExpression& expression);
+        llvm::Value* Gen(const StringExpression& expression);
+        llvm::Value* Gen(const UnaryExpression& expression);
+        llvm::Value* Gen(const VarArgExpression& expression);
+
+        llvm::Type* Gen(const TypePtr& ptr);
+
+        [[nodiscard]] bool IsGlobal() const;
+
+    private:
+        std::unique_ptr<llvm::LLVMContext> m_Context;
+        std::unique_ptr<llvm::IRBuilder<>> m_Builder;
+        std::unique_ptr<llvm::Module> m_Module;
     };
 }

@@ -1,21 +1,12 @@
-﻿#include <csaw/codegen/Def.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/lang/Parser.hpp>
-
-#include <filesystem>
+﻿#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <csaw/lang/Parser.hpp>
 
-csaw::Builder builder;
+#include "csaw/codegen/Builder.hpp"
 
-static void callback(const csaw::StmtPtr &ptr)
-{
-    std::cout << ptr << std::endl;
-    csaw::CodeGen(builder, ptr);
-}
-
-int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
+int main(int argc, char** argv)
 {
     std::string exec = argv[0];
     std::map<std::string, std::string> options;
@@ -50,13 +41,14 @@ int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
         file = arg;
     }
 
-    if (std::find(flags.begin(), flags.end(), "help") != flags.end())
+    if (std::ranges::find(flags, "help") != flags.end())
     {
-        std::cout << "Usage: " << exec << " [<flag|option>...] <file>" << std::endl
-                  << "Flags:" << std::endl
-                  << "\t--help: show this text" << std::endl
-                  << "Options:" << std::endl
-                  << "\t--include=<path>...: set include paths as comma seperated list" << std::endl;
+        std::cout
+                << "Usage: " << exec << " [<flag|option>...] <file>" << std::endl
+                << "Flags:" << std::endl
+                << "\t--help: show this text" << std::endl
+                << "Options:" << std::endl
+                << "\t--include=<path>...: set include paths as comma seperated list" << std::endl;
         return 0;
     }
 
@@ -90,7 +82,12 @@ int main(int argc, char **argv) // <exec> [<flag>|<arg>]... [<file>]
     if (!include.empty())
         includePaths.push_back(include);
 
-    csaw::Parser::Parse(stream, callback, includePaths);
+    csaw::Builder builder(filepath.filename().string());
+    csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
+    {
+        std::cout << ptr << std::endl;
+        // builder.Gen(ptr);
+    }, includePaths);
 
     stream.close();
     return 0;

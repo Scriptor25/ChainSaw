@@ -1,32 +1,37 @@
 \inc "complex.csaw"
 
-MAX_ITER: num =    10;
-SAMPLES:  num =     1;
-WIDTH:    num =    10;
-HEIGHT:   num = WIDTH;
+MAX_ITER: int32 =    10;
+SAMPLES:  int32 =     1;
+WIDTH:    int32 =    10;
+HEIGHT:   int32 = WIDTH;
 
 @main::num {
 
-    xc:   num =   num(readf("xc: "));	## -0.5
-    yc:   num =   num(readf("yc: "));	##    0
-    size: num = num(readf("size: "));	##    2
+    xc:   flt64 = [flt64]  readf("xc: ");	## -0.5
+    yc:   flt64 = [flt64]  readf("yc: ");	##    0
+    size: int32 = [int32]readf("size: ");	##    2
 
     output: img = img(WIDTH, HEIGHT);
+
+    j: int32;
+    i: int32;
+    n: int32;
+    s: int32;
+    x0: flt64;
+    y0: flt64;
+    z0: complex;
+    grey: int32;
 	
-    for (j: num = 0; j < HEIGHT; j++) {
-        for (i: num = 0; i < WIDTH; i++) {
-            n: num = 0;
-            for (s: num = 0; s < SAMPLES; s++) {
-				x0: num = xc - size / 2 + size * (i + random()) /  WIDTH;
-                y0: num = yc - size / 2 + size * (j + random()) / HEIGHT;
-                z0: complex = complex();
-				z0.real = x0;
-				z0.imaginary = y0;
-				printf("[{}]", str(z0));
+    for (j = 0; j < HEIGHT; ++j) {
+        for (i = 0; i < WIDTH; ++i) {
+            n = 0;
+            for (s = 0; s < SAMPLES; ++s) {
+				x0 = xc - size / 2 + size * (i + random()) /  WIDTH;
+                y0 = yc - size / 2 + size * (j + random()) / HEIGHT;
+                z0 = complex(x0, y0);
                 n += mandel(z0, MAX_ITER);
             }
-            n /= (SAMPLES * MAX_ITER);
-            grey: num = floor(n * 255.999);
+            grey = [int32](255.999 * [flt64]n / [flt64](SAMPLES * MAX_ITER));
             output.set(i, j, (0xff << 24) | (grey << 16) | (grey << 8) | grey);
         }
 		printf("\n");
@@ -36,10 +41,10 @@ HEIGHT:   num = WIDTH;
     ret 0;
 }
 
-@mandel(z0: complex, max: num):num {
+@mandel(z0: complex, max: int32): int32 {
     z: complex = z0;
-	t: num = 0;
-    for (; (t < max) && (z.abs() <= 2.0); t++)
+	t: int32;
+    for (t = 0; (t < max) && (z.abs() <= 2); ++t)
         z = z.square() + z0;
     ret t;
 }

@@ -1,117 +1,78 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 
 namespace csaw
 {
-    struct Stmt;
-    typedef std::shared_ptr<Stmt> StmtPtr;
+    struct Statement;
+    struct ScopeStatement;
+    struct ForStatement;
+    struct FunctionStatement;
+    struct IfStatement;
+    struct RetStatement;
+    struct DefStatement;
+    struct VariableStatement;
+    struct WhileStatement;
 
-    struct FunStmt;
-    typedef std::shared_ptr<FunStmt> FunStmtPtr;
+    typedef std::shared_ptr<Statement> StatementPtr;
+    typedef std::shared_ptr<ScopeStatement> ScopeStatementPtr;
+    typedef std::shared_ptr<ForStatement> ForStatementPtr;
+    typedef std::shared_ptr<FunctionStatement> FunctionStatementPtr;
+    typedef std::shared_ptr<IfStatement> IfStatementPtr;
+    typedef std::shared_ptr<RetStatement> RetStatementPtr;
+    typedef std::shared_ptr<DefStatement> DefStatementPtr;
+    typedef std::shared_ptr<VariableStatement> VariableStatementPtr;
+    typedef std::shared_ptr<WhileStatement> WhileStatementPtr;
 
-    struct RetStmt;
-    typedef std::shared_ptr<RetStmt> RetStmtPtr;
+    std::ostream& operator<<(std::ostream& out, const StatementPtr& ptr);
+    std::ostream& operator<<(std::ostream& out, const ScopeStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const ForStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const FunctionStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const IfStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const RetStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const DefStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const VariableStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const WhileStatement& statement);
 
-    struct EnclosedStmt;
-    typedef std::shared_ptr<EnclosedStmt> EnclosedStmtPtr;
+    struct Expression;
+    struct BinaryExpression;
+    struct CallExpression;
+    struct CastExpression;
+    struct CharExpression;
+    struct IdentifierExpression;
+    struct IndexExpression;
+    struct MemberExpression;
+    struct NumberExpression;
+    struct SelectExpression;
+    struct StringExpression;
+    struct UnaryExpression;
+    struct VarArgExpression;
 
-    struct ForStmt;
-    typedef std::shared_ptr<ForStmt> ForStmtPtr;
+    typedef std::shared_ptr<Expression> ExpressionPtr;
+    typedef std::shared_ptr<BinaryExpression> BinaryExpressionPtr;
+    typedef std::shared_ptr<CallExpression> CallExpressionPtr;
+    typedef std::shared_ptr<CastExpression> CastExpressionPtr;
+    typedef std::shared_ptr<CharExpression> CharExpressionPtr;
+    typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
+    typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
+    typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
+    typedef std::shared_ptr<NumberExpression> NumberExpressionPtr;
+    typedef std::shared_ptr<SelectExpression> SelectExpressionPtr;
+    typedef std::shared_ptr<StringExpression> StringExpressionPtr;
+    typedef std::shared_ptr<UnaryExpression> UnaryExpressionPtr;
+    typedef std::shared_ptr<VarArgExpression> VarArgExpressionPtr;
 
-    struct VarStmt;
-    typedef std::shared_ptr<VarStmt> VarStmtPtr;
-
-    struct WhileStmt;
-    typedef std::shared_ptr<WhileStmt> WhileStmtPtr;
-
-    struct IfStmt;
-    typedef std::shared_ptr<IfStmt> IfStmtPtr;
-
-    struct ThingStmt;
-    typedef std::shared_ptr<ThingStmt> ThingStmtPtr;
-
-    struct AliasStmt;
-    typedef std::shared_ptr<AliasStmt> AliasStmtPtr;
-
-    struct Expr;
-    typedef std::shared_ptr<Expr> ExprPtr;
-
-    struct CallExpr;
-    typedef std::shared_ptr<CallExpr> CallExprPtr;
-
-    struct NumExpr;
-    typedef std::shared_ptr<NumExpr> NumExprPtr;
-
-    struct ChrExpr;
-    typedef std::shared_ptr<ChrExpr> ChrExprPtr;
-
-    struct StrExpr;
-    typedef std::shared_ptr<StrExpr> StrExprPtr;
-
-    struct IdentExpr;
-    typedef std::shared_ptr<IdentExpr> IdentExprPtr;
-
-    struct BinExpr;
-    typedef std::shared_ptr<BinExpr> BinExprPtr;
-
-    struct UnExpr;
-    typedef std::shared_ptr<UnExpr> UnExprPtr;
-
-    struct IndexExpr;
-    typedef std::shared_ptr<IndexExpr> IndexExprPtr;
-
-    struct MemberExpr;
-    typedef std::shared_ptr<MemberExpr> MemberExprPtr;
-
-    struct VarArgExpr;
-    typedef std::shared_ptr<VarArgExpr> VarArgExprPtr;
-
-    struct SelExpr;
-    typedef std::shared_ptr<SelExpr> SelExprPtr;
-
-    std::ostream &operator<<(std::ostream &out, StmtPtr ptr);
-
-    std::ostream &operator<<(std::ostream &out, const FunStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const RetStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const EnclosedStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const ForStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const VarStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const WhileStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const IfStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const ThingStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, const AliasStmt &stmt);
-
-    std::ostream &operator<<(std::ostream &out, ExprPtr ptr);
-
-    std::ostream &operator<<(std::ostream &out, const CallExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const NumExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const ChrExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const StrExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const IdentExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const BinExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const UnExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const IndexExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const MemberExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const VarArgExpr &expr);
-
-    std::ostream &operator<<(std::ostream &out, const SelExpr &expr);
+    std::ostream& operator<<(std::ostream& out, const ExpressionPtr& ptr);
+    std::ostream& operator<<(std::ostream& out, const BinaryExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const CallExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const CastExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const CharExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const IdentifierExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const IndexExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const MemberExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const NumberExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const SelectExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const StringExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const UnaryExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const VarArgExpression& expression);
 }

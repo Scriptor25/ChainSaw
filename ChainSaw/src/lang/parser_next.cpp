@@ -1,6 +1,7 @@
+#include <istream>
 #include <csaw/lang/Parser.hpp>
 
-csaw::Token &csaw::Parser::Next()
+csaw::Token& csaw::Parser::Next()
 {
     auto c = m_Stream.get();
 
@@ -49,7 +50,7 @@ csaw::Token &csaw::Parser::Next()
         while (isalnum(c) || c == '_');
         m_Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(TK_COMP_DIR, value, m_Line);
+        return m_Token = Token(TK_COMPILE_DIRECTIVE, value, m_Line);
     }
 
     if (c == '"')
@@ -88,7 +89,7 @@ csaw::Token &csaw::Parser::Next()
 
     if (c == '0')
     {
-        int p = m_Stream.get();
+        const int p = m_Stream.get();
 
         int mode = 0;
         if (p == 'x' || p == 'X')
@@ -132,7 +133,6 @@ csaw::Token &csaw::Parser::Next()
                     str += static_cast<char>(c);
                 c = m_Stream.get();
             }
-
         }
         while (isdigit(c) || c == '.');
         m_Stream.putback(static_cast<char>(c));
@@ -157,5 +157,3 @@ csaw::Token &csaw::Parser::Next()
 
     return m_Token = Token(TK_OPERATOR, c, m_Line);
 }
-
-
