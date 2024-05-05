@@ -14,9 +14,12 @@ namespace csaw
 
         TK_IDENTIFIER,
 
-        TK_DEC,
-        TK_HEX,
-        TK_BIN,
+        TK_INT_BIN,
+        TK_INT_OCT,
+        TK_INT_DEC,
+        TK_INT_HEX,
+
+        TK_FLOAT,
 
         TK_STRING,
         TK_CHAR,
@@ -84,7 +87,7 @@ namespace csaw
         ExpressionPtr ParseExpression();
         ExpressionPtr ParseSelectExpression(); // x ? y : z
         ExpressionPtr ParseBinaryExpression(); // x op y
-        ExpressionPtr ParseLogicExpression(); // x [&, &=, &&, |, |=, ||, ^, ^=] y
+        ExpressionPtr ParseLogicExpression(); // x [&, &=, &&, |, |=, ||, ^] y
         ExpressionPtr ParseCompareExpression(); // x [=, ==, !=] y
         ExpressionPtr ParseShiftExpression(); // x [<, >, <=, >=, <<, >>, <<=, >>=] y
         ExpressionPtr ParseSumExpression(); // x [+, +=, (++), -, -=, (--)] y

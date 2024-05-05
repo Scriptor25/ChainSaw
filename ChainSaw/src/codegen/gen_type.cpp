@@ -5,6 +5,9 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& ptr)
     if (!ptr)
         return m_Builder->getVoidTy();
 
+    if (const auto ptrty = std::dynamic_pointer_cast<PointerType>(ptr))
+        return m_Builder->getPtrTy();
+
     if (ptr->Name == "int1") return m_Builder->getInt1Ty();
     if (ptr->Name == "int8") return m_Builder->getInt8Ty();
     if (ptr->Name == "int16") return m_Builder->getInt16Ty();

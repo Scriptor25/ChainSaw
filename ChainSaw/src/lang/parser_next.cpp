@@ -55,7 +55,7 @@ csaw::Token& csaw::Parser::Next()
 
     if (c == '"')
     {
-        std::string str;
+        std::string value;
 
         c = m_Stream.get();
         while (c != EOF && c != '"')
@@ -63,16 +63,16 @@ csaw::Token& csaw::Parser::Next()
             if (c == '\\')
                 c = Escape(m_Stream.get());
 
-            str += static_cast<char>(c);
+            value += static_cast<char>(c);
             c = m_Stream.get();
         }
 
-        return m_Token = Token(TK_STRING, str, m_Line);
+        return m_Token = Token(TK_STRING, value, m_Line);
     }
 
     if (c == '\'')
     {
-        std::string str;
+        std::string value;
 
         c = m_Stream.get();
         while (c != EOF && c != '"')
@@ -80,11 +80,11 @@ csaw::Token& csaw::Parser::Next()
             if (c == '\\')
                 c = Escape(m_Stream.get());
 
-            str += static_cast<char>(c);
+            value += static_cast<char>(c);
             c = m_Stream.get();
         }
 
-        return m_Token = Token(TK_CHAR, str, m_Line);
+        return m_Token = Token(TK_CHAR, value, m_Line);
     }
 
     if (c == '0')
@@ -96,63 +96,78 @@ csaw::Token& csaw::Parser::Next()
             mode = 1;
         else if (p == 'b' || p == 'B')
             mode = 2;
-
-        if (mode == 0)
-            m_Stream.putback(static_cast<char>(p));
-        else
+        else if (isdigit(p))
         {
-            std::string str;
+            mode = 3;
+            m_Stream.putback(static_cast<char>(p));
+        }
+        else m_Stream.putback(static_cast<char>(p));
+
+        if (mode)
+        {
+            std::string value;
 
             c = m_Stream.get();
             do
             {
-                str += static_cast<char>(c);
+                value += static_cast<char>(c);
                 c = m_Stream.get();
             }
             while (isxdigit(c));
             m_Stream.putback(static_cast<char>(c));
 
-            return m_Token = Token(mode == 1 ? TK_HEX : TK_BIN, str, m_Line);
+            return m_Token = Token(mode == 1 ? TK_INT_HEX : mode == 2 ? TK_INT_BIN : TK_INT_OCT, value, m_Line);
         }
     }
 
     if (isdigit(c))
     {
-        std::string str;
+        std::string value;
+        bool period = false;
 
         do
         {
-            str += static_cast<char>(c);
+            value += static_cast<char>(c);
             c = m_Stream.get();
+
+            if (c == '.')
+            {
+                if (period)
+                    throw std::runtime_error("a floating point number can only have one period");
+
+                period = true;
+                value += static_cast<char>(c);
+                c = m_Stream.get();
+            }
 
             if (c == 'e' || c == 'E')
             {
-                str += static_cast<char>(c);
+                value += static_cast<char>(c);
                 c = m_Stream.get();
                 if (c == '-')
-                    str += static_cast<char>(c);
+                    value += static_cast<char>(c);
                 c = m_Stream.get();
             }
         }
-        while (isdigit(c) || c == '.');
+        while (isdigit(c));
         m_Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(TK_DEC, str, m_Line);
+        return m_Token = Token(period ? TK_FLOAT : TK_INT_DEC, value, m_Line);
     }
 
     if (isalpha(c) || c == '_')
     {
-        std::string str;
+        std::string value;
 
         do
         {
-            str += static_cast<char>(c);
+            value += static_cast<char>(c);
             c = m_Stream.get();
         }
         while (isalnum(c) || c == '_');
         m_Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(TK_IDENTIFIER, str, m_Line);
+        return m_Token = Token(TK_IDENTIFIER, value, m_Line);
     }
 
     return m_Token = Token(TK_OPERATOR, c, m_Line);

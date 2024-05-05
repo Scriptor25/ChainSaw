@@ -11,13 +11,15 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<CharExpression>(ptr))
         return out << *expr;
+    if (const auto expr = std::dynamic_pointer_cast<FloatExpression>(ptr))
+        return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<IdentifierExpression>(ptr))
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<IndexExpression>(ptr))
         return out << *expr;
-    if (const auto expr = std::dynamic_pointer_cast<MemberExpression>(ptr))
+    if (const auto expr = std::dynamic_pointer_cast<IntExpression>(ptr))
         return out << *expr;
-    if (const auto expr = std::dynamic_pointer_cast<NumberExpression>(ptr))
+    if (const auto expr = std::dynamic_pointer_cast<MemberExpression>(ptr))
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<SelectExpression>(ptr))
         return out << *expr;
@@ -50,12 +52,17 @@ std::ostream& csaw::operator<<(std::ostream& out, const CallExpression& expressi
 
 std::ostream& csaw::operator<<(std::ostream& out, const CastExpression& expression)
 {
-    return out << '[' << expression.Type << ']' << expression.Castee;
+    return out << '[' << expression.Type << ']' << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const CharExpression& expression)
 {
     return out << '\'' << expression.Value << '\'';
+}
+
+std::ostream& csaw::operator<<(std::ostream& out, const FloatExpression& expression)
+{
+    return out << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const IdentifierExpression& expression)
@@ -68,14 +75,14 @@ std::ostream& csaw::operator<<(std::ostream& out, const IndexExpression& express
     return out << expression.Array << '[' << expression.Index << ']';
 }
 
+std::ostream& csaw::operator<<(std::ostream& out, const IntExpression& expression)
+{
+    return out << expression.Value;
+}
+
 std::ostream& csaw::operator<<(std::ostream& out, const MemberExpression& expression)
 {
     return out << expression.Object << '.' << expression.Member;
-}
-
-std::ostream& csaw::operator<<(std::ostream& out, const NumberExpression& expression)
-{
-    return out << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const SelectExpression& expression)

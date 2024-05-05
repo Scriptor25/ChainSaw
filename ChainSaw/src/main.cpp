@@ -2,9 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <csaw/codegen/Builder.hpp>
 #include <csaw/lang/Parser.hpp>
-
-#include "csaw/codegen/Builder.hpp"
 
 int main(int argc, char** argv)
 {
@@ -19,11 +18,9 @@ int main(int argc, char** argv)
         if (arg.find_first_of("--") == 0)
         {
             const auto opt = arg.substr(2);
-            const auto pos = opt.find_first_of('=');
-            if (pos != std::string::npos)
+            if (const auto pos = opt.find_first_of('='); pos != std::string::npos)
                 options[opt.substr(0, pos)] = opt.substr(pos + 1);
-            else
-                flags.push_back(opt);
+            else flags.push_back(opt);
 
             continue;
         }
@@ -68,7 +65,7 @@ int main(int argc, char** argv)
 
     std::vector<std::string> includePaths;
     includePaths.push_back(std::filesystem::absolute(exec).parent_path().string());
-    includePaths.push_back(std::filesystem::absolute(filepath).parent_path().string());
+    includePaths.push_back(absolute(filepath).parent_path().string());
     auto include = options["include"];
     while (!include.empty())
     {
@@ -86,7 +83,7 @@ int main(int argc, char** argv)
     csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
     {
         std::cout << ptr << std::endl;
-        // builder.Gen(ptr);
+        builder.Gen(ptr);
     }, includePaths);
 
     stream.close();

@@ -39,10 +39,11 @@ namespace csaw
     struct CallExpression;
     struct CastExpression;
     struct CharExpression;
+    struct FloatExpression;
     struct IdentifierExpression;
     struct IndexExpression;
+    struct IntExpression;
     struct MemberExpression;
-    struct NumberExpression;
     struct SelectExpression;
     struct StringExpression;
     struct UnaryExpression;
@@ -56,7 +57,6 @@ namespace csaw
     typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
     typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
     typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
-    typedef std::shared_ptr<NumberExpression> NumberExpressionPtr;
     typedef std::shared_ptr<SelectExpression> SelectExpressionPtr;
     typedef std::shared_ptr<StringExpression> StringExpressionPtr;
     typedef std::shared_ptr<UnaryExpression> UnaryExpressionPtr;
@@ -67,10 +67,11 @@ namespace csaw
     std::ostream& operator<<(std::ostream& out, const CallExpression& expression);
     std::ostream& operator<<(std::ostream& out, const CastExpression& expression);
     std::ostream& operator<<(std::ostream& out, const CharExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const FloatExpression& expression);
     std::ostream& operator<<(std::ostream& out, const IdentifierExpression& expression);
     std::ostream& operator<<(std::ostream& out, const IndexExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const IntExpression& expression);
     std::ostream& operator<<(std::ostream& out, const MemberExpression& expression);
-    std::ostream& operator<<(std::ostream& out, const NumberExpression& expression);
     std::ostream& operator<<(std::ostream& out, const SelectExpression& expression);
     std::ostream& operator<<(std::ostream& out, const StringExpression& expression);
     std::ostream& operator<<(std::ostream& out, const UnaryExpression& expression);

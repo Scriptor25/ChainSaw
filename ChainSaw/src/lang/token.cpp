@@ -26,9 +26,9 @@ const char* csaw::ToString(const TokenType type)
     {
     case TK_EOF: return "EOF";
     case TK_IDENTIFIER: return "IDENTIFIER";
-    case TK_DEC: return "DEC";
-    case TK_HEX: return "HEX";
-    case TK_BIN: return "BIN";
+    case TK_INT_DEC: return "DEC";
+    case TK_INT_HEX: return "HEX";
+    case TK_INT_BIN: return "BIN";
     case TK_STRING: return "STRING";
     case TK_CHAR: return "CHAR";
     case TK_OPERATOR: return "OPERATOR";

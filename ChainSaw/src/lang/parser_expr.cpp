@@ -226,21 +226,17 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
     if (AtEOF())
         throw std::runtime_error("reached end of file");
 
-    if (At(TK_DEC))
-        return std::make_shared<NumberExpression>(line, Get().Value, 10);
-    if (At(TK_HEX))
-        return std::make_shared<NumberExpression>(line, Get().Value, 16);
-    if (At(TK_BIN))
-        return std::make_shared<NumberExpression>(line, Get().Value, 2);
+    if (At(TK_INT_BIN)) return std::make_shared<IntExpression>(line, Get().Value, 2);
+    if (At(TK_INT_OCT)) return std::make_shared<IntExpression>(line, Get().Value, 8);
+    if (At(TK_INT_DEC)) return std::make_shared<IntExpression>(line, Get().Value, 10);
+    if (At(TK_INT_HEX)) return std::make_shared<IntExpression>(line, Get().Value, 16);
 
-    if (At(TK_CHAR))
-        return std::make_shared<CharExpression>(line, Get().Value);
+    if (At(TK_FLOAT)) return std::make_shared<FloatExpression>(line, Get().Value);
 
-    if (At(TK_STRING))
-        return std::make_shared<StringExpression>(line, Get().Value);
+    if (At(TK_CHAR)) return std::make_shared<CharExpression>(line, Get().Value);
+    if (At(TK_STRING)) return std::make_shared<StringExpression>(line, Get().Value);
 
-    if (At(TK_IDENTIFIER))
-        return std::make_shared<IdentifierExpression>(line, Get().Value);
+    if (At(TK_IDENTIFIER)) return std::make_shared<IdentifierExpression>(line, Get().Value);
 
     if (At("+") || At("-") || At("!") || At("~"))
     {
