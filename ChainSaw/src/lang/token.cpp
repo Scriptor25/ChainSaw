@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include <csaw/lang/Parser.hpp>
 
 csaw::Token::Token(const TokenType type, const std::string& value, const size_t line)

@@ -1,7 +1,9 @@
 #include <csaw/codegen/Builder.hpp>
+#include <csaw/codegen/FunctionRef.hpp>
+#include <csaw/codegen/ValueRef.hpp>
 #include <csaw/lang/Expr.hpp>
 
-llvm::Value* csaw::Builder::Gen(const ExpressionPtr& ptr)
+csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
 {
     if (const auto p = std::dynamic_pointer_cast<BinaryExpression>(ptr))
         return Gen(*p);
@@ -33,48 +35,68 @@ llvm::Value* csaw::Builder::Gen(const ExpressionPtr& ptr)
     throw std::runtime_error("not yet implemented");
 }
 
-llvm::Value* csaw::Builder::Gen(const BinaryExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
 {
-    const auto left = Gen(expression.Left);
-    const auto right = Gen(expression.Right);
-
+    auto left = Gen(expression.Left);
+    auto right = Gen(expression.Right);
     auto op = expression.Operator;
+
+    if (const auto& functionref = GetFunction(op, nullptr, {left.RawType(), right.RawType()}); functionref.Function)
+    {
+        const auto result = m_Builder->CreateCall(functionref.Function->getFunctionType(), functionref.Function, {left.Load(*this), right.Load(*this)});
+        return {*this, ValueRefMode_Constant, result, functionref.Result};
+    }
+
+    if (const auto& functionref = GetFunction(op, left.RawType(), {right.RawType()}); functionref.Function)
+    {
+        const auto result = m_Builder->CreateCall(functionref.Function->getFunctionType(), functionref.Function, {left.Load(*this), right.Load(*this)});
+        return {*this, ValueRefMode_Constant, result, functionref.Result};
+    }
+
     if (op == "==") return GenCmpEQ(left, right);
     if (op == "!=") return GenCmpNE(left, right);
     if (op == "<=") return GenCmpLE(left, right);
     if (op == ">=") return GenCmpGE(left, right);
-    if (op == "=") return m_Builder->CreateStore(right, left);
+    if (op == "=")
+    {
+        left.Store(*this, right.Load(*this));
+        return left;
+    }
 
     const auto equ_idx = op.find('=');
     const auto assign = equ_idx != std::string::npos;
     if (assign) op = op.substr(0, equ_idx);
 
-    llvm::Value* value = nullptr;
-
-    if (op == "&") value = m_Builder->CreateAnd(left, right);
-    if (op == "&&") value = m_Builder->CreateLogicalAnd(left, right);
-    if (op == "|") value = m_Builder->CreateOr(left, right);
-    if (op == "||") value = m_Builder->CreateLogicalOr(left, right);
-    if (op == "^") value = m_Builder->CreateXor(left, right);
+    ValueRef value;
+    if (op == "&") value = GenAnd(left, right);
+    if (op == "&&") value = GenLogicalAnd(left, right);
+    if (op == "|") value = GenOr(left, right);
+    if (op == "||") value = GenLogicalOr(left, right);
+    if (op == "^") value = GenXor(left, right);
     if (op == "<") value = GenCmpLT(left, right);
     if (op == ">") value = GenCmpGT(left, right);
-    if (op == "<<") value = m_Builder->CreateShl(left, right);
-    if (op == ">>") value = m_Builder->CreateAShr(left, right);
+    if (op == "<<") value = GenShl(left, right);
+    if (op == ">>") value = GenAShr(left, right);
+    if (op == ">>>") value = GenLShr(left, right);
     if (op == "+") value = GenAdd(left, right);
     if (op == "-") value = GenSub(left, right);
     if (op == "*") value = GenMul(left, right);
     if (op == "/") value = GenDiv(left, right);
     if (op == "%") value = GenRem(left, right);
 
-    if (!value)
+    if (value.Mode() == ValueRefMode_Invalid)
         throw std::runtime_error("unhandled binary operator");
 
     if (assign)
-        return m_Builder->CreateStore(value, left);
+    {
+        left.Store(*this, value.Load(*this));
+        return left;
+    }
+
     return value;
 }
 
-llvm::Value* csaw::Builder::Gen(const CallExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
 {
     std::string name;
     ExpressionPtr callee = nullptr;
@@ -85,83 +107,148 @@ llvm::Value* csaw::Builder::Gen(const CallExpression& expression)
     }
     else if (const auto identifier_expression = std::dynamic_pointer_cast<IdentifierExpression>(expression.Callee))
         name = identifier_expression->Id;
-    else throw std::runtime_error("wtf");
+    else throw std::runtime_error("wtf have you done");
 
     std::vector<TypePtr> argtypes(expression.Args.size());
-    for (size_t i = 0; i < argtypes.size(); ++i)
-        argtypes[i] = expression.Args[i]->GetType();
+    std::vector<llvm::Value*> args(expression.Args.size());
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        const auto ref = Gen(expression.Args[i]);
+        argtypes[i] = ref.RawType();
+        args[i] = ref.Load(*this);
+    }
 
-    const auto function = GetFunction(name, callee ? callee->GetType() : nullptr, argtypes);
+    const auto calleeref = callee ? Gen(callee) : ValueRef();
+    if (callee) args.insert(args.begin(), calleeref.Load(*this));
 
-    std::vector<llvm::Value*> args(expression.Args.size() + 1);
-    args[0] = callee ? Gen(callee) : llvm::ConstantPointerNull::get(m_Builder->getPtrTy());
-    for (size_t i = 1; i < args.size(); ++i)
-        args[i] = Gen(expression.Args[i - 1]);
+    const auto functionref = GetFunction(name, callee ? calleeref.RawType() : nullptr, argtypes);
+    if (!functionref.Function)
+        throw std::runtime_error("undefined function");
 
-    return m_Builder->CreateCall(function->getFunctionType(), function, args);
+    if (functionref.IsConstructor)
+        args.insert(args.begin(), m_Builder->CreateAlloca(Gen(functionref.Result)));
+
+    const auto result = m_Builder->CreateCall(functionref.Function->getFunctionType(), functionref.Function, args);
+    return {*this, ValueRefMode_Constant, result, functionref.Result};
 }
 
-llvm::Value* csaw::Builder::Gen(const CastExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const CastExpression& expression)
 {
-    const auto value = Gen(expression.Value);
+    const auto valueref = Gen(expression.Value);
+    const auto value = valueref.Load(*this);
     const auto type = Gen(expression.Type);
 
-    if (value->getType()->isIntegerTy())
-        return m_Builder->CreateIntCast(value, type, true);
-    if (value->getType()->isFloatingPointTy())
-        return m_Builder->CreateFPCast(value, type);
-    if (value->getType()->isPointerTy())
-        return m_Builder->CreatePointerCast(value, type);
+    llvm::Value* result = nullptr;
+    if (valueref.Type()->isIntegerTy())
+    {
+        if (type->isIntegerTy())
+            result = m_Builder->CreateIntCast(value, type, true);
+        else if (type->isFloatingPointTy())
+            result = m_Builder->CreateSIToFP(value, type);
+        else if (type->isPointerTy())
+            result = m_Builder->CreateIntToPtr(value, type);
+    }
+    else if (valueref.Type()->isFloatingPointTy())
+    {
+        if (type->isFloatingPointTy())
+            result = m_Builder->CreateFPCast(value, type);
+        else if (type->isIntegerTy())
+            result = m_Builder->CreateFPToSI(value, type);
+    }
+    else if (valueref.Type()->isPointerTy())
+    {
+        if (type->isPointerTy())
+            result = m_Builder->CreatePointerCast(value, type);
+        else if (type->isIntegerTy())
+            result = m_Builder->CreatePtrToInt(value, type);
+    }
 
-    throw std::runtime_error("not yet implemented");
+    if (!result)
+        throw std::runtime_error("not yet implemented");
+
+    return {*this, ValueRefMode_Constant, result, expression.Type};
 }
 
-llvm::Value* csaw::Builder::Gen(const CharExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const CharExpression& expression)
 {
     throw std::runtime_error("not yet implemented");
 }
 
-llvm::Value* csaw::Builder::Gen(const FloatExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const FloatExpression& expression)
 {
     throw std::runtime_error("not yet implemented");
 }
 
-llvm::Value* csaw::Builder::Gen(const IdentifierExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const IdentifierExpression& expression)
 {
-    return m_Values[expression.Id];
+    if (const auto& value = m_Values[expression.Id]; value.Mode() != ValueRefMode_Invalid)
+        return value;
+    return m_GlobalValues[expression.Id];
 }
 
-llvm::Value* csaw::Builder::Gen(const IndexExpression& expression)
-{
-    throw std::runtime_error("not yet implemented");
-}
-
-llvm::Value* csaw::Builder::Gen(const IntExpression& expression)
-{
-    return m_Builder->getIntN(64, expression.Value);
-}
-
-llvm::Value* csaw::Builder::Gen(const MemberExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const IndexExpression& expression)
 {
     throw std::runtime_error("not yet implemented");
 }
 
-llvm::Value* csaw::Builder::Gen(const SelectExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const IntExpression& expression)
+{
+    const auto result = m_Builder->getInt32(expression.Value);
+    return {*this, ValueRefMode_Constant, result, Type::Get("int32")};
+}
+
+csaw::ValueRef csaw::Builder::Gen(const MemberExpression& expression)
+{
+    const auto object = Gen(expression.Object);
+    const auto member = expression.Member;
+
+    throw std::runtime_error("not yet implemented");
+}
+
+csaw::ValueRef csaw::Builder::Gen(const SelectExpression& expression)
 {
     throw std::runtime_error("not yet implemented");
 }
 
-llvm::Value* csaw::Builder::Gen(const StringExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const StringExpression& expression)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto result = m_Builder->CreateGlobalStringPtr(expression.Value);
+    return {*this, ValueRefMode_Pointer, result, PointerType::Get(Type::Get("int8"))};
 }
 
-llvm::Value* csaw::Builder::Gen(const UnaryExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const UnaryExpression& expression)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto value = Gen(expression.Value);
+    const auto op = expression.Operator;
+
+    if (expression.OpRight)
+    {
+        if (const auto& functionref = GetFunction(op, nullptr, {value.RawType()}); functionref.Function)
+        {
+            const auto result = m_Builder->CreateCall(functionref.Function->getFunctionType(), functionref.Function, {value.Load(*this)});
+            return {*this, ValueRefMode_Constant, result, functionref.Result};
+        }
+    }
+    else if (const auto& functionref = GetFunction(op, value.RawType(), {}); functionref.Function)
+    {
+        const auto result = m_Builder->CreateCall(functionref.Function->getFunctionType(), functionref.Function, {value.Load(*this)});
+        return {*this, ValueRefMode_Constant, result, functionref.Result};
+    }
+
+    ValueRef result;
+    if (op == "-") result = GenNeg(value);
+    if (op == "!") result = GenNot(value);
+    if (op == "~") result = GenInv(value);
+    if (op == "++") result = GenInc(value, expression.OpRight);
+    if (op == "--") result = GenDec(value, expression.OpRight);
+
+    if (result.Mode() == ValueRefMode_Invalid)
+        throw std::runtime_error("not yet implemented");
+
+    return result;
 }
 
-llvm::Value* csaw::Builder::Gen(const VarArgExpression& expression)
+csaw::ValueRef csaw::Builder::Gen(const VarArgExpression& expression)
 {
     throw std::runtime_error("not yet implemented");
 }

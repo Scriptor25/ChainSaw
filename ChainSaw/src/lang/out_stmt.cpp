@@ -90,7 +90,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
     if (statement.Callee)
         out << ':' << statement.Callee;
 
-    if (!statement.Args.empty() || !statement.VarArg.empty())
+    if (!statement.Args.empty() || statement.VarArg)
     {
         out << '(';
         for (size_t i = 0; i < statement.Args.size(); i++)
@@ -99,13 +99,13 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
                 out << ", ";
             out << statement.Args[i].first << ": " << statement.Args[i].second;
         }
-        if (!statement.VarArg.empty())
-            out << ", " << statement.VarArg << '?';
+        if (statement.VarArg)
+            out << ", ?";
         out << ')';
     }
 
     if (!statement.Constructor && statement.Result)
-        out << ((statement.Args.empty() && statement.VarArg.empty() && !statement.Callee) ? "::" : ": ") << statement.Result;
+        out << (statement.Args.empty() && !statement.VarArg && !statement.Callee ? "::" : ": ") << statement.Result;
 
     if (!statement.Body)
         return out << ';';

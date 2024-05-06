@@ -1,4 +1,6 @@
 #include <csaw/codegen/Builder.hpp>
+#include <csaw/codegen/FunctionRef.hpp>
+#include <csaw/codegen/ValueRef.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Stmt.hpp>
 #include <llvm/IR/Verifier.h>
@@ -24,7 +26,7 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
 
     if (const auto p = std::dynamic_pointer_cast<Expression>(ptr))
     {
-        Gen(p);
+        (void)Gen(p);
         return;
     }
 
@@ -33,7 +35,8 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
 
 void csaw::Builder::Gen(const ScopeStatement& statement)
 {
-    throw std::runtime_error("not yet implemented");
+    for (const auto& ptr : statement.Body)
+        Gen(ptr);
 }
 
 void csaw::Builder::Gen(const ForStatement& statement)
@@ -43,20 +46,22 @@ void csaw::Builder::Gen(const ForStatement& statement)
 
 void csaw::Builder::Gen(const FunctionStatement& statement)
 {
+    const bool has_ptr = statement.Constructor || statement.Callee;
+
     std::vector<TypePtr> args(statement.Args.size());
-    std::vector<llvm::Type*> arg_types(statement.Args.size() + 1);
-    arg_types[0] = m_Builder->getPtrTy();
-    for (size_t i = 0; i < args.size(); ++i) arg_types[i + 1] = Gen(args[i] = statement.Args[i].second);
-    const auto function_name = GetFunctionName(statement.Name, statement.Constructor, statement.Callee, args, !statement.VarArg.empty());
-    auto function = m_Module->getFunction(function_name);
-    if (!function)
+    std::vector<llvm::Type*> arg_types(statement.Args.size());
+    for (size_t i = 0; i < args.size(); ++i) arg_types[i] = Gen(args[i] = statement.Args[i].second);
+    if (has_ptr) arg_types.insert(arg_types.begin(), m_Builder->getPtrTy());
+
+    auto& ref = GetOrCreateFunction(statement.Name, statement.Constructor, statement.Callee, args, statement.VarArg, statement.Result);
+    if (!ref.Function)
     {
         const auto result_type = Gen(statement.Result);
-        const auto function_type = llvm::FunctionType::get(result_type, arg_types, !statement.VarArg.empty());
-        function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, function_name, *m_Module);
+        const auto function_type = llvm::FunctionType::get(result_type, arg_types, statement.VarArg);
+        ref.Function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, statement.Name, *m_Module);
 
-        int i = -1;
-        for (auto& arg : function->args())
+        int i = has_ptr ? -1 : 0;
+        for (auto& arg : ref.Function->args())
         {
             arg.setName(i < 0 ? "me" : statement.Args[i].first);
             ++i;
@@ -66,48 +71,103 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (!statement.Body)
         return;
 
-    if (!function->empty())
+    if (!ref.Function->empty())
         throw std::runtime_error("function already implemented");
 
     m_Values.clear();
-    for (auto& arg : function->args())
-        m_Values[arg.getName().str()] = &arg;
+    int i = has_ptr ? -1 : 0;
+    for (auto& arg : ref.Function->args())
+    {
+        const auto type = i < 0 ? (statement.Constructor ? statement.Result : statement.Callee) : statement.Args[i].second;
+        m_Values[arg.getName().str()] = {*this, ValueRefMode_Constant, &arg, type};
+        ++i;
+    }
 
-    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", function);
+    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", ref.Function);
     m_Builder->SetInsertPoint(entry_block);
 
     if (const auto scope_statement = std::dynamic_pointer_cast<ScopeStatement>(statement.Body))
     {
         Gen(scope_statement);
         // TODO: check for missing ret
+
+        if (statement.Constructor)
+            m_Builder->CreateRet(m_Values["me"].Load(*this));
     }
     else if (const auto expression = std::dynamic_pointer_cast<Expression>(statement.Body))
     {
         const auto result = Gen(expression);
-        m_Builder->CreateRet(result);
+        m_Builder->CreateRet(result.Load(*this));
     }
     else
     {
         Gen(statement.Body);
-        m_Builder->CreateRetVoid();
+
+        if (statement.Constructor)
+            m_Builder->CreateRet(m_Values["me"].Load(*this));
+        else
+            m_Builder->CreateRetVoid();
     }
 
     m_Builder->SetInsertPoint(static_cast<llvm::BasicBlock*>(nullptr));
 
-    function->dump();
-
-    if (verifyFunction(*function, &llvm::errs()))
+    if (verifyFunction(*ref.Function, &llvm::errs()))
+    {
+        ref.Function->viewCFG();
         throw std::runtime_error("failed to verify function");
+    }
+
+    m_FPM->run(*ref.Function, *m_FAM);
 }
 
 void csaw::Builder::Gen(const IfStatement& statement)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto condition = Gen(statement.Condition);
+
+    const auto true_block = llvm::BasicBlock::Create(*m_Context, "true", m_Builder->GetInsertBlock()->getParent());
+    const auto false_block = llvm::BasicBlock::Create(*m_Context, "false", m_Builder->GetInsertBlock()->getParent());
+    const auto end_block = statement.False ? llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent()) : false_block;
+
+    bool need_end = false;
+
+    m_Builder->CreateCondBr(condition.Load(*this), true_block, false_block);
+
+    m_Builder->SetInsertPoint(true_block);
+    Gen(statement.True);
+    if (!true_block->getTerminator())
+    {
+        m_Builder->CreateBr(end_block);
+        need_end = true;
+    }
+
+    m_Builder->SetInsertPoint(false_block);
+    if (statement.False)
+    {
+        Gen(statement.False);
+        if (!false_block->getTerminator())
+        {
+            m_Builder->CreateBr(end_block);
+            need_end = true;
+        }
+    }
+    else need_end = true;
+
+    if (!need_end)
+        end_block->eraseFromParent();
+    else
+        m_Builder->SetInsertPoint(end_block);
 }
 
 void csaw::Builder::Gen(const RetStatement& statement)
 {
-    throw std::runtime_error("not yet implemented");
+    if (!statement.Value)
+    {
+        m_Builder->CreateRetVoid();
+        return;
+    }
+
+    const auto value = Gen(statement.Value);
+    m_Builder->CreateRet(value.Load(*this));
 }
 
 void csaw::Builder::Gen(const DefStatement& statement)
@@ -118,32 +178,63 @@ void csaw::Builder::Gen(const DefStatement& statement)
         return;
     }
 
-    throw std::runtime_error("not yet implemented");
+    if (statement.Elements.empty())
+    {
+        if (!llvm::StructType::getTypeByName(*m_Context, statement.Name))
+            llvm::StructType::create(*m_Context, statement.Name);
+        return;
+    }
+
+    auto type = llvm::StructType::getTypeByName(*m_Context, statement.Name);
+    if (type && !type->isEmptyTy())
+        throw std::runtime_error("cannot redefine struct");
+
+    std::vector<llvm::Type*> elements(statement.Elements.size());
+    for (size_t i = 0; i < elements.size(); ++i)
+        elements[i] = Gen(statement.Elements[i].second);
+
+    if (!type)
+        llvm::StructType::create(*m_Context, elements, statement.Name);
+    else
+        type->setBody(elements);
 }
 
 void csaw::Builder::Gen(const VariableStatement& statement)
 {
-    const auto type = Gen(statement.Type);
-    const auto initializer = Gen(statement.Value);
-
     if (IsGlobal())
     {
         llvm::Constant* global_initializer = nullptr;
-        if (initializer)
+        if (statement.Value)
         {
-            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer);
-            if (!global_initializer)
+            const auto initializer = Gen(statement.Value);
+            if (initializer.Mode() != ValueRefMode_Constant)
                 throw std::runtime_error("not yet implemented");
+            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer.Load(*this));
         }
 
-        (void)llvm::GlobalVariable(*m_Module, type, false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
+        const auto type = Gen(statement.Type);
+        const auto value = new llvm::GlobalVariable(*m_Module, type, false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
+
+        m_GlobalValues[statement.Name] = {*this, ValueRefMode_Pointer, value, statement.Type};
+
         return;
     }
 
-    throw std::runtime_error("not yet implemented");
+    m_Values[statement.Name] = {*this, ValueRefMode_AllocateValue, statement.Value ? Gen(statement.Value).Load(*this) : nullptr, statement.Type};
 }
 
 void csaw::Builder::Gen(const WhileStatement& statement)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", m_Builder->GetInsertBlock()->getParent());
+    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", m_Builder->GetInsertBlock()->getParent());
+    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent());
+
+    m_Builder->CreateBr(hdr_block);
+    m_Builder->SetInsertPoint(hdr_block);
+    const auto condition = Gen(statement.Condition);
+    m_Builder->CreateCondBr(condition.Load(*this), loop_block, end_block);
+    m_Builder->SetInsertPoint(loop_block);
+    Gen(statement.Body);
+    m_Builder->CreateBr(hdr_block);
+    m_Builder->SetInsertPoint(end_block);
 }

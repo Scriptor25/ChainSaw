@@ -82,10 +82,21 @@ int main(int argc, char** argv)
     csaw::Builder builder(filepath.filename().string());
     csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
     {
-        std::cout << ptr << std::endl;
+        // std::cout << ptr << std::endl;
         builder.Gen(ptr);
     }, includePaths);
 
     stream.close();
+
+    std::error_code err;
+    auto outstream = llvm::raw_fd_ostream("output.ll", err);
+    if (err)
+    {
+        std::cerr << err.message() << std::endl;
+        return 1;
+    }
+
+    builder.GetModule().print(outstream, nullptr);
+
     return 0;
 }

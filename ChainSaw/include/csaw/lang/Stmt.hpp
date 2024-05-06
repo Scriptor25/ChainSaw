@@ -41,13 +41,13 @@ namespace csaw
 
     struct FunctionStatement : Statement
     {
-        FunctionStatement(size_t line, bool constructor, const std::string& name, const TypePtr& callee, const std::vector<std::pair<std::string, TypePtr>>& args, const std::string& vararg, const TypePtr& result, const StatementPtr& body);
+        FunctionStatement(size_t line, bool constructor, const std::string& name, const TypePtr& callee, const std::vector<std::pair<std::string, TypePtr>>& args, bool vararg, const TypePtr& result, const StatementPtr& body);
 
         bool Constructor;
         std::string Name;
         TypePtr Callee;
         std::vector<std::pair<std::string, TypePtr>> Args;
-        std::string VarArg;
+        bool VarArg;
         TypePtr Result;
         StatementPtr Body;
     };

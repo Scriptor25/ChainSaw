@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <csaw/lang/Parser.hpp>
 
 void csaw::Parser::Parse(std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths)

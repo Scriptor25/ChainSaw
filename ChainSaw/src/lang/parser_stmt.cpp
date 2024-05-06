@@ -64,14 +64,14 @@ csaw::ForStatementPtr csaw::Parser::ParseForStatement()
 
 csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
 {
-    auto line = m_Line;
+    const auto line = m_Line;
 
     std::string name;
-    TypePtr callee;
+    TypePtr callee = nullptr;
     std::vector<std::pair<std::string, TypePtr>> args;
-    std::string vararg;
-    TypePtr result;
-    StatementPtr body;
+    bool vararg = false;
+    TypePtr result = nullptr;
+    StatementPtr body = nullptr;
 
     bool constructor = NextIfAt("$");
     if (!constructor)
@@ -96,12 +96,13 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
     {
         while (!At(")") && !AtEOF())
         {
-            auto aName = Expect(TK_IDENTIFIER).Value;
             if (NextIfAt("?"))
             {
-                vararg = aName;
+                vararg = true;
                 break;
             }
+
+            auto aName = Expect(TK_IDENTIFIER).Value;
             Expect(":");
             auto aType = ParseType();
             args.emplace_back(aName, aType);

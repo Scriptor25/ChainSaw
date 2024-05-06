@@ -1,4 +1,6 @@
+#include <iostream>
 #include <map>
+#include <string>
 #include <csaw/Type.hpp>
 
 static std::map<std::string, csaw::TypePtr> Types;

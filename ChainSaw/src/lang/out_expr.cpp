@@ -122,9 +122,9 @@ std::ostream& csaw::operator<<(std::ostream& out, const StringExpression& expres
 
 std::ostream& csaw::operator<<(std::ostream& out, const UnaryExpression& expression)
 {
-    if (!expression.RightOp) out << expression.Operator;
+    if (!expression.OpRight) out << expression.Operator;
     out << expression.Value;
-    if (expression.RightOp) out << expression.Operator;
+    if (expression.OpRight) out << expression.Operator;
     return out;
 }
 

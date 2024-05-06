@@ -21,7 +21,7 @@ csaw::ForStatement::ForStatement(const size_t line, const StatementPtr& pre, con
 {
 }
 
-csaw::FunctionStatement::FunctionStatement(const size_t line, const bool constructor, const std::string& name, const TypePtr& callee, const std::vector<std::pair<std::string, TypePtr>>& args, const std::string& vararg, const TypePtr& result, const StatementPtr& body)
+csaw::FunctionStatement::FunctionStatement(const size_t line, const bool constructor, const std::string& name, const TypePtr& callee, const std::vector<std::pair<std::string, TypePtr>>& args, const bool vararg, const TypePtr& result, const StatementPtr& body)
     : Statement(line), Constructor(constructor), Name(name), Callee(callee), Args(args), VarArg(vararg), Result(result), Body(body)
 {
 }

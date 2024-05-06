@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <csaw/lang/Def.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Parser.hpp>

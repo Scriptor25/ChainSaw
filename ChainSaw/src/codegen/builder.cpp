@@ -1,126 +1,111 @@
 #include <csaw/codegen/Builder.hpp>
-
-std::string csaw::Builder::GetFunctionName(const std::string& name, const bool constructor, const TypePtr& callee, const std::vector<TypePtr>& args, const bool vararg)
-{
-    std::string function_name;
-
-    if (constructor)
-        function_name += '$';
-
-    function_name += name;
-
-    if (callee)
-        function_name += ':' + callee->Name;
-
-    if (!args.empty() || vararg)
-    {
-        function_name += '(';
-        size_t i = 0;
-        for (; i < args.size(); ++i)
-        {
-            if (i > 0) function_name += ',';
-            function_name += args[i]->Name;
-        }
-        if (vararg)
-        {
-            if (i > 0) function_name += ',';
-            function_name += '?';
-        }
-        function_name += ')';
-    }
-
-    return function_name;
-}
-
-void csaw::Builder::GetFunctionAttributes(const std::string& functionName, std::string& name, bool& constructor, TypePtr& callee, std::vector<TypePtr>& args, bool& vararg)
-{
-    name.clear();
-    constructor = false;
-    callee = nullptr;
-    args.clear();
-    vararg = false;
-
-    auto copy = functionName;
-
-    if (copy[0] == '$')
-    {
-        constructor = true;
-        copy = copy.substr(1);
-    }
-
-    const auto callee_index = copy.find(':');
-    const auto args_index = copy.find('(');
-
-    if (callee_index == std::string::npos && args_index == std::string::npos)
-    {
-        name = copy;
-        return;
-    }
-
-    // name:callee(...)
-    if (callee_index != std::string::npos)
-    {
-        name = copy.substr(0, callee_index);
-        if (args_index == std::string::npos)
-        {
-            copy = copy.substr(callee_index + 1);
-            callee = Type::Get(copy);
-            return;
-        }
-
-        callee = Type::Get(copy.substr(callee_index + 1, args_index - callee_index - 1));
-        copy = copy.substr(args_index + 1);
-    }
-    else
-    {
-        name = copy.substr(0, args_index);
-        copy = copy.substr(args_index + 1);
-    }
-
-    size_t arg_end = copy.find(',');
-    while (arg_end != std::string::npos)
-    {
-        args.push_back(Type::Get(copy.substr(0, arg_end)));
-        copy = copy.substr(arg_end + 1);
-        arg_end = copy.find(',');
-    }
-    if (copy[0] == '?') vararg = true;
-}
+#include <csaw/codegen/FunctionRef.hpp>
+#include <llvm/Passes/PassBuilder.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Scalar/Reassociate.h>
+#include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
 csaw::Builder::Builder(const std::string& moduleName)
 {
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTargetAsmParser();
+
+    // m_JIT = llvm::ExitOnError()(CSawJIT::Create());
+
     m_Context = std::make_unique<llvm::LLVMContext>();
     m_Builder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
     m_Module = std::make_unique<llvm::Module>(moduleName, *m_Context);
+    // m_Module->setDataLayout(m_JIT->GetDataLayout());
+
+    m_FPM = std::make_unique<llvm::FunctionPassManager>();
+    m_LAM = std::make_unique<llvm::LoopAnalysisManager>();
+    m_FAM = std::make_unique<llvm::FunctionAnalysisManager>();
+    m_CGAM = std::make_unique<llvm::CGSCCAnalysisManager>();
+    m_MAM = std::make_unique<llvm::ModuleAnalysisManager>();
+    m_PIC = std::make_unique<llvm::PassInstrumentationCallbacks>();
+    m_SI = std::make_unique<llvm::StandardInstrumentations>(*m_Context, true);
+    m_SI->registerCallbacks(*m_PIC, m_MAM.get());
+
+    m_FPM->addPass(llvm::InstCombinePass());
+    m_FPM->addPass(llvm::ReassociatePass());
+    m_FPM->addPass(llvm::GVNPass());
+    m_FPM->addPass(llvm::SimplifyCFGPass());
+
+    llvm::PassBuilder pb;
+    pb.registerModuleAnalyses(*m_MAM);
+    pb.registerFunctionAnalyses(*m_FAM);
+    pb.crossRegisterProxies(*m_LAM, *m_FAM, *m_CGAM, *m_MAM);
 }
 
-llvm::Function* csaw::Builder::GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args)
+llvm::LLVMContext& csaw::Builder::GetContext()
 {
-    std::string _name;
-    bool _constructor;
-    TypePtr _callee;
-    std::vector<TypePtr> _args;
-    bool _vararg;
+    return *m_Context;
+}
 
-    auto& functions = m_Module->getFunctionList();
-    for (auto& function : functions)
+llvm::IRBuilder<>& csaw::Builder::GetBuilder()
+{
+    return *m_Builder;
+}
+
+llvm::Module& csaw::Builder::GetModule()
+{
+    return *m_Module;
+}
+
+int csaw::Builder::Main(const int argc, char** argv)
+{
+    // llvm::ExitOnError()(m_JIT->AddModule(m_Module));
+
+    // const auto main_fn = llvm::ExitOnError()(m_JIT->Lookup("main")).getAddress().toPtr<int(*)(int, char**)>();
+    // return main_fn(argc, argv);
+    return 0;
+}
+
+const csaw::FunctionRef& csaw::Builder::GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args)
+{
+    for (const auto& ref : m_Functions[name])
     {
-        GetFunctionAttributes(function.getName().str(), _name, _constructor, _callee, _args, _vararg);
-        if (name != _name) continue;
-        if (_callee != callee) continue;
-        if (args.size() < _args.size() || (args.size() > _args.size() && !_vararg)) continue;
+        if (name != ref.Name) continue;
+        if (callee != ref.Callee) continue;
+        if (args.size() < ref.Args.size() || (args.size() > ref.Args.size() && !ref.IsVarArg)) continue;
 
         size_t i = 0;
-        for (; i < _args.size(); ++i)
-            if (_args[i] != args[i]) break;
-        if (i < _args.size()) continue;
+        for (; i < ref.Args.size(); ++i)
+            if (ref.Args[i] != args[i]) break;
+        if (i < ref.Args.size()) continue;
 
-        return &function;
+        return ref;
     }
-    throw std::runtime_error("not yet implemented");
+
+    return {};
 }
 
-bool csaw::Builder::IsGlobal() const
+csaw::FunctionRef& csaw::Builder::GetOrCreateFunction(const std::string& name, const bool constructor, const TypePtr& callee, const std::vector<TypePtr>& args, const bool vararg, const TypePtr& result)
+{
+    for (auto& ref : m_Functions[name])
+    {
+        if (name != ref.Name) continue;
+        if (constructor != ref.IsConstructor) continue;
+        if (callee != ref.Callee) continue;
+        if (args.size() != ref.Args.size()) continue;
+        if (vararg != ref.IsVarArg) continue;
+        if (result != ref.Result) continue;
+
+        size_t i = 0;
+        for (; i < ref.Args.size(); ++i)
+            if (ref.Args[i] != args[i]) break;
+        if (i < ref.Args.size()) continue;
+
+        return ref;
+    }
+
+    return m_Functions[name].emplace_back(nullptr, name, constructor, callee, args, vararg, result);
+}
+
+bool csaw::Builder::IsGlobal()
 {
     return !m_Builder->GetInsertBlock();
 }
