@@ -1,20 +1,22 @@
 ## Includes
-\inc "stdlib/bool.csaw"
-\inc "stdlib/io.csaw"
-\inc "stdlib/math.csaw"
-\inc "stdlib/random.csaw"
-
 \inc "random.csaw"
 
-@strcmp(a: int8*, b: int8*): int32;
-@(==)(a: int8*, b: int8*): int1 = strcmp(a, b) == 0;
-@(!=)(a: int8*, b: int8*): int1 = strcmp(a, b) != 0;
-@atoi(x: int8*): int32;
+def bool = int1;
+true:  bool = [bool]1;
+false: bool = [bool]0;
+
+@csaw_strcmp(str1: int8*, str2: int8*): int32;
+@csaw_atoi(str: int8*): int32;
+@csaw_printf(fmt: int8*, ?): int32;
+@csaw_scanf(fmt: int8*, ?): int32;
+
+@(==)(str1: int8*, str2: int8*): int1 = csaw_strcmp(str1, str2) == 0;
+@(!=)(str1: int8*, str2: int8*): int1 = csaw_strcmp(str1, str2) != 0;
 
 ## Main - Ghost Game
 @main::int32 {
 
-    printf("Ghost Game\n\n");
+    csaw_printf("Ghost Game\n\n");
 
     still_running: bool = true;
     score: int32 = 0;
@@ -25,22 +27,24 @@
 
     while (still_running) {
         door_with_ghost = randomInt(1, 3);
-        printf("There are three doors.\nThere's a ghost behind one of them.\nWhich one do you open?\n");
+        csaw_printf("There are three doors.\nThere's a ghost behind one of them.\nWhich one do you open?\n");
         
 		door = "";
-        while (door != "1" && door != "2" && door != "3")
-            door = readf("1, 2 or 3? ");
+        while (door != "1" && door != "2" && door != "3") {
+            csaw_printf("1, 2 or 3? ");
+            csaw_scanf("%d", &door);
+        }
         
-        door_num = atoi(door);
+        door_num = csaw_atoi(door);
         if (door_num == door_with_ghost) {
-            printf("GHOST!\n");
+            csaw_printf("GHOST!\n");
             still_running = false;
         } else {
-            printf("No one there!\nYou can go one room further.\n");
+            csaw_printf("No one there!\nYou can go one room further.\n");
             ++score;
         }
     }
 
-    printf("Run!\nGame over! Your score: %d\n", score);
+    csaw_printf("Run!\nGame over! Your score: %d\n", score);
     ret 0;
 }

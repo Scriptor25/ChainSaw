@@ -44,6 +44,7 @@ namespace csaw
     struct IndexExpression;
     struct IntExpression;
     struct MemberExpression;
+    struct ReferenceExpression;
     struct SelectExpression;
     struct StringExpression;
     struct UnaryExpression;
@@ -57,6 +58,7 @@ namespace csaw
     typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
     typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
     typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
+    typedef std::shared_ptr<ReferenceExpression> ReferenceExpressionPtr;
     typedef std::shared_ptr<SelectExpression> SelectExpressionPtr;
     typedef std::shared_ptr<StringExpression> StringExpressionPtr;
     typedef std::shared_ptr<UnaryExpression> UnaryExpressionPtr;
@@ -72,6 +74,7 @@ namespace csaw
     std::ostream& operator<<(std::ostream& out, const IndexExpression& expression);
     std::ostream& operator<<(std::ostream& out, const IntExpression& expression);
     std::ostream& operator<<(std::ostream& out, const MemberExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const ReferenceExpression& expression);
     std::ostream& operator<<(std::ostream& out, const SelectExpression& expression);
     std::ostream& operator<<(std::ostream& out, const StringExpression& expression);
     std::ostream& operator<<(std::ostream& out, const UnaryExpression& expression);

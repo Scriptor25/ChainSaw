@@ -81,6 +81,13 @@ namespace csaw
         std::string Member;
     };
 
+    struct ReferenceExpression : Expression
+    {
+        ReferenceExpression(size_t line, const ExpressionPtr& value);
+
+        ExpressionPtr Value;
+    };
+
     struct SelectExpression : Expression
     {
         SelectExpression(size_t line, const ExpressionPtr& condition, const ExpressionPtr& _true, const ExpressionPtr& _false);

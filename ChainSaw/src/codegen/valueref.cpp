@@ -75,3 +75,16 @@ llvm::Value* csaw::ValueRef::Store(Builder& builder, llvm::Value* value) const
         throw std::runtime_error("invalid or constant value reference");
     }
 }
+
+csaw::ValueRef csaw::ValueRef::GetReference(Builder& builder)
+{
+    switch (m_Mode)
+    {
+    case ValueRefMode_Pointer:
+    case ValueRefMode_AllocateValue:
+        return {builder, ValueRefMode_Constant, m_Pointer, PointerType::Get(m_RawType)};
+
+    default:
+        throw std::runtime_error("invalid or constant value reference");
+    }
+}

@@ -1,3 +1,0 @@
-@format(fmt: int8*, ?): int8*;
-@printf(fmt: int8*, ?): int32;
-@readf(fmt: int8*, ?): int8*;

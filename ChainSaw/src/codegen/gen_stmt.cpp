@@ -41,7 +41,20 @@ void csaw::Builder::Gen(const ScopeStatement& statement)
 
 void csaw::Builder::Gen(const ForStatement& statement)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", m_Builder->GetInsertBlock()->getParent());
+    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", m_Builder->GetInsertBlock()->getParent());
+    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent());
+
+    if (statement.Pre) Gen(statement.Pre);
+    m_Builder->CreateBr(hdr_block);
+    m_Builder->SetInsertPoint(hdr_block);
+    const auto condition = statement.Condition ? Gen(statement.Condition) : ValueRef(*this, ValueRefMode_Constant, m_Builder->getInt1(true), Type::Get("int1"));
+    m_Builder->CreateCondBr(condition.Load(*this), loop_block, end_block);
+    m_Builder->SetInsertPoint(loop_block);
+    if (statement.Body) Gen(statement.Body);
+    if (statement.Loop) Gen(statement.Loop);
+    m_Builder->CreateBr(hdr_block);
+    m_Builder->SetInsertPoint(end_block);
 }
 
 void csaw::Builder::Gen(const FunctionStatement& statement)
@@ -234,7 +247,7 @@ void csaw::Builder::Gen(const WhileStatement& statement)
     const auto condition = Gen(statement.Condition);
     m_Builder->CreateCondBr(condition.Load(*this), loop_block, end_block);
     m_Builder->SetInsertPoint(loop_block);
-    Gen(statement.Body);
+    if (statement.Body) Gen(statement.Body);
     m_Builder->CreateBr(hdr_block);
     m_Builder->SetInsertPoint(end_block);
 }

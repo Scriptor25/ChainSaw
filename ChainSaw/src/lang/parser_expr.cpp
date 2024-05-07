@@ -244,7 +244,7 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         std::string op = Get().Value;
         if ((op == "+" || op == "-") && At(op))
             op += Get().Value;
-        return std::make_shared<UnaryExpression>(line, op, ParseExpression(), false);
+        return std::make_shared<UnaryExpression>(line, op, ParseIndexExpression(), false);
     }
 
     if (NextIfAt("("))
@@ -266,8 +266,14 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
     {
         const auto type = ParseType();
         Expect("]");
-        const auto castee = ParseExpression();
+        const auto castee = ParseIndexExpression();
         return std::make_shared<CastExpression>(line, type, castee);
+    }
+
+    if (NextIfAt("&"))
+    {
+        const auto value = ParseIndexExpression();
+        return std::make_shared<ReferenceExpression>(line, value);
     }
 
     throw std::runtime_error("unhandled token");

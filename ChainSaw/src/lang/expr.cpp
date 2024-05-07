@@ -58,6 +58,11 @@ csaw::MemberExpression::MemberExpression(const size_t line, const ExpressionPtr&
 {
 }
 
+csaw::ReferenceExpression::ReferenceExpression(const size_t line, const ExpressionPtr& value)
+    : Expression(line), Value(value)
+{
+}
+
 csaw::SelectExpression::SelectExpression(const size_t line, const ExpressionPtr& condition, const ExpressionPtr& _true, const ExpressionPtr& _false)
     : Expression(line), Condition(condition), True(_true), False(_false)
 {

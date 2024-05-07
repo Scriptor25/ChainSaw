@@ -19,12 +19,14 @@ namespace csaw
         ValueRef();
         ValueRef(Builder& builder, ValueRefMode mode, llvm::Value* value, const TypePtr& rawType);
 
-        [[nodiscard]] TypePtr RawType() const;
-        [[nodiscard]] llvm::Type* Type() const;
-        [[nodiscard]] ValueRefMode Mode() const;
+        TypePtr RawType() const;
+        llvm::Type* Type() const;
+        ValueRefMode Mode() const;
 
-        [[nodiscard]] llvm::Value* Load(Builder& builder) const;
+        llvm::Value* Load(Builder& builder) const;
         llvm::Value* Store(Builder& builder, llvm::Value* value) const;
+
+        ValueRef GetReference(Builder& builder);
 
     private:
         ValueRefMode m_Mode;

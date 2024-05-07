@@ -32,7 +32,7 @@ namespace csaw
         const FunctionRef& GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
         FunctionRef& GetOrCreateFunction(const std::string& name, bool constructor, const TypePtr& callee, const std::vector<TypePtr>& args, bool vararg, const TypePtr& result);
 
-        bool IsGlobal();
+        bool IsGlobal() const;
 
         void Gen(const StatementPtr& ptr);
         llvm::Type* Gen(const TypePtr& ptr);
@@ -57,6 +57,7 @@ namespace csaw
         ValueRef Gen(const IndexExpression& expression);
         ValueRef Gen(const IntExpression& expression);
         ValueRef Gen(const MemberExpression& expression);
+        ValueRef Gen(const ReferenceExpression& expression);
         ValueRef Gen(const SelectExpression& expression);
         ValueRef Gen(const StringExpression& expression);
         ValueRef Gen(const UnaryExpression& expression);
@@ -86,6 +87,8 @@ namespace csaw
         ValueRef GenInv(const ValueRef& value);
         ValueRef GenInc(const ValueRef& value, bool opRight);
         ValueRef GenDec(const ValueRef& value, bool opRight);
+
+        std::pair<ValueRef, ValueRef> CastToBestOf(const ValueRef& left, const ValueRef& right);
 
         // std::unique_ptr<CSawJIT> m_JIT;
 

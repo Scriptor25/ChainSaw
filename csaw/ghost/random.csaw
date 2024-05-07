@@ -1,2 +1,3 @@
+@random::flt64;
 @random(minc: flt64, mexc: flt64): flt64 = minc + (mexc - minc) * random();
 @randomInt(minc: int32, mexc: int32): int32 = [int32]random([flt64]minc, [flt64]mexc);

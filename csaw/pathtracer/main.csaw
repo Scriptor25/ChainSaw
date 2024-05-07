@@ -1,0 +1,30 @@
+@printf(fmt: int8*, ?): int32;
+
+@main(argc: int32, argv: int8**): int32 {
+
+    width: int32; height: int32;
+
+    i: int32; j: int32;
+
+     r: flt64;  g: flt64;  b: flt64;
+    ir: int32; ig: int32; ib: int32;
+
+    width = height = 256;
+
+    printf("P3\n%d %d\n255\n", width, height);
+
+    for (j = 0; j < height; ++j)
+        for (i = 0; i < width; ++i) {
+            r = i / [flt64](width  - 1);
+            g = j / [flt64](height - 1);
+            b = 0.2;
+
+            ir = [int32](r * 255.999);
+            ig = [int32](g * 255.999);
+            ib = [int32](b * 255.999);
+
+            printf("%d %d %d\n", ir, ig, ib);
+        }
+
+    ret 0;
+}

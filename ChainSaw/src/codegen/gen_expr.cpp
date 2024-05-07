@@ -23,6 +23,8 @@ csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
         return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<MemberExpression>(ptr))
         return Gen(*p);
+    if (const auto p = std::dynamic_pointer_cast<ReferenceExpression>(ptr))
+        return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<SelectExpression>(ptr))
         return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<StringExpression>(ptr))
@@ -53,36 +55,39 @@ csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
         return {*this, ValueRefMode_Constant, result, functionref.Result};
     }
 
-    if (op == "==") return GenCmpEQ(left, right);
-    if (op == "!=") return GenCmpNE(left, right);
-    if (op == "<=") return GenCmpLE(left, right);
-    if (op == ">=") return GenCmpGE(left, right);
     if (op == "=")
     {
         left.Store(*this, right.Load(*this));
         return left;
     }
 
+    const auto [lhs, rhs] = CastToBestOf(left, right);
+
+    if (op == "==") return GenCmpEQ(lhs, rhs);
+    if (op == "!=") return GenCmpNE(lhs, rhs);
+    if (op == "<=") return GenCmpLE(lhs, rhs);
+    if (op == ">=") return GenCmpGE(lhs, rhs);
+
     const auto equ_idx = op.find('=');
     const auto assign = equ_idx != std::string::npos;
     if (assign) op = op.substr(0, equ_idx);
 
     ValueRef value;
-    if (op == "&") value = GenAnd(left, right);
-    if (op == "&&") value = GenLogicalAnd(left, right);
-    if (op == "|") value = GenOr(left, right);
-    if (op == "||") value = GenLogicalOr(left, right);
-    if (op == "^") value = GenXor(left, right);
-    if (op == "<") value = GenCmpLT(left, right);
-    if (op == ">") value = GenCmpGT(left, right);
-    if (op == "<<") value = GenShl(left, right);
-    if (op == ">>") value = GenAShr(left, right);
-    if (op == ">>>") value = GenLShr(left, right);
-    if (op == "+") value = GenAdd(left, right);
-    if (op == "-") value = GenSub(left, right);
-    if (op == "*") value = GenMul(left, right);
-    if (op == "/") value = GenDiv(left, right);
-    if (op == "%") value = GenRem(left, right);
+    if (op == "&") value = GenAnd(lhs, rhs);
+    if (op == "&&") value = GenLogicalAnd(lhs, rhs);
+    if (op == "|") value = GenOr(lhs, rhs);
+    if (op == "||") value = GenLogicalOr(lhs, rhs);
+    if (op == "^") value = GenXor(lhs, rhs);
+    if (op == "<") value = GenCmpLT(lhs, rhs);
+    if (op == ">") value = GenCmpGT(lhs, rhs);
+    if (op == "<<") value = GenShl(lhs, rhs);
+    if (op == ">>") value = GenAShr(lhs, rhs);
+    if (op == ">>>") value = GenLShr(lhs, rhs);
+    if (op == "+") value = GenAdd(lhs, rhs);
+    if (op == "-") value = GenSub(lhs, rhs);
+    if (op == "*") value = GenMul(lhs, rhs);
+    if (op == "/") value = GenDiv(lhs, rhs);
+    if (op == "%") value = GenRem(lhs, rhs);
 
     if (value.Mode() == ValueRefMode_Invalid)
         throw std::runtime_error("unhandled binary operator");
@@ -121,7 +126,7 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
     const auto calleeref = callee ? Gen(callee) : ValueRef();
     if (callee) args.insert(args.begin(), calleeref.Load(*this));
 
-    const auto functionref = GetFunction(name, callee ? calleeref.RawType() : nullptr, argtypes);
+    const auto& functionref = GetFunction(name, callee ? calleeref.RawType() : nullptr, argtypes);
     if (!functionref.Function)
         throw std::runtime_error("undefined function");
 
@@ -176,7 +181,8 @@ csaw::ValueRef csaw::Builder::Gen(const CharExpression& expression)
 
 csaw::ValueRef csaw::Builder::Gen(const FloatExpression& expression)
 {
-    throw std::runtime_error("not yet implemented");
+    const auto result = llvm::ConstantFP::get(m_Builder->getDoubleTy(), expression.Value);
+    return {*this, ValueRefMode_Constant, result, Type::Get("flt64")};
 }
 
 csaw::ValueRef csaw::Builder::Gen(const IdentifierExpression& expression)
@@ -203,6 +209,12 @@ csaw::ValueRef csaw::Builder::Gen(const MemberExpression& expression)
     const auto member = expression.Member;
 
     throw std::runtime_error("not yet implemented");
+}
+
+csaw::ValueRef csaw::Builder::Gen(const ReferenceExpression& expression)
+{
+    auto value = Gen(expression.Value);
+    return value.GetReference(*this);
 }
 
 csaw::ValueRef csaw::Builder::Gen(const SelectExpression& expression)

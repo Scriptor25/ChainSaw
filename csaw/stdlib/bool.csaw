@@ -1,3 +1,0 @@
-def bool = int1;
-true:  bool = [bool]1;
-false: bool = [bool]0;

@@ -1,6 +1,7 @@
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
 #include <llvm/Passes/PassBuilder.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar/GVN.h>
@@ -19,6 +20,9 @@ csaw::Builder::Builder(const std::string& moduleName)
     m_Builder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
     m_Module = std::make_unique<llvm::Module>(moduleName, *m_Context);
     // m_Module->setDataLayout(m_JIT->GetDataLayout());
+
+    const auto triple = llvm::sys::getDefaultTargetTriple();
+    m_Module->setTargetTriple(triple);
 
     m_FPM = std::make_unique<llvm::FunctionPassManager>();
     m_LAM = std::make_unique<llvm::LoopAnalysisManager>();
@@ -105,7 +109,33 @@ csaw::FunctionRef& csaw::Builder::GetOrCreateFunction(const std::string& name, c
     return m_Functions[name].emplace_back(nullptr, name, constructor, callee, args, vararg, result);
 }
 
-bool csaw::Builder::IsGlobal()
+bool csaw::Builder::IsGlobal() const
 {
     return !m_Builder->GetInsertBlock();
+}
+
+std::pair<csaw::ValueRef, csaw::ValueRef> csaw::Builder::CastToBestOf(const ValueRef& left, const ValueRef& right)
+{
+    if (left.Type() == right.Type())
+        return {left, right};
+
+    if (left.Type()->isIntegerTy() && right.Type()->isIntegerTy())
+    {
+        if (left.Type()->getIntegerBitWidth() > right.Type()->getIntegerBitWidth())
+        {
+            const auto result = m_Builder->CreateIntCast(right.Load(*this), left.Type(), true);
+            return {left, {*this, ValueRefMode_Constant, result, left.RawType()}};
+        }
+
+        const auto result = m_Builder->CreateIntCast(left.Load(*this), right.Type(), true);
+        return {{*this, ValueRefMode_Constant, result, right.RawType()}, right};
+    }
+
+    if (left.Type()->isIntegerTy() && right.Type()->isFloatingPointTy())
+    {
+        const auto result = m_Builder->CreateSIToFP(left.Load(*this), right.Type());
+        return {{*this, ValueRefMode_Constant, result, right.RawType()}, right};
+    }
+
+    throw std::runtime_error("not yet implemented");
 }
