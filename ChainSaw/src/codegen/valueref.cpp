@@ -1,90 +1,105 @@
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/ValueRef.hpp>
 
-csaw::ValueRef::ValueRef()
+csaw::ValueRef csaw::ValueRef::Allocate(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType)
 {
-    m_Mode = ValueRefMode_Invalid;
-    m_RawType = nullptr;
-    m_Type = nullptr;
-    m_Pointer = nullptr;
+    auto pointer = builder->GetBuilder().CreateAlloca(builder->Gen(rawBaseType));
+    if (value)
+        builder->GetBuilder().CreateStore(value, pointer);
+    return {builder, false, pointer, PointerType::Get(rawBaseType)};
 }
 
-csaw::ValueRef::ValueRef(Builder& builder, const ValueRefMode mode, llvm::Value* value, const TypePtr& rawType)
-    : m_Mode(mode), m_RawType(rawType), m_Type(builder.Gen(rawType))
+csaw::ValueRef csaw::ValueRef::Constant(Builder* builder, llvm::Value* value, const TypePtr& rawType)
 {
-    if (!value)
-        value = llvm::Constant::getNullValue(m_Type);
-
-    switch (mode)
-    {
-    case ValueRefMode_Constant:
-    case ValueRefMode_Pointer:
-        m_Pointer = value;
-        break;
-
-    case ValueRefMode_AllocateValue:
-        m_Pointer = builder.GetBuilder().CreateAlloca(m_Type);
-        Store(builder, value);
-        break;
-
-    default:
-        throw std::runtime_error("invalid value reference");
-    }
+    return {builder, true, value, rawType};
 }
 
-csaw::TypePtr csaw::ValueRef::RawType() const
+csaw::ValueRef csaw::ValueRef::Pointer(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType)
 {
+    return {builder, false, value, PointerType::Get(rawBaseType)};
+}
+
+llvm::Value* csaw::ValueRef::GetValue() const
+{
+    Check();
+    return m_Value;
+}
+
+llvm::Type* csaw::ValueRef::GetType() const
+{
+    Check();
+    return m_Builder->Gen(m_RawType);
+}
+
+llvm::Type* csaw::ValueRef::GetBaseType() const
+{
+    Check();
+    return m_Builder->Gen(GetRawBaseType());
+}
+
+csaw::TypePtr csaw::ValueRef::GetRawType() const
+{
+    Check();
     return m_RawType;
 }
 
-llvm::Type* csaw::ValueRef::Type() const
+csaw::TypePtr csaw::ValueRef::GetRawBaseType() const
 {
-    return m_Type;
+    Check();
+    if (m_RawType->IsPointer())
+        return std::dynamic_pointer_cast<PointerType>(m_RawType)->Base;
+    return m_RawType;
 }
 
-csaw::ValueRefMode csaw::ValueRef::Mode() const
+csaw::ValueRef csaw::ValueRef::GetReference() const
 {
-    return m_Mode;
+    Check();
+    if (m_IsRValue)
+        throw std::runtime_error("cannot get reference to rvalue");
+    return Constant(m_Builder, m_Value, m_RawType);
 }
 
-llvm::Value* csaw::ValueRef::Load(Builder& builder) const
+bool csaw::ValueRef::IsRValue() const
 {
-    switch (m_Mode)
-    {
-    case ValueRefMode_Constant:
-        return m_Pointer;
-
-    case ValueRefMode_Pointer:
-    case ValueRefMode_AllocateValue:
-        return builder.GetBuilder().CreateLoad(m_Type, m_Pointer);
-
-    default:
-        throw std::runtime_error("invalid value reference");
-    }
+    return m_IsRValue;
 }
 
-llvm::Value* csaw::ValueRef::Store(Builder& builder, llvm::Value* value) const
+csaw::ValueRef csaw::ValueRef::Load() const
 {
-    switch (m_Mode)
-    {
-    case ValueRefMode_Pointer:
-    case ValueRefMode_AllocateValue:
-        return builder.GetBuilder().CreateStore(value, m_Pointer);
-
-    default:
-        throw std::runtime_error("invalid or constant value reference");
-    }
+    Check();
+    if (m_IsRValue)
+        return *this;
+    const auto base_type = GetRawBaseType();
+    const auto value = m_Builder->GetBuilder().CreateLoad(m_Builder->Gen(base_type), m_Value);
+    return Constant(m_Builder, value, base_type);
 }
 
-csaw::ValueRef csaw::ValueRef::GetReference(Builder& builder)
+const csaw::ValueRef& csaw::ValueRef::Store(const ValueRef& value) const
 {
-    switch (m_Mode)
-    {
-    case ValueRefMode_Pointer:
-    case ValueRefMode_AllocateValue:
-        return {builder, ValueRefMode_Constant, m_Pointer, PointerType::Get(m_RawType)};
+    Check();
+    if (m_IsRValue)
+        throw std::runtime_error("cannot assign to rvalue");
+    m_Builder->GetBuilder().CreateStore(value.Load().GetValue(), m_Value);
+    return *this;
+}
 
-    default:
-        throw std::runtime_error("invalid or constant value reference");
-    }
+bool csaw::ValueRef::Invalid() const
+{
+    return !m_Builder || !m_Value;
+}
+
+csaw::ValueRef::ValueRef()
+    : m_Builder(nullptr), m_IsRValue(true), m_Value(nullptr)
+{
+}
+
+csaw::ValueRef::ValueRef(Builder* builder, const bool rvalue, llvm::Value* value, const TypePtr& rawType)
+    : m_Builder(builder), m_IsRValue(rvalue), m_Value(value), m_RawType(rawType)
+{
+}
+
+void csaw::ValueRef::Check() const
+{
+    if (Invalid())
+        throw std::runtime_error("cannot use invalid value ref");
 }

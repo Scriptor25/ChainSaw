@@ -1,3 +1,4 @@
+#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 
 llvm::Type* csaw::Builder::Gen(const TypePtr& ptr)
@@ -22,5 +23,5 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& ptr)
     if (ptr->Name == "flt32") return m_Builder->getFloatTy();
     if (ptr->Name == "flt64") return m_Builder->getDoubleTy();
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }

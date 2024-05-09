@@ -1,163 +1,212 @@
+#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/ValueRef.hpp>
 
 csaw::ValueRef csaw::Builder::GenCmpEQ(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateICmpEQ(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, Type::Get("int1")};
+        const auto value = m_Builder->CreateICmpEQ(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenCmpNE(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
-    {
-        const auto result = m_Builder->CreateICmpNE(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, Type::Get("int1")};
-    }
-
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenCmpLE(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateICmpSLE(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, Type::Get("int1")};
+        const auto value = m_Builder->CreateICmpSLE(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
     }
 
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFCmpOLE(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenCmpGE(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenAnd(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateAnd(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenLogicalAnd(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntegerTy(1))
+    if (left.GetType()->isIntegerTy(1))
     {
-        const auto result = m_Builder->CreateLogicalAnd(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, Type::Get("int1")};
+        const auto value = m_Builder->CreateLogicalAnd(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenOr(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateOr(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenLogicalOr(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isIntegerTy(1))
+    {
+        const auto value = m_Builder->CreateLogicalOr(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenXor(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenCmpLT(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateICmpSLT(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, Type::Get("int1")};
+        const auto value = m_Builder->CreateICmpSLT(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
     }
 
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFCmpOLT(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenCmpGT(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenShl(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateShl(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenAShr(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateAShr(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenLShr(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenAdd(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateAdd(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateAdd(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    if (left.Type()->isFloatingPointTy())
+    if (left.GetType()->isFloatingPointTy())
     {
-        const auto result = m_Builder->CreateFAdd(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateFAdd(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenSub(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isIntOrPtrTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateSub(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateSub(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    if (left.Type()->isFloatingPointTy())
+    if (left.GetType()->isFloatingPointTy())
     {
-        const auto result = m_Builder->CreateFSub(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateFSub(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenMul(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isFloatingPointTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateFMul(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateMul(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFMul(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenDiv(const ValueRef& left, const ValueRef& right)
 {
-    if (left.Type()->isFloatingPointTy())
+    if (left.GetType()->isIntegerTy())
     {
-        const auto result = m_Builder->CreateFDiv(left.Load(*this), right.Load(*this));
-        return {*this, ValueRefMode_Constant, result, left.RawType()};
+        const auto value = m_Builder->CreateSDiv(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
     }
 
-    throw std::runtime_error("not yet implemented");
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFDiv(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, left.GetRawType());
+    }
+
+    CSAW_WIP;
 }
 
 csaw::ValueRef csaw::Builder::GenRem(const ValueRef& left, const ValueRef& right)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }

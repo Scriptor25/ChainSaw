@@ -1,30 +1,46 @@
-@printf(fmt: int8*, ?): int32;
+## STD INCLUDES
+\inc "stdio.csaw"
+\inc "stdlib.csaw"
+\inc "stdimg.csaw"
 
-@main(argc: int32, argv: int8**): int32 {
+## PROJECT INCLUDES
+\inc "vec3.csaw"
 
-    width: int32; height: int32;
+## MAIN
+@main(argc: int32, ppArgv: int8**): int32 {
+
+    a: int32;
+    for (a = 0; a < argc; ++a)
+        printf("#%-3d: %s\n", a, ppArgv[a]);
+
+    if (argc != 2)
+        ret 1;
 
     i: int32; j: int32;
 
      r: flt64;  g: flt64;  b: flt64;
-    ir: int32; ig: int32; ib: int32;
+    ir:  int8; ig:  int8; ib:  int8;
 
-    width = height = 256;
+    out: image = image(256, 256);
 
-    printf("P3\n%d %d\n255\n", width, height);
-
-    for (j = 0; j < height; ++j)
-        for (i = 0; i < width; ++i) {
-            r = i / [flt64](width  - 1);
-            g = j / [flt64](height - 1);
+    for (j = 0; j < out.height; ++j) {
+        printf("\rScanlines remaining: %d", out.height - j);
+        for (i = 0; i < out.width; ++i) {
+            r = i / [flt64](out.width  - 1);
+            g = j / [flt64](out.height - 1);
             b = 0.2;
 
-            ir = [int32](r * 255.999);
-            ig = [int32](g * 255.999);
-            ib = [int32](b * 255.999);
+            ir = [int8](r * 255.999);
+            ig = [int8](g * 255.999);
+            ib = [int8](b * 255.999);
 
-            printf("%d %d %d\n", ir, ig, ib);
+            out.pixel(i, j, 0xff << 24 | (ir & 0xff) << 16 | (ig & 0xff) << 8 | (ib & 0xff));
         }
+    }
 
+    out.write(ppArgv[1]);
+    out.destroy();
+
+    printf("\rDone.                       \n");
     ret 0;
 }

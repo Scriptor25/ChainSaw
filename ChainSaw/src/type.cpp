@@ -27,6 +27,16 @@ csaw::Type::Type(const std::string& name)
 {
 }
 
+bool csaw::Type::IsPointer() const
+{
+    return false;
+}
+
+bool csaw::Type::IsStruct() const
+{
+    return false;
+}
+
 csaw::PointerTypePtr csaw::PointerType::Get(const TypePtr& base)
 {
     const auto name = base->Name + '*';
@@ -39,4 +49,32 @@ csaw::PointerTypePtr csaw::PointerType::Get(const TypePtr& base)
 csaw::PointerType::PointerType(const std::string& name, const TypePtr& base)
     : Type(name), Base(base)
 {
+}
+
+bool csaw::PointerType::IsPointer() const
+{
+    return true;
+}
+
+csaw::StructTypePtr csaw::StructType::Get(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
+{
+    auto& type = Types[name];
+    if (!type)
+        type = std::make_shared<StructType>(name, elements);
+    return std::dynamic_pointer_cast<StructType>(type);
+}
+
+csaw::StructTypePtr csaw::StructType::Get(const std::string& name)
+{
+    return std::dynamic_pointer_cast<StructType>(Types[name]);
+}
+
+csaw::StructType::StructType(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
+    : Type(name), Elements(elements)
+{
+}
+
+bool csaw::StructType::IsStruct() const
+{
+    return true;
 }

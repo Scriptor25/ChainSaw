@@ -1,3 +1,4 @@
+#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
 #include <csaw/codegen/ValueRef.hpp>
@@ -30,7 +31,7 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
         return;
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
 void csaw::Builder::Gen(const ScopeStatement& statement)
@@ -48,8 +49,8 @@ void csaw::Builder::Gen(const ForStatement& statement)
     if (statement.Pre) Gen(statement.Pre);
     m_Builder->CreateBr(hdr_block);
     m_Builder->SetInsertPoint(hdr_block);
-    const auto condition = statement.Condition ? Gen(statement.Condition) : ValueRef(*this, ValueRefMode_Constant, m_Builder->getInt1(true), Type::Get("int1"));
-    m_Builder->CreateCondBr(condition.Load(*this), loop_block, end_block);
+    const auto condition = statement.Condition ? Gen(statement.Condition) : ValueRef::Constant(this, m_Builder->getInt1(true), Type::Get("int1"));
+    m_Builder->CreateCondBr(condition.Load().GetValue(), loop_block, end_block);
     m_Builder->SetInsertPoint(loop_block);
     if (statement.Body) Gen(statement.Body);
     if (statement.Loop) Gen(statement.Loop);
@@ -87,39 +88,45 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (!ref.Function->empty())
         throw std::runtime_error("function already implemented");
 
+    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", ref.Function);
+    m_Builder->SetInsertPoint(entry_block);
+
     m_Values.clear();
     int i = has_ptr ? -1 : 0;
     for (auto& arg : ref.Function->args())
     {
-        const auto type = i < 0 ? (statement.Constructor ? statement.Result : statement.Callee) : statement.Args[i].second;
-        m_Values[arg.getName().str()] = {*this, ValueRefMode_Constant, &arg, type};
+        if (i < 0)
+        {
+            const auto type = statement.Constructor ? Type::Get(statement.Name) : statement.Callee;
+            m_Values[arg.getName().str()] = ValueRef::Allocate(this, &arg, PointerType::Get(type));
+        }
+        else
+        {
+            m_Values[arg.getName().str()] = ValueRef::Allocate(this, &arg, statement.Args[i].second);
+        }
         ++i;
     }
-
-    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", ref.Function);
-    m_Builder->SetInsertPoint(entry_block);
 
     if (const auto scope_statement = std::dynamic_pointer_cast<ScopeStatement>(statement.Body))
     {
         Gen(scope_statement);
-        // TODO: check for missing ret
 
-        if (statement.Constructor)
-            m_Builder->CreateRet(m_Values["me"].Load(*this));
+        if (ref.Function->getFunctionType()->getReturnType()->isVoidTy())
+            for (const auto& block : *ref.Function)
+                if (!block.getTerminator())
+                    m_Builder->CreateRetVoid();
     }
     else if (const auto expression = std::dynamic_pointer_cast<Expression>(statement.Body))
     {
         const auto result = Gen(expression);
-        m_Builder->CreateRet(result.Load(*this));
+        if (ref.Function->getFunctionType()->getReturnType()->isVoidTy())
+            m_Builder->CreateRetVoid();
+        else m_Builder->CreateRet(result.Load().GetValue());
     }
     else
     {
         Gen(statement.Body);
-
-        if (statement.Constructor)
-            m_Builder->CreateRet(m_Values["me"].Load(*this));
-        else
-            m_Builder->CreateRetVoid();
+        m_Builder->CreateRetVoid();
     }
 
     m_Builder->SetInsertPoint(static_cast<llvm::BasicBlock*>(nullptr));
@@ -143,7 +150,7 @@ void csaw::Builder::Gen(const IfStatement& statement)
 
     bool need_end = false;
 
-    m_Builder->CreateCondBr(condition.Load(*this), true_block, false_block);
+    m_Builder->CreateCondBr(condition.Load().GetValue(), true_block, false_block);
 
     m_Builder->SetInsertPoint(true_block);
     Gen(statement.True);
@@ -180,7 +187,7 @@ void csaw::Builder::Gen(const RetStatement& statement)
     }
 
     const auto value = Gen(statement.Value);
-    m_Builder->CreateRet(value.Load(*this));
+    m_Builder->CreateRet(value.Load().GetValue());
 }
 
 void csaw::Builder::Gen(const DefStatement& statement)
@@ -198,7 +205,7 @@ void csaw::Builder::Gen(const DefStatement& statement)
         return;
     }
 
-    auto type = llvm::StructType::getTypeByName(*m_Context, statement.Name);
+    const auto type = llvm::StructType::getTypeByName(*m_Context, statement.Name);
     if (type && !type->isEmptyTy())
         throw std::runtime_error("cannot redefine struct");
 
@@ -220,20 +227,20 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         if (statement.Value)
         {
             const auto initializer = Gen(statement.Value);
-            if (initializer.Mode() != ValueRefMode_Constant)
-                throw std::runtime_error("not yet implemented");
-            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer.Load(*this));
+            if (!initializer.IsRValue())
+                CSAW_WIP;
+            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer.GetValue());
         }
 
         const auto type = Gen(statement.Type);
         const auto value = new llvm::GlobalVariable(*m_Module, type, false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
 
-        m_GlobalValues[statement.Name] = {*this, ValueRefMode_Pointer, value, statement.Type};
+        m_GlobalValues[statement.Name] = ValueRef::Pointer(this, value, statement.Type);
 
         return;
     }
 
-    m_Values[statement.Name] = {*this, ValueRefMode_AllocateValue, statement.Value ? Gen(statement.Value).Load(*this) : nullptr, statement.Type};
+    m_Values[statement.Name] = ValueRef::Allocate(this, statement.Value ? Gen(statement.Value).Load().GetValue() : nullptr, statement.Type);
 }
 
 void csaw::Builder::Gen(const WhileStatement& statement)
@@ -245,7 +252,7 @@ void csaw::Builder::Gen(const WhileStatement& statement)
     m_Builder->CreateBr(hdr_block);
     m_Builder->SetInsertPoint(hdr_block);
     const auto condition = Gen(statement.Condition);
-    m_Builder->CreateCondBr(condition.Load(*this), loop_block, end_block);
+    m_Builder->CreateCondBr(condition.Load().GetValue(), loop_block, end_block);
     m_Builder->SetInsertPoint(loop_block);
     if (statement.Body) Gen(statement.Body);
     m_Builder->CreateBr(hdr_block);

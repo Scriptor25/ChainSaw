@@ -1,0 +1,61 @@
+def vec3 {
+    x: flt64,
+    y: flt64,
+    z: flt64
+}
+
+$vec3() {
+    me.x = me.y = me.z = 0.0;
+}
+
+$vec3(s: flt64) {
+    me.x = me.y = me.z = s;
+}
+
+$vec3(x: flt64, y: flt64, z: flt64) {
+    me.x = x;
+    me.y = y;
+    me.z = z;
+}
+
+@(-):vec3:vec3 = vec3(-me.x, -me.y, -me.z);
+@([]):vec3(i: int32): flt64* {
+    if (i == 0) ret &me.x;
+    if (i == 1) ret &me.y;
+    if (i == 2) ret &me.z;
+    ret [flt64*]0;
+}
+
+@(+=):vec3(v: vec3*): vec3* {
+    me.x += v.x;
+    me.y += v.y;
+    me.z += v.z;
+    ret me;
+}
+
+@(*=):vec3(t: flt64): vec3* {
+    me.x *= t;
+    me.y *= t;
+    me.z *= t;
+    ret me;
+}
+
+@(/=):vec3(t: flt64): vec3* = me *= 1 / t;
+
+@length_squared:vec3:flt64 = me.x * me.x + me.y * me.y + me.z * me.z;
+@length:vec3:flt64 = sqrt(me.length_squared());
+
+@(+)(u: vec3*, v: vec3*): vec3 = vec3(u.x + v.x, u.y + v.y, u.z + v.z);
+@(-)(u: vec3*, v: vec3*): vec3 = vec3(u.x - v.x, u.y - v.y, u.z - v.z);
+@(*)(t: flt64, v: vec3*): vec3 = vec3(t * v.x, t * v.y, t * v.z);
+@(*)(v: vec3*: t: flt64): vec3 = t * v;
+@(/)(v: vec3*, t: flt64): vec3 = (1 / t) * v;
+
+@dot(u: vec3*, v: vec3*): flt64 = u.x * v.x + u.y * v.y + u.z * v.z;
+@cross(u: vec3*, v: vec3*): vec3 = vec3(
+    u.y * v.z - u.z * v.y,
+    u.z * v.x - u.x * v.z,
+    u.x * v.y - u.y * v.x
+);
+
+@unit_vector(v: vec3*): vec3 = v / v.length();

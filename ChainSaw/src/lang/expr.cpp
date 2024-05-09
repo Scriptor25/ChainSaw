@@ -33,6 +33,11 @@ csaw::CharExpression::CharExpression(const size_t line, const std::string& value
     Value = value[0];
 }
 
+csaw::DereferenceExpression::DereferenceExpression(const size_t line, const ExpressionPtr& value)
+    : Expression(line), Value(value)
+{
+}
+
 csaw::FloatExpression::FloatExpression(const size_t line, const std::string& value)
     : Expression(line), Value(std::stod(value))
 {
@@ -53,8 +58,8 @@ csaw::IntExpression::IntExpression(const size_t line, const std::string& value, 
 {
 }
 
-csaw::MemberExpression::MemberExpression(const size_t line, const ExpressionPtr& object, const std::string& member)
-    : Expression(line), Object(object), Member(member)
+csaw::MemberExpression::MemberExpression(const size_t line, const ExpressionPtr& object, const std::string& member, const bool deref)
+    : Expression(line), Object(object), Member(member), ShouldDeref(deref)
 {
 }
 

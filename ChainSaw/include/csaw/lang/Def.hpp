@@ -39,6 +39,7 @@ namespace csaw
     struct CallExpression;
     struct CastExpression;
     struct CharExpression;
+    struct DereferenceExpression;
     struct FloatExpression;
     struct IdentifierExpression;
     struct IndexExpression;
@@ -55,6 +56,7 @@ namespace csaw
     typedef std::shared_ptr<CallExpression> CallExpressionPtr;
     typedef std::shared_ptr<CastExpression> CastExpressionPtr;
     typedef std::shared_ptr<CharExpression> CharExpressionPtr;
+    typedef std::shared_ptr<DereferenceExpression> DereferenceExpressionPtr;
     typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
     typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
     typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
@@ -69,6 +71,7 @@ namespace csaw
     std::ostream& operator<<(std::ostream& out, const CallExpression& expression);
     std::ostream& operator<<(std::ostream& out, const CastExpression& expression);
     std::ostream& operator<<(std::ostream& out, const CharExpression& expression);
+    std::ostream& operator<<(std::ostream& out, const DereferenceExpression& expression);
     std::ostream& operator<<(std::ostream& out, const FloatExpression& expression);
     std::ostream& operator<<(std::ostream& out, const IdentifierExpression& expression);
     std::ostream& operator<<(std::ostream& out, const IndexExpression& expression);

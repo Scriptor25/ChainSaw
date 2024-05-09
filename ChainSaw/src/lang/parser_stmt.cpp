@@ -1,3 +1,4 @@
+#include <csaw/CSaw.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Parser.hpp>
 #include <csaw/lang/Stmt.hpp>
@@ -85,9 +86,6 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
     }
     else name = Expect(TK_IDENTIFIER).Value;
 
-    if (constructor)
-        result = Type::Get(name);
-
     if (NextIfAt(":"))
         if (!At(":"))
             callee = ParseType();
@@ -121,6 +119,9 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
         Expect(";");
         return std::make_shared<FunctionStatement>(line, constructor, name, callee, args, vararg, result, body);
     }
+
+    if (NextIfAt("<"))
+        CSAW_WIP;
 
     if (!At("{"))
     {
@@ -196,6 +197,8 @@ csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
             Expect(",");
     }
     Expect("}");
+
+    StructType::Get(name, elements);
 
     return std::make_shared<DefStatement>(line, name, elements);
 }

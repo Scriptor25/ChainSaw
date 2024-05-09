@@ -209,12 +209,12 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
 {
-    while (NextIfAt("."))
+    while (At(".") || At("!"))
     {
         auto line = m_Line;
-
+        bool deref = Get().Value == "!";
         std::string id = Expect(TK_IDENTIFIER).Value;
-        expr = std::make_shared<MemberExpression>(line, expr, id);
+        expr = std::make_shared<MemberExpression>(line, expr, id, deref);
     }
 
     return expr;
@@ -274,6 +274,12 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
     {
         const auto value = ParseIndexExpression();
         return std::make_shared<ReferenceExpression>(line, value);
+    }
+
+    if (NextIfAt("*"))
+    {
+        const auto value = ParseIndexExpression();
+        return std::make_shared<DereferenceExpression>(line, value);
     }
 
     throw std::runtime_error("unhandled token");

@@ -6,32 +6,37 @@
 
 namespace csaw
 {
-    enum ValueRefMode
+    class ValueRef
     {
-        ValueRefMode_Invalid,
-        ValueRefMode_Constant,
-        ValueRefMode_Pointer,
-        ValueRefMode_AllocateValue,
-    };
+    public:
+        static ValueRef Allocate(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType);
+        static ValueRef Constant(Builder* builder, llvm::Value* value, const TypePtr& rawType);
+        static ValueRef Pointer(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType);
 
-    struct ValueRef
-    {
         ValueRef();
-        ValueRef(Builder& builder, ValueRefMode mode, llvm::Value* value, const TypePtr& rawType);
 
-        TypePtr RawType() const;
-        llvm::Type* Type() const;
-        ValueRefMode Mode() const;
+        llvm::Value* GetValue() const;
+        llvm::Type* GetType() const;
+        llvm::Type* GetBaseType() const;
+        TypePtr GetRawType() const;
+        TypePtr GetRawBaseType() const;
 
-        llvm::Value* Load(Builder& builder) const;
-        llvm::Value* Store(Builder& builder, llvm::Value* value) const;
+        ValueRef GetReference() const;
+        bool IsRValue() const;
 
-        ValueRef GetReference(Builder& builder);
+        ValueRef Load() const;
+        const ValueRef& Store(const ValueRef& value) const;
+
+        bool Invalid() const;
 
     private:
-        ValueRefMode m_Mode;
-        llvm::Value* m_Pointer;
+        ValueRef(Builder* builder, bool rvalue, llvm::Value* value, const TypePtr& rawType);
+
+        void Check() const;
+
+        Builder* m_Builder;
+        bool m_IsRValue;
+        llvm::Value* m_Value;
         TypePtr m_RawType;
-        llvm::Type* m_Type;
     };
 }

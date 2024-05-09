@@ -75,7 +75,7 @@ csaw::Token& csaw::Parser::Next()
         std::string value;
 
         c = m_Stream.get();
-        while (c != EOF && c != '"')
+        while (c != EOF && c != '\'')
         {
             if (c == '\\')
                 c = Escape(m_Stream.get());

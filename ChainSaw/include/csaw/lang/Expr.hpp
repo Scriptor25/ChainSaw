@@ -44,6 +44,13 @@ namespace csaw
         char Value;
     };
 
+    struct DereferenceExpression : Expression
+    {
+        DereferenceExpression(size_t line, const ExpressionPtr& value);
+
+        ExpressionPtr Value;
+    };
+
     struct FloatExpression : Expression
     {
         FloatExpression(size_t line, const std::string& value);
@@ -75,10 +82,11 @@ namespace csaw
 
     struct MemberExpression : Expression
     {
-        MemberExpression(size_t line, const ExpressionPtr& object, const std::string& member);
+        MemberExpression(size_t line, const ExpressionPtr& object, const std::string& member, bool deref);
 
         ExpressionPtr Object;
         std::string Member;
+        bool ShouldDeref;
     };
 
     struct ReferenceExpression : Expression

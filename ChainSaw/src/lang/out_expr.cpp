@@ -1,4 +1,5 @@
 #include <ostream>
+#include <csaw/CSaw.hpp>
 #include <csaw/lang/Expr.hpp>
 
 std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
@@ -11,6 +12,8 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<CharExpression>(ptr))
         return out << *expr;
+    if (const auto expr = std::dynamic_pointer_cast<DereferenceExpression>(ptr))
+        return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<FloatExpression>(ptr))
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<IdentifierExpression>(ptr))
@@ -21,6 +24,8 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<MemberExpression>(ptr))
         return out << *expr;
+    if (const auto expr = std::dynamic_pointer_cast<ReferenceExpression>(ptr))
+        return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<SelectExpression>(ptr))
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<StringExpression>(ptr))
@@ -30,12 +35,12 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
     if (const auto expr = std::dynamic_pointer_cast<VarArgExpression>(ptr))
         return out << *expr;
 
-    throw std::runtime_error("unhandled expression pointer");
+    CSAW_WIP;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const BinaryExpression& expression)
 {
-    return out << expression.Left << ' ' << expression.Operator << ' ' << expression.Right;
+    return out << '(' << expression.Left << ' ' << expression.Operator << ' ' << expression.Right << ')';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const CallExpression& expression)
@@ -52,12 +57,17 @@ std::ostream& csaw::operator<<(std::ostream& out, const CallExpression& expressi
 
 std::ostream& csaw::operator<<(std::ostream& out, const CastExpression& expression)
 {
-    return out << '[' << expression.Type << ']' << expression.Value;
+    return out << "([" << expression.Type << ']' << expression.Value << ')';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const CharExpression& expression)
 {
     return out << '\'' << expression.Value << '\'';
+}
+
+std::ostream& csaw::operator<<(std::ostream& out, const DereferenceExpression& expression)
+{
+    return out << "*(" << expression.Value << ')';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const FloatExpression& expression)
@@ -85,9 +95,14 @@ std::ostream& csaw::operator<<(std::ostream& out, const MemberExpression& expres
     return out << expression.Object << '.' << expression.Member;
 }
 
+std::ostream& csaw::operator<<(std::ostream& out, const ReferenceExpression& expression)
+{
+    return out << "&(" << expression.Value << ')';
+}
+
 std::ostream& csaw::operator<<(std::ostream& out, const SelectExpression& expression)
 {
-    return out << expression.Condition << " ? " << expression.True << " : " << expression.False;
+    return out << '(' << expression.Condition << " ? " << expression.True << " : " << expression.False << ')';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const StringExpression& expression)
@@ -122,10 +137,11 @@ std::ostream& csaw::operator<<(std::ostream& out, const StringExpression& expres
 
 std::ostream& csaw::operator<<(std::ostream& out, const UnaryExpression& expression)
 {
+    out << '(';
     if (!expression.OpRight) out << expression.Operator;
     out << expression.Value;
     if (expression.OpRight) out << expression.Operator;
-    return out;
+    return out << ')';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const VarArgExpression& expression)

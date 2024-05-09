@@ -3,6 +3,6 @@
 namespace csaw
 {
     class Builder;
-    struct ValueRef;
+    class ValueRef;
     struct FunctionRef;
 }

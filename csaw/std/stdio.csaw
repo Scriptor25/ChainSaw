@@ -1,0 +1,67 @@
+## STDIO ##
+
+## Types
+def FILE = void;
+def fpos_t = int64;
+def size_t = int64;
+def va_list = void*;
+
+## Operations of files
+@remove(filename: int8*): int32;
+@rename(oldname: int8*, newname: int8*): int32;
+@tmpfile::FILE*;
+@tmpnam(str: int8*): int8*;
+
+## File access
+@fclose(stream: FILE*): int32;
+@fflush(stream: FILE*): int32;
+@fopen(filename: int8*, mode: int8*): FILE*;
+@freopen(filename: int8*, mode: int8*, stream: FILE*): FILE*;
+@setbuf(stream: FILE*, buffer: int8*);
+@setvbuf(stream: FILE*, buffer: int8*, size: size_t): int32;
+
+## Formatted input/output
+@fprintf(stream: FILE*, format: int8*, ?): int32;
+@fscanf(stream: FILE*, format: int8*, ?): int32;
+@printf(format: int8*, ?): int32;
+@scanf(format: int8*, ?): int32;
+@snprintf(s: int8*, n: size_t, format: int8*, ?): int32;
+@sprintf(s: int8*, format: int8*, ?): int32;
+@sscanf(s: int8*, format: int8*, ?): int32;
+@vfprintf(stream: FILE*, format: int8*, arg: va_list): int32;
+@vfscanf(stream: FILE*, format: int8*, arg: va_list): int32;
+@vprintf(format: int8*, arg: va_list): int32;
+@vscanf(format: int8*, arg: va_list): int32;
+@vsnprintf(s: int8*, n: size_t, format: int8*, arg: va_list): int32;
+@vsprintf(s: int8*, format: int8*, arg: va_list): int32;
+@vsscanf(s: int8*, format: int8*, arg: va_list): int32;
+
+## Character input/output
+@fgetc(stream: FILE*): int32;
+@fgets(str: int8*, num: int32, stream: FILE*): int8*;
+@fputc(character: int32, stream: FILE*): int32;
+@fputs(str: int8*, stream: FILE*): int32;
+@getc(stream: FILE*): int32;
+@getchar::int32;
+@gets(str: int8*): int8*;
+@putc(character: int32, stream: FILE*): int32;
+@putchar(character: int32): int32;
+@puts(str: int8*): int32;
+@ungetc(character: int32, stream: FILE*): int32;
+
+## Direct input/output
+@fread(ptr: void*, size: size_t, count: size_t, stream: FILE*): size_t;
+@fwrite(ptr: void*, size: size_t, count: size_t, stream: FILE*): size_t;
+
+## File positioning
+@fgetpos(stream: FILE*, pos: fpos_t*): int32;
+@fseek(stream: FILE*, offset: int64, origin: int32): int32;
+@fsetpos(stream: FILE*, pos: fpos_t*): int32;
+@ftell(stream: FILE*): int64;
+@rewind(stream: FILE*);
+
+## Error-handling
+@clearerr(stream: FILE*);
+@feof(stream: FILE*): int32;
+@ferror(stream: FILE*): int32;
+@perror(str: int8*);

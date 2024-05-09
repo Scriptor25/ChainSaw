@@ -1,36 +1,45 @@
+#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 
-csaw::ValueRef csaw::Builder::GenNeg(const ValueRef& value)
+csaw::ValueRef csaw::Builder::GenNeg(const ValueRef& reference)
 {
-    throw std::runtime_error("not yet implemented");
-}
-
-csaw::ValueRef csaw::Builder::GenNot(const ValueRef& value)
-{
-    throw std::runtime_error("not yet implemented");
-}
-
-csaw::ValueRef csaw::Builder::GenInv(const ValueRef& value)
-{
-    throw std::runtime_error("not yet implemented");
-}
-
-csaw::ValueRef csaw::Builder::GenInc(const ValueRef& value, const bool opRight)
-{
-    if (value.Type()->isIntegerTy())
+    if (reference.GetBaseType()->isFloatingPointTy())
     {
-        const auto result = m_Builder->CreateAdd(value.Load(*this), llvm::ConstantInt::get(value.Type(), 1));
-
-        value.Store(*this, result);
-        if (opRight)
-            return {*this, ValueRefMode_Constant, result, value.RawType()};
-        return value;
+        const auto value = m_Builder->CreateFNeg(reference.Load().GetValue());
+        return ValueRef::Constant(this, value, reference.GetRawBaseType());
     }
 
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
 }
 
-csaw::ValueRef csaw::Builder::GenDec(const ValueRef& value, const bool opRight)
+csaw::ValueRef csaw::Builder::GenNot(const ValueRef& reference)
 {
-    throw std::runtime_error("not yet implemented");
+    CSAW_WIP;
+}
+
+csaw::ValueRef csaw::Builder::GenInv(const ValueRef& reference)
+{
+    CSAW_WIP;
+}
+
+csaw::ValueRef csaw::Builder::GenInc(const ValueRef& reference, const bool opRight)
+{
+    const auto base_type = reference.GetBaseType();
+    if (base_type->isIntegerTy())
+    {
+        const auto one = llvm::ConstantInt::get(base_type, 1, true);
+        const auto value = m_Builder->CreateAdd(reference.Load().GetValue(), one);
+        auto result = ValueRef::Constant(this, value, reference.GetRawBaseType());
+        (void)reference.Store(result);
+        if (opRight)
+            return result;
+        return reference;
+    }
+
+    CSAW_WIP;
+}
+
+csaw::ValueRef csaw::Builder::GenDec(const ValueRef& reference, const bool opRight)
+{
+    CSAW_WIP;
 }

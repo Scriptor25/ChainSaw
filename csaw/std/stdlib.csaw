@@ -1,0 +1,65 @@
+## STDLIB ##
+
+## Types
+def div_t;
+def ldiv_t;
+def lldiv_t;
+def size_t = int64;
+def wchar_t = int32;
+
+## Constants
+RAND_MAX: int32 = 0x7fff;
+
+## String conversions
+@atof(str: int8*): flt64;
+@atoi(str: int8*): int32;
+@atol(str: int8*): int64;
+@atoll(str: int8*): int128;
+@strtod(str: int8*, endptr: int8**): flt64;
+@strtof(str: int8*, endptr: int8**): flt32;
+@strtol(str: int8*, endptr: int8**, base: int32): int64;
+@strtold(str: int8*, endptr: int8**): flt64;
+@strtoll(str: int8*, endptr: int8**, base: int32): int128;
+@strtoul(str: int8*, endptr: int8**, base: int32): int64;
+@strtoull(str: int8*, endptr: int8**, base: int32): int128;
+
+## Pseudo-random sequence generation
+@rand::int32;
+@srand(seed: int32);
+
+## Dynamic memory management
+@calloc(num: size_t, size: size_t): void*;
+@free(ptr: void*);
+@malloc(size: size_t): void*;
+@realloc(ptr: void*, size: size_t): void*;
+
+## Environment
+@abort;
+##@atexit(func: void()): int32; ## No function pointers yet
+##@at_quick_exit(func: void()): int32; ## No function pointers yet
+@exit(status: int32);
+@getenv(name: int8*): int8*;
+@quick_exit(status: int32);
+@system(command: int8*): int32;
+@_Exit(status: int32);
+
+## Searching and sorting
+##@bsearch(key: void*, base: void*, num: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
+##@qsort(base: void*, num: size_t, size: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
+
+## Integer arithmetics
+@abs(n: int32): int32;
+@div(numer: int32, denom: int32): div_t;
+@labs(n: int64): int64;
+@ldiv(numer: int64, denom: int64): ldiv_t;
+@llabs(n: int128): int128;
+@lldiv(numer: int128, denom: int128): lldiv_t;
+
+## Multibyte characters
+@mblen(pmb: int8*, max: size_t): int32;
+@mbtowc(pwc: wchar_t*, pmb: int8*, max: size_t): int32;
+@wctomb(pmb: int8*, wc: wchar_t): int32;
+
+## Multibyte strings
+@mbstowcs(dest: wchar_t*, src: int8*, max: size_t): size_t;
+@wcstombs(dest: int8*, src: wchar_t*, max: size_t): size_t;

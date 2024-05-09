@@ -4,12 +4,12 @@
 #include <memory>
 #include <vector>
 #include <csaw/Type.hpp>
-#include <csaw/codegen/CSawJIT.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
 #include <csaw/codegen/ValueRef.hpp>
 #include <csaw/lang/Def.hpp>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -23,21 +23,25 @@ namespace csaw
     public:
         explicit Builder(const std::string& moduleName);
 
-        llvm::LLVMContext& GetContext();
-        llvm::IRBuilder<>& GetBuilder();
-        llvm::Module& GetModule();
+        llvm::LLVMContext& GetContext() const;
+        llvm::IRBuilder<>& GetBuilder() const;
+        llvm::Module& GetModule() const;
 
-        int Main(int argc, char** argv);
-
-        const FunctionRef& GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
-        FunctionRef& GetOrCreateFunction(const std::string& name, bool constructor, const TypePtr& callee, const std::vector<TypePtr>& args, bool vararg, const TypePtr& result);
-
-        bool IsGlobal() const;
+        int Main(int argc, const char** argv);
 
         void Gen(const StatementPtr& ptr);
         llvm::Type* Gen(const TypePtr& ptr);
 
     private:
+        const FunctionRef& GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
+        FunctionRef& GetOrCreateFunction(const std::string& name, bool constructor, const TypePtr& callee, const std::vector<TypePtr>& args, bool vararg, const TypePtr& result);
+
+        static std::pair<int, TypePtr> ElementInStruct(const TypePtr& rawType, const std::string& element);
+
+        bool IsGlobal() const;
+
+        std::pair<ValueRef, ValueRef> CastToBestOf(const ValueRef& left, const ValueRef& right);
+
         void Gen(const ScopeStatement& statement);
         void Gen(const ForStatement& statement);
         void Gen(const FunctionStatement& statement);
@@ -52,6 +56,7 @@ namespace csaw
         ValueRef Gen(const CallExpression& expression);
         ValueRef Gen(const CastExpression& expression);
         ValueRef Gen(const CharExpression& expression);
+        ValueRef Gen(const DereferenceExpression& expression);
         ValueRef Gen(const FloatExpression& expression);
         ValueRef Gen(const IdentifierExpression& expression);
         ValueRef Gen(const IndexExpression& expression);
@@ -82,15 +87,14 @@ namespace csaw
         ValueRef GenMul(const ValueRef& left, const ValueRef& right);
         ValueRef GenDiv(const ValueRef& left, const ValueRef& right);
         ValueRef GenRem(const ValueRef& left, const ValueRef& right);
-        ValueRef GenNeg(const ValueRef& value);
-        ValueRef GenNot(const ValueRef& value);
-        ValueRef GenInv(const ValueRef& value);
-        ValueRef GenInc(const ValueRef& value, bool opRight);
-        ValueRef GenDec(const ValueRef& value, bool opRight);
+        ValueRef GenNeg(const ValueRef& reference);
+        ValueRef GenNot(const ValueRef& reference);
+        ValueRef GenInv(const ValueRef& reference);
+        ValueRef GenInc(const ValueRef& reference, bool opRight);
+        ValueRef GenDec(const ValueRef& reference, bool opRight);
 
-        std::pair<ValueRef, ValueRef> CastToBestOf(const ValueRef& left, const ValueRef& right);
-
-        // std::unique_ptr<CSawJIT> m_JIT;
+        llvm::ExitOnError m_Error;
+        std::unique_ptr<llvm::orc::LLJIT> m_JIT;
 
         std::unique_ptr<llvm::LLVMContext> m_Context;
         std::unique_ptr<llvm::IRBuilder<>> m_Builder;

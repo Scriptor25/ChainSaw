@@ -5,16 +5,41 @@
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/lang/Parser.hpp>
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
     std::string exec = argv[0];
     std::map<std::string, std::string> options;
     std::vector<std::string> flags;
     std::string file;
+    bool to_args = false;
+    std::vector<const char*> args;
+    args.push_back(exec.c_str());
 
     for (int i = 1; i < argc; ++i)
     {
+        if (to_args)
+        {
+            args.push_back(argv[i]);
+            continue;
+        }
+
         std::string arg = argv[i];
+        if (arg == "--")
+        {
+            if (file.empty())
+            {
+                std::cerr
+                        << "Failed to parse args because program args are entered before a file name is set. Use '"
+                        << exec
+                        << " --help' for more information."
+                        << std::endl;
+                return 1;
+            }
+
+            to_args = true;
+            continue;
+        }
+
         if (arg.find_first_of("--") == 0)
         {
             const auto opt = arg.substr(2);
@@ -41,11 +66,13 @@ int main(int argc, char** argv)
     if (std::ranges::find(flags, "help") != flags.end())
     {
         std::cout
-                << "Usage: " << exec << " [<flag|option>...] <file>" << std::endl
+                << "Usage: " << exec << " [<flag|option>...] <file> [-- ...]" << std::endl
                 << "Flags:" << std::endl
                 << "\t--help: show this text" << std::endl
                 << "Options:" << std::endl
-                << "\t--include=<path>...: set include paths as comma seperated list" << std::endl;
+                << "\t--include=<path>...: set include paths as comma seperated list" << std::endl
+                << "File: filename" << std::endl
+                << "Everything after '--' after setting the filename is used as additional args for the compiled program" << std::endl;
         return 0;
     }
 
@@ -80,11 +107,25 @@ int main(int argc, char** argv)
         includePaths.push_back(include);
 
     csaw::Builder builder(filepath.filename().string());
-    csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
+    try
     {
-        // std::cout << ptr << std::endl;
-        builder.Gen(ptr);
-    }, includePaths);
+        csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
+        {
+            // std::cout << ptr << std::endl;
+            try
+            {
+                builder.Gen(ptr);
+            }
+            catch (const std::runtime_error& error)
+            {
+                std::cerr << "CodeGen Error: " << error.what() << std::endl;
+            }
+        }, includePaths);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << "Parser Error: " << error.what() << std::endl;
+    }
 
     stream.close();
 
@@ -97,6 +138,9 @@ int main(int argc, char** argv)
     }
 
     builder.GetModule().print(outstream, nullptr);
+
+    const auto code = builder.Main(static_cast<int>(args.size()), args.data());
+    std::cout << "Exit Code " << code << std::endl;
 
     return 0;
 }
