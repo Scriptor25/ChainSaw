@@ -15,6 +15,12 @@ csaw::ValueRef csaw::Builder::GenCmpEQ(const ValueRef& left, const ValueRef& rig
 
 csaw::ValueRef csaw::Builder::GenCmpNE(const ValueRef& left, const ValueRef& right)
 {
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateICmpNE(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
     CSAW_WIP;
 }
 
@@ -37,6 +43,18 @@ csaw::ValueRef csaw::Builder::GenCmpLE(const ValueRef& left, const ValueRef& rig
 
 csaw::ValueRef csaw::Builder::GenCmpGE(const ValueRef& left, const ValueRef& right)
 {
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateICmpSGE(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFCmpOGE(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
     CSAW_WIP;
 }
 
@@ -108,6 +126,18 @@ csaw::ValueRef csaw::Builder::GenCmpLT(const ValueRef& left, const ValueRef& rig
 
 csaw::ValueRef csaw::Builder::GenCmpGT(const ValueRef& left, const ValueRef& right)
 {
+    if (left.GetType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateICmpSGT(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
+    if (left.GetType()->isFloatingPointTy())
+    {
+        const auto value = m_Builder->CreateFCmpOGT(left.GetValue(), right.GetValue());
+        return ValueRef::Constant(this, value, Type::Get("int1"));
+    }
+
     CSAW_WIP;
 }
 

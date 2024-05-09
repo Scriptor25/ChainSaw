@@ -113,8 +113,8 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
     {
         name = member->Member;
         callee = Gen(member->Object);
-        if (!member->ShouldDeref)
-            callee = callee.GetReference();
+        if (member->ShouldDeref)
+            callee = callee.Load();
     }
     else
         CSAW_WIP;

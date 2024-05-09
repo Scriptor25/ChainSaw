@@ -213,8 +213,16 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
     {
         auto line = m_Line;
         bool deref = Get().Value == "!";
-        std::string id = Expect(TK_IDENTIFIER).Value;
-        expr = std::make_shared<MemberExpression>(line, expr, id, deref);
+        if (deref && NextIfAt("="))
+        {
+            const auto right = ParseShiftExpression();
+            expr = std::make_shared<BinaryExpression>(line, "!=", expr, right);
+        }
+        else
+        {
+            std::string id = Expect(TK_IDENTIFIER).Value;
+            expr = std::make_shared<MemberExpression>(line, expr, id, deref);
+        }
     }
 
     return expr;

@@ -1,0 +1,13 @@
+def color = vec3;
+
+@toint(col: color): int32 {
+    r: flt64 = col.x;
+    g: flt64 = col.y;
+    b: flt64 = col.z;
+
+    rbyte: int32 = [int32](255.999 * r);
+    gbyte: int32 = [int32](255.999 * g);
+    bbyte: int32 = [int32](255.999 * b);
+
+    ret 0xff << 24 | (rbyte & 0xff) << 16 | (gbyte & 0xff) << 8 | (bbyte & 0xff);
+}

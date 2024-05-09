@@ -3,6 +3,12 @@
 
 csaw::ValueRef csaw::Builder::GenNeg(const ValueRef& reference)
 {
+    if (reference.GetBaseType()->isIntegerTy())
+    {
+        const auto value = m_Builder->CreateNeg(reference.Load().GetValue());
+        return ValueRef::Constant(this, value, reference.GetRawBaseType());
+    }
+
     if (reference.GetBaseType()->isFloatingPointTy())
     {
         const auto value = m_Builder->CreateFNeg(reference.Load().GetValue());
