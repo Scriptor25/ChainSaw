@@ -33,74 +33,52 @@
 ## MAIN
 @main(argc: int32, ppArgv: int8**): int32 {
 
-    a: int32;
-    for (a = 0; a < argc; ++a)
+    for (a: int32 = 0; a < argc; ++a)
         printf("#%-3d: %s\n", a, ppArgv[a]);
 
     if (argc != 2)
         ret 1;
 
-    i: int32;
-    j: int32;
-    aspect_ratio: flt64;
-    image_width: int32;
-    image_height: int32;
-    focal_length: flt64;
-    viewport_width: flt64;
-    viewport_height: flt64;
-    camera_center: point3;
-    viewport_u: vec3;
-    viewport_v: vec3;
-    pixel_delta_u: vec3;
-    pixel_delta_v: vec3;
-    viewport_upper_left: point3;
-    pixel00_loc: point3;
-    pixel_center: point3;
-    ray_direction: vec3;
-    r: ray;
-    col: color;
-
     ## Image
 
-    aspect_ratio = 16.0 / 9.0;
-    image_width = 400;
+    aspect_ratio: flt64 = 16.0 / 9.0;
+    image_width: int32 = 400;
 
     ## Calculate the image height, and ensure that it's at least 1.
-    image_height = [int32](image_width / aspect_ratio);
+    image_height: int32 = [int32](image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
     ## Camera
 
-    focal_length = 1.0;
-    viewport_height = 2.0;
-    viewport_width = viewport_height * [flt64]image_width / image_height;
-    camera_center = vec3(0.0, 0.0, 0.0);
+    focal_length: flt64 = 1.0;
+    viewport_height: flt64 = 2.0;
+    viewport_width: flt64 = viewport_height * [flt64]image_width / image_height;
+    camera_center: point3 = vec3(0.0, 0.0, 0.0);
 
     ## Calculate the vectors across the horizontal and down the vertical viewport edges.
-    viewport_u = vec3(viewport_width, 0.0, 0.0);
-    viewport_v = vec3(0.0, -viewport_height, 0.0);
+    viewport_u: vec3 = vec3(viewport_width, 0.0, 0.0);
+    viewport_v: vec3 = vec3(0.0, -viewport_height, 0.0);
 
     ## Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    pixel_delta_u = viewport_u / [flt64]image_width;
-    pixel_delta_v = viewport_v / [flt64]image_height;
+    pixel_delta_u: vec3 = viewport_u / [flt64]image_width;
+    pixel_delta_v: vec3 = viewport_v / [flt64]image_height;
 
     ## Calculate the location of the upper left pixel.
-    viewport_upper_left = camera_center - vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
-    pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+    viewport_upper_left: point3 = camera_center - vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    pixel00_loc: point3 = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     ## Render
 
     out: image = image(image_width, image_height);
 
-    for (j = 0; j < out.height; ++j) {
+    for (j: int32 = 0; j < out.height; ++j) {
         printf("\rScanlines remaining: %d", out.height - j);
-        for (i = 0; i < out.width; ++i) {
-            pixel_center = pixel00_loc + ([flt64]i * pixel_delta_u) + ([flt64]j * pixel_delta_v);
-            ray_direction = pixel_center - camera_center;
-            r.orig = camera_center;
-            r.dir = ray_direction;
+        for (i: int32 = 0; i < out.width; ++i) {
+            pixel_center: point3 = pixel00_loc + ([flt64]i * pixel_delta_u) + ([flt64]j * pixel_delta_v);
+            ray_direction: vec3 = pixel_center - camera_center;
+            r: ray = ray(camera_center, ray_direction);
 
-            col = ray_color(r);
+            col: color = ray_color(r);
             out.pixel(i, j, toint(col));
         }
     }

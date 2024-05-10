@@ -3,15 +3,11 @@ def ray {
     dir: vec3
 }
 
-$ray {
-    me!orig = vec3();
-    me!dir = vec3();
-}
-
 $ray(origin: point3, direction: vec3) {
     me!orig = origin;
     me!dir = direction;
 }
+$ray [vec3(), vec3()]
 
 @origin:ray:point3 = me!orig;
 @direction:ray:vec3 = me!dir;

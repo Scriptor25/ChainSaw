@@ -107,25 +107,11 @@ int main(int argc, const char** argv)
         includePaths.push_back(include);
 
     csaw::Builder builder(filepath.filename().string());
-    try
+    csaw::Parser::Parse(file, stream, [&builder](const csaw::StatementPtr& ptr)
     {
-        csaw::Parser::Parse(stream, [&builder](const csaw::StatementPtr& ptr)
-        {
-            // std::cout << ptr << std::endl;
-            try
-            {
-                builder.Gen(ptr);
-            }
-            catch (const std::runtime_error& error)
-            {
-                std::cerr << "CodeGen Error: " << error.what() << std::endl;
-            }
-        }, includePaths);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << "Parser Error: " << error.what() << std::endl;
-    }
+        // std::cout << ptr << std::endl;
+        builder.Generate(ptr);
+    }, includePaths);
 
     stream.close();
 
