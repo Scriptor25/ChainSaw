@@ -1,7 +1,7 @@
-#include <iostream>
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
+#include <csaw/lang/Stmt.hpp>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
@@ -69,13 +69,7 @@ llvm::Module& csaw::Builder::GetModule() const
 
 void csaw::Builder::Generate(const StatementPtr& ptr)
 {
-    try { Gen(ptr); }
-    catch (const ChainSawMessage& error)
-    {
-        std::cerr << "Code Gen Error: " << error.what() << std::endl;
-        if (!error.CanRecover)
-            throw;
-    }
+    Gen(ptr);
 }
 
 int csaw::Builder::Main(const int argc, const char** argv)
@@ -127,10 +121,25 @@ csaw::FunctionRef& csaw::Builder::GetOrCreateFunction(const std::string& name, c
     return m_Functions[name].emplace_back(nullptr, name, callee, result, args, isConstructor, isVarArg);
 }
 
+std::string csaw::Builder::FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args)
+{
+    std::string signature;
+    if (callee) signature += callee->Name;
+    else signature += "<none>";
+    signature += '(';
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        if (i > 0) signature += ", ";
+        signature += args[i]->Name;
+    }
+    signature += ')';
+    return signature;
+}
+
 std::pair<int, csaw::TypePtr> csaw::Builder::ElementInStruct(const TypePtr& rawType, const std::string& element)
 {
     if (!rawType->IsStruct())
-        CSAW_MESSAGE(true, "type " + rawType->Name + " is not a struct");
+        CSAW_MESSAGE_NONE(true, "type " + rawType->Name + " is not a struct");
 
     int i = 0;
     for (const auto& [name, type] : rawType->AsStruct()->Elements)
@@ -140,7 +149,7 @@ std::pair<int, csaw::TypePtr> csaw::Builder::ElementInStruct(const TypePtr& rawT
         ++i;
     }
 
-    CSAW_MESSAGE(true, rawType->Name + " does not have a member '" + element + "'");
+    CSAW_MESSAGE_NONE(true, rawType->Name + " does not have a member '" + element + "'");
 }
 
 bool csaw::Builder::IsGlobal() const
@@ -183,5 +192,5 @@ std::pair<csaw::ValueRef, csaw::ValueRef> csaw::Builder::CastToBestOf(const Valu
         }
     }
 
-    CSAW_MESSAGE(true, "superior cast between " + left.GetRawType()->Name + " and " + right.GetRawType()->Name + " is not implemented");
+    CSAW_MESSAGE_NONE(true, "superior cast between " + left.GetRawType()->Name + " and " + right.GetRawType()->Name + " is not implemented");
 }

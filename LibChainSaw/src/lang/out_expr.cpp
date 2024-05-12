@@ -35,7 +35,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
     if (const auto expr = std::dynamic_pointer_cast<VarArgExpression>(ptr))
         return out << *expr;
 
-    CSAW_MESSAGE(true, "printing is not implemented for expression");
+    CSAW_MESSAGE_STMT(true, *ptr, "printing is not implemented for this expression");
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const BinaryExpression& expression)

@@ -10,6 +10,8 @@ def wchar_t = int32;
 ## Constants
 RAND_MAX: int32 = 0x7fff;
 
+## Functions
+
 ## String conversions
 @atof(str: int8*): flt64;
 @atoi(str: int8*): int32;

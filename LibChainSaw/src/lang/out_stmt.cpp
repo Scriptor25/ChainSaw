@@ -41,7 +41,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const StatementPtr& ptr)
         return out;
     }
 
-    CSAW_MESSAGE(true, "printing is not implemented for statement");
+    CSAW_MESSAGE_STMT(true, *ptr, "printing is not implemented for this statement");
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const ScopeStatement& statement)

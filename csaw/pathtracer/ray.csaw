@@ -1,15 +1,13 @@
 def ray {
-    orig: point3,
-    dir: vec3
+    origin: point3,
+    direction: vec3,
+    t: interval
 }
 
-$ray(origin: point3, direction: vec3) {
-    me!orig = origin;
-    me!dir = direction;
+$ray(origin: point3, direction: vec3, t: interval) {
+    me!origin = origin;
+    me!direction = direction;
+    me!t = t;
 }
-$ray [vec3(), vec3()]
 
-@origin:ray:point3 = me!orig;
-@direction:ray:vec3 = me!dir;
-
-@at:ray(t: flt64): point3 = me!orig + t * me!dir;
+@at:ray(t: flt64): point3 = me!origin + t * me!direction;

@@ -73,7 +73,7 @@ namespace csaw
 
     struct StructType : Type
     {
-        static StructTypePtr Get(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);
+        static StructTypePtr Create(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);
         static StructTypePtr Get(const std::string& name);
 
         StructType(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);

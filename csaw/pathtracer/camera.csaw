@@ -1,0 +1,79 @@
+def camera {
+    ## public
+    aspect_ratio: flt64,    ## Ratio of image width over height
+    image_width: int32,     ## Rendered image width in pixel count
+
+    ## private
+    image_height: int32,    ## Rendered image height
+    center: point3,         ## Camera center
+    pixel00_loc: point3,    ## Location of pixel 0, 0
+    pixel_delta_u: vec3,    ## Offset to pixel to the right
+    pixel_delta_v: vec3     ## Offset to pixel below
+}
+
+$camera {
+    me!aspect_ratio = 1.0;
+    me!image_width = 100;
+}
+
+@initialize:camera;
+@ray_color:camera(r: ray*, world: hittable*): color;
+@render:camera(filename: int8*, world: hittable*) {
+    me!initialize();
+
+    out: image = image(me!image_width, me!image_height);
+
+    for (j: int32 = 0; j < out.height; ++j) {
+        printf("\rScanlines remaining: %d", out.height - j);
+        for (i: int32 = 0; i < out.width; ++i) {
+            pixel_center: point3 = me!pixel00_loc + ([flt64]i * me!pixel_delta_u) + ([flt64]j * me!pixel_delta_v);
+            ray_direction: vec3 = pixel_center - me!center;
+            r: ray = ray(me!center, ray_direction, interval(0.0, 1000.0));
+
+            pixel_color: color = me!ray_color(&r, world);
+            out.pixel(i, j, toint(pixel_color));
+        }
+    }
+
+    out.toppm(filename);
+    out.destroy();
+
+    printf("\rDone.                       \n");
+}
+
+@initialize:camera {
+    me!image_height = [int32](me!image_width / me!aspect_ratio);
+    me!image_height = (me!image_height < 1) ? 1 : me!image_height;
+
+    me!center = vec3(0.0, 0.0, 0.0);
+
+    ## Determine viewport dimensions.
+    focal_length: flt64 = 1.0;
+    viewport_height: flt64 = 2.0;
+    viewport_width: flt64 = viewport_height * [flt64]me!image_width / me!image_height;
+
+    ## Calculate the vectors across the horizontal and down the vertical viewport edges.
+    viewport_u: vec3 = vec3(viewport_width, 0.0, 0.0);
+    viewport_v: vec3 = vec3(0.0, -viewport_height, 0.0);
+
+    ## Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    me!pixel_delta_u = viewport_u / [flt64]me!image_width;
+    me!pixel_delta_v = viewport_v / [flt64]me!image_height;
+
+    ## Calculate the location of the upper left pixel.
+    viewport_upper_left: point3 = me!center - vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    me!pixel00_loc = viewport_upper_left + 0.5 * (me!pixel_delta_u + me!pixel_delta_v);
+}
+
+@ray_color:camera(r: ray*, world: hittable*): color {
+    rec: hit_record;
+
+    if (world!hit(r, &rec))
+        ret 0.5 * (rec.normal + vec3(1.0, 1.0, 1.0));
+
+    unit_direction: vec3 = unit_vector(r!direction);
+    a: flt64 = 0.5 * (unit_direction.y + 1.0);
+    ret (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+}
+
+

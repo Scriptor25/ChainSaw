@@ -4,7 +4,7 @@
 llvm::Type* csaw::Builder::Gen(const TypePtr& ptr) const
 {
     if (!ptr)
-        CSAW_MESSAGE(true, "type must not be null");
+        CSAW_MESSAGE_NONE(true, "type must not be null");
 
     if (ptr->IsPointer())
         return m_Builder->getPtrTy();
@@ -19,7 +19,7 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& ptr) const
     {
         if (const auto type = llvm::StructType::getTypeByName(*m_Context, ptr->Name))
             return type;
-        CSAW_MESSAGE(true, ptr->Name + " is a struct type, but there is no llvm struct type defined with this name");
+        CSAW_MESSAGE_NONE(true, ptr->Name + " is a struct type, but there is no llvm struct type defined with this name");
     }
 
     if (ptr->Name == "void") return m_Builder->getVoidTy();
@@ -33,5 +33,5 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& ptr) const
     if (ptr->Name == "flt32") return m_Builder->getFloatTy();
     if (ptr->Name == "flt64") return m_Builder->getDoubleTy();
 
-    CSAW_MESSAGE(true, "no type with name '" + ptr->Name + "' defined");
+    CSAW_MESSAGE_NONE(true, "no type with name '" + ptr->Name + "' defined");
 }

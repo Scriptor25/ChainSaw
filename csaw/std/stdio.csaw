@@ -6,6 +6,8 @@ def fpos_t = int64;
 def size_t = int64;
 def va_list = void*;
 
+## Functions
+
 ## Operations of files
 @remove(filename: int8*): int32;
 @rename(oldname: int8*, newname: int8*): int32;

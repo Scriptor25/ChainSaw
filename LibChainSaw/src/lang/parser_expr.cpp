@@ -21,7 +21,7 @@ csaw::ExpressionPtr csaw::Parser::ParseSelectExpression()
         Expect(":");
         auto _false = ParseExpression();
 
-        expr = std::make_shared<SelectExpression>(line, expr, _true, _false);
+        expr = std::make_shared<SelectExpression>(m_Filename, line, expr, _true, _false);
     }
 
     return expr;
@@ -50,7 +50,7 @@ csaw::ExpressionPtr csaw::Parser::ParseLogicExpression()
         else
             right = ParseCompareExpression();
 
-        expr = std::make_shared<BinaryExpression>(line, op, expr, right);
+        expr = std::make_shared<BinaryExpression>(m_Filename, line, op, expr, right);
     }
 
     return expr;
@@ -74,7 +74,7 @@ csaw::ExpressionPtr csaw::Parser::ParseCompareExpression()
         else
             right = ParseShiftExpression();
 
-        expr = std::make_shared<BinaryExpression>(line, op, expr, right);
+        expr = std::make_shared<BinaryExpression>(m_Filename, line, op, expr, right);
     }
 
     return expr;
@@ -98,7 +98,7 @@ csaw::ExpressionPtr csaw::Parser::ParseShiftExpression()
         else
             right = ParseSumExpression();
 
-        expr = std::make_shared<BinaryExpression>(line, op, expr, right);
+        expr = std::make_shared<BinaryExpression>(m_Filename, line, op, expr, right);
     }
 
     return expr;
@@ -121,13 +121,13 @@ csaw::ExpressionPtr csaw::Parser::ParseSumExpression()
             right = ParseExpression();
         else if (op == "++" || op == "--")
         {
-            expr = std::make_shared<UnaryExpression>(line, op, expr, true);
+            expr = std::make_shared<UnaryExpression>(m_Filename, line, op, expr, true);
             break;
         }
         else
             right = ParseProductExpression();
 
-        expr = std::make_shared<BinaryExpression>(line, op, expr, right);
+        expr = std::make_shared<BinaryExpression>(m_Filename, line, op, expr, right);
     }
 
     return expr;
@@ -151,7 +151,7 @@ csaw::ExpressionPtr csaw::Parser::ParseProductExpression()
         else
             right = ParseIndexExpression();
 
-        expr = std::make_shared<BinaryExpression>(line, op, expr, right);
+        expr = std::make_shared<BinaryExpression>(m_Filename, line, op, expr, right);
     }
 
     return expr;
@@ -168,7 +168,7 @@ csaw::ExpressionPtr csaw::Parser::ParseIndexExpression()
         auto index = ParseExpression();
         Expect("]");
 
-        expr = std::make_shared<IndexExpression>(line, expr, index);
+        expr = std::make_shared<IndexExpression>(m_Filename, line, expr, index);
 
         if (At("."))
             expr = ParseMemberExpression(expr);
@@ -194,7 +194,7 @@ csaw::ExpressionPtr csaw::Parser::ParseCallExpression()
         }
         Expect(")");
 
-        expr = std::make_shared<CallExpression>(line, expr, args);
+        expr = std::make_shared<CallExpression>(m_Filename, line, expr, args);
 
         if (At("."))
             expr = ParseMemberExpression(expr);
@@ -217,12 +217,12 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
         if (deref && NextIfAt("="))
         {
             const auto right = ParseShiftExpression();
-            expr = std::make_shared<BinaryExpression>(line, "!=", expr, right);
+            expr = std::make_shared<BinaryExpression>(m_Filename, line, "!=", expr, right);
         }
         else
         {
-            std::string id = Expect(TK_IDENTIFIER).Value;
-            expr = std::make_shared<MemberExpression>(line, expr, id, deref);
+            std::string id = Expect(TK_IDENTIFIER | TK_STRING).Value;
+            expr = std::make_shared<MemberExpression>(m_Filename, line, expr, id, deref);
         }
     }
 
@@ -234,20 +234,20 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
     auto line = m_Line;
 
     if (AtEOF())
-        CSAW_MESSAGE(false, "reached end of file");
+        CSAW_MESSAGE_(false, m_Filename, m_Line, "reached end of file");
 
-    if (At(TK_IDENTIFIER)) return std::make_shared<IdentifierExpression>(line, Get().Value);
-    if (At(TK_INT_BIN | TK_INT_OCT | TK_INT_DEC | TK_INT_HEX)) return std::make_shared<IntExpression>(line, Get().IntValue());
-    if (At(TK_FLOAT)) return std::make_shared<FloatExpression>(line, Get().Value);
-    if (At(TK_STRING)) return std::make_shared<StringExpression>(line, Get().Value);
-    if (At(TK_CHAR)) return std::make_shared<CharExpression>(line, Get().Value);
+    if (At(TK_IDENTIFIER)) return std::make_shared<IdentifierExpression>(m_Filename, line, Get().Value);
+    if (At(TK_INT_BIN | TK_INT_OCT | TK_INT_DEC | TK_INT_HEX)) return std::make_shared<IntExpression>(m_Filename, line, Get().IntValue());
+    if (At(TK_FLOAT)) return std::make_shared<FloatExpression>(m_Filename, line, Get().Value);
+    if (At(TK_STRING)) return std::make_shared<StringExpression>(m_Filename, line, Get().Value);
+    if (At(TK_CHAR)) return std::make_shared<CharExpression>(m_Filename, line, Get().Value);
 
     if (At("+") || At("-") || At("!") || At("~"))
     {
         std::string op = Get().Value;
         if ((op == "+" || op == "-") && At(op))
             op += Get().Value;
-        return std::make_shared<UnaryExpression>(line, op, ParseIndexExpression(), false);
+        return std::make_shared<UnaryExpression>(m_Filename, line, op, ParseIndexExpression(), false);
     }
 
     if (NextIfAt("("))
@@ -262,7 +262,7 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         Expect("[");
         const auto type = ParseType();
         Expect("]");
-        return std::make_shared<VarArgExpression>(line, type);
+        return std::make_shared<VarArgExpression>(m_Filename, line, type);
     }
 
     if (NextIfAt("["))
@@ -270,21 +270,21 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         const auto type = ParseType();
         Expect("]");
         const auto castee = ParseIndexExpression();
-        return std::make_shared<CastExpression>(line, type, castee);
+        return std::make_shared<CastExpression>(m_Filename, line, type, castee);
     }
 
     if (NextIfAt("&"))
     {
         const auto value = ParseIndexExpression();
-        return std::make_shared<ReferenceExpression>(line, value);
+        return std::make_shared<ReferenceExpression>(m_Filename, line, value);
     }
 
     if (NextIfAt("*"))
     {
         const auto value = ParseIndexExpression();
-        return std::make_shared<DereferenceExpression>(line, value);
+        return std::make_shared<DereferenceExpression>(m_Filename, line, value);
     }
 
     const auto token = Get();
-    CSAW_MESSAGE(false, "unhandled token '" + token.Value + "' type " + ToString(token.Type));
+    CSAW_MESSAGE_(false, m_Filename, line, "unhandled token '" + token.Value + "' type " + ToString(token.Type));
 }

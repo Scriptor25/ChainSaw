@@ -1,5 +1,3 @@
-def color = vec3;
-
 @toint(col: color): int32 {
     r: flt64 = col.x;
     g: flt64 = col.y;

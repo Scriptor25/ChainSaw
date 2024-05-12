@@ -1,0 +1,55 @@
+def hittable_list {
+    type: int8,
+    objects: hittable**,
+    count: int32,
+    reserved: int32,
+}
+
+$hittable_list() {
+    me!type = 'L';
+    me!count = 0;
+    me!reserved = 10;
+    me!objects = malloc([int64]me!reserved * 8);
+}
+
+@add:hittable_list(object: hittable*);
+$hittable_list(object: hittable*) {
+    me!type = 'L';
+    me!count = 0;
+    me!reserved = 10;
+    me!objects = malloc([int64]me!reserved * 8);
+    me!add(object);
+}
+
+@add:hittable_list(object: hittable*) {
+    if (me!count == me!reserved) {
+        me!reserved *= 2;
+        me!objects = realloc([void*]me!objects, [int64]me!reserved * 8);
+    }
+    me!objects[me!count] = object;
+    ++me!count;
+}
+
+@get:hittable_list(index: int32): hittable* = me!objects[index];
+
+@destroy:hittable_list {
+    free([void*]me!objects);
+}
+
+@hit:hittable_list(r: ray*, rec: hit_record*): bool {
+    temp_rec: hit_record;
+    hit_anything: bool = false;
+
+    temp_r: ray = *r;
+
+    for (i: int32 = 0; i < me!count; ++i) {
+        object: hittable* = me!get(i);
+        if (object!hit(&temp_r, &temp_rec)) {
+            hit_anything = true;
+            temp_r.t.max = temp_rec.t;
+            rec = temp_rec;
+        }
+    }
+
+    ret hit_anything;
+}

@@ -25,7 +25,7 @@ csaw::TypePtr csaw::Type::Get(const std::string& name)
 {
     if (const auto& type = Types[name])
         return type;
-    CSAW_MESSAGE(true, "cannot resolve type with name '" + name + "'");
+    CSAW_MESSAGE_NONE(true, "cannot resolve type with name '" + name + "'");
 }
 
 csaw::TypePtr csaw::Type::GetVoid()
@@ -164,12 +164,14 @@ bool csaw::ArrayType::IsArray() const
     return true;
 }
 
-csaw::StructTypePtr csaw::StructType::Get(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
+csaw::StructTypePtr csaw::StructType::Create(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
 {
     auto& type = Types[name];
     if (!type)
         type = std::make_shared<StructType>(name, elements);
-    return std::dynamic_pointer_cast<StructType>(type);
+    const auto& struct_type = std::dynamic_pointer_cast<StructType>(type);
+    struct_type->Elements = elements;
+    return struct_type;
 }
 
 csaw::StructTypePtr csaw::StructType::Get(const std::string& name)

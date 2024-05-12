@@ -2,33 +2,19 @@
 \inc "std/stdio.csaw"
 \inc "std/stdlib.csaw"
 \inc "std/stdimg.csaw"
+\inc "std/stdbool.csaw"
+\inc "std/math.csaw"
 
 ## PROJECT INCLUDES
+\inc "def.csaw"
 \inc "vec3.csaw"
 \inc "color.csaw"
+\inc "interval.csaw"
 \inc "ray.csaw"
-
-@hit_sphere(center: point3, radius: flt64, r: ray): flt64 {
-    oc: vec3 = center - r.origin();
-    dir: vec3 = r.direction();
-    a: flt64 = dir.length_squared();
-    h: flt64 = dot(dir, oc);
-    c: flt64 = oc.length_squared() - radius * radius;
-    discriminant: flt64 = h * h - a * c;
-    if (discriminant < 0) ret -1.0;
-    ret (h - sqrt(discriminant)) / a;
-}
-
-@ray_color(r: ray): color {
-    t: flt64 = hit_sphere(vec3(0.0, 0.0, -1.0), 0.5, r);
-    if (t > 0.0) {
-        N: vec3 = unit_vector(r.at(t) - vec3(0.0, 0.0, -1.0));
-        ret 0.5 * vec3(N.x + 1.0, N.y + 1.0, N.z + 1.0);
-    }
-    unit_direction: vec3 = unit_vector(r.direction());
-    a: flt64 = 0.5 * (unit_direction.y + 1.0);
-    ret (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
-}
+\inc "hittable.csaw"
+\inc "sphere.csaw"
+\inc "hittable_list.csaw"
+\inc "camera.csaw"
 
 ## MAIN
 @main(argc: int32, ppArgv: int8**): int32 {
@@ -39,53 +25,22 @@
     if (argc != 2)
         ret 1;
 
-    ## Image
+    ## World
 
-    aspect_ratio: flt64 = 16.0 / 9.0;
-    image_width: int32 = 400;
+    sphere1: sphere = sphere(vec3(0.0, 0.0, -1.0), 0.5);
+    sphere2: sphere = sphere(vec3(0.0, -100.5, -1.0), 100.0);
 
-    ## Calculate the image height, and ensure that it's at least 1.
-    image_height: int32 = [int32](image_width / aspect_ratio);
-    image_height = (image_height < 1) ? 1 : image_height;
+    world: hittable_list = hittable_list();
+    world.add([hittable*]&sphere1);
+    world.add([hittable*]&sphere2);
 
-    ## Camera
+    cam: camera = camera();
+    cam.aspect_ratio = 16.0 / 9.0;
+    cam.image_width = 400;
 
-    focal_length: flt64 = 1.0;
-    viewport_height: flt64 = 2.0;
-    viewport_width: flt64 = viewport_height * [flt64]image_width / image_height;
-    camera_center: point3 = vec3(0.0, 0.0, 0.0);
+    cam.render(ppArgv[1], [hittable*]&world);
 
-    ## Calculate the vectors across the horizontal and down the vertical viewport edges.
-    viewport_u: vec3 = vec3(viewport_width, 0.0, 0.0);
-    viewport_v: vec3 = vec3(0.0, -viewport_height, 0.0);
+    world.destroy();
 
-    ## Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    pixel_delta_u: vec3 = viewport_u / [flt64]image_width;
-    pixel_delta_v: vec3 = viewport_v / [flt64]image_height;
-
-    ## Calculate the location of the upper left pixel.
-    viewport_upper_left: point3 = camera_center - vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
-    pixel00_loc: point3 = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-
-    ## Render
-
-    out: image = image(image_width, image_height);
-
-    for (j: int32 = 0; j < out.height; ++j) {
-        printf("\rScanlines remaining: %d", out.height - j);
-        for (i: int32 = 0; i < out.width; ++i) {
-            pixel_center: point3 = pixel00_loc + ([flt64]i * pixel_delta_u) + ([flt64]j * pixel_delta_v);
-            ray_direction: vec3 = pixel_center - camera_center;
-            r: ray = ray(camera_center, ray_direction);
-
-            col: color = ray_color(r);
-            out.pixel(i, j, toint(col));
-        }
-    }
-
-    out.toppm(ppArgv[1]);
-    out.destroy();
-
-    printf("\rDone.                       \n");
     ret 0;
 }

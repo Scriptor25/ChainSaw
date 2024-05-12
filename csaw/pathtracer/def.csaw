@@ -1,0 +1,9 @@
+def vec3;
+def point3 = vec3;
+def color = vec3;
+def ray;
+
+def hit_record;
+def hittable;
+def sphere;
+def hittable_list;

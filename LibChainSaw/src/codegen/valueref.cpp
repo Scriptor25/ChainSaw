@@ -5,7 +5,7 @@
 csaw::ValueRef csaw::ValueRef::Allocate(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType)
 {
     if (!rawBaseType)
-        CSAW_MESSAGE(true, "cannot allocate value for null base type");
+        CSAW_MESSAGE_NONE(true, "cannot allocate value for null base type");
     const auto insert_block = builder->GetBuilder().GetInsertBlock();
     builder->GetBuilder().SetInsertPointPastAllocas(insert_block->getParent());
     auto pointer = builder->GetBuilder().CreateAlloca(builder->Gen(rawBaseType));
@@ -18,14 +18,14 @@ csaw::ValueRef csaw::ValueRef::Allocate(Builder* builder, llvm::Value* value, co
 csaw::ValueRef csaw::ValueRef::Constant(Builder* builder, llvm::Value* value, const TypePtr& rawType)
 {
     if (!rawType)
-        CSAW_MESSAGE(true, "cannot create constant with null type");
+        CSAW_MESSAGE_NONE(true, "cannot create constant with null type");
     return {builder, true, value, rawType};
 }
 
 csaw::ValueRef csaw::ValueRef::Pointer(Builder* builder, llvm::Value* value, const TypePtr& rawBaseType)
 {
     if (!rawBaseType)
-        CSAW_MESSAGE(true, "cannot create value with null base type");
+        CSAW_MESSAGE_NONE(true, "cannot create value with null base type");
     return {builder, false, value, PointerType::Get(rawBaseType)};
 }
 
@@ -65,7 +65,7 @@ csaw::ValueRef csaw::ValueRef::GetReference() const
 {
     Check();
     if (m_IsRValue)
-        CSAW_MESSAGE(true, "cannot get reference to rvalue");
+        CSAW_MESSAGE_NONE(true, "cannot get reference to rvalue");
     return Constant(m_Builder, m_Value, m_RawType);
 }
 
@@ -88,7 +88,7 @@ const csaw::ValueRef& csaw::ValueRef::Store(const ValueRef& value) const
 {
     Check();
     if (m_IsRValue)
-        CSAW_MESSAGE(true, "cannot assign to rvalue");
+        CSAW_MESSAGE_NONE(true, "cannot assign to rvalue");
     m_Builder->GetBuilder().CreateStore(value.Load().GetValue(), m_Value);
     return *this;
 }
@@ -111,5 +111,5 @@ csaw::ValueRef::ValueRef(Builder* builder, const bool rvalue, llvm::Value* value
 void csaw::ValueRef::Check() const
 {
     if (Invalid())
-        CSAW_MESSAGE(true, "cannot use invalid value reference");
+        CSAW_MESSAGE_NONE(true, "cannot use invalid value reference");
 }

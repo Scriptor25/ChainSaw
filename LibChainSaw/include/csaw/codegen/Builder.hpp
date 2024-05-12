@@ -36,6 +36,7 @@ namespace csaw
         const FunctionRef* GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
         FunctionRef& GetOrCreateFunction(const std::string& name, const TypePtr& callee, const TypePtr& result, const std::vector<TypePtr>& args, bool isConstructor, bool isVarArg);
 
+        static std::string FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args);
         static std::pair<int, TypePtr> ElementInStruct(const TypePtr& rawType, const std::string& element);
 
         [[nodiscard]] bool IsGlobal() const;

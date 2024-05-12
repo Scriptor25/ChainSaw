@@ -12,9 +12,10 @@ void csaw::Parser::Parse(const std::string& filename, std::istream& stream, cons
         try { callback(parser.ParseStatement()); }
         catch (const ChainSawMessage& error)
         {
-            std::cerr << "Parser Error: in " << filename << ":" << parser.m_Line << ": " << error.what() << std::endl;
-            if (!error.CanRecover)
-                throw;
+            const auto file = error.SourceFile.empty() ? filename : error.SourceFile;
+            const auto line = error.SourceLine == 0 ? parser.m_Line : error.SourceLine;
+            std::cerr << file << "(" << line << "): " << error.Message << std::endl;
+            if (!error.CanRecover) throw;
         }
     }
     while (!parser.AtEOF());
@@ -65,7 +66,7 @@ csaw::Token csaw::Parser::Get()
 csaw::Token csaw::Parser::Expect(const int type)
 {
     if (!At(type))
-        CSAW_MESSAGE(true, "unexpected type " + std::string(ToString(m_Token.Type)) + ", expected " + ToString(type));
+        CSAW_MESSAGE_(true, m_Filename, m_Line, "unexpected type " + std::string(ToString(m_Token.Type)) + ", expected " + ToString(type));
     Token token = m_Token;
     Next();
     return token;
@@ -74,7 +75,7 @@ csaw::Token csaw::Parser::Expect(const int type)
 void csaw::Parser::Expect(const std::string& value)
 {
     if (!At(value))
-        CSAW_MESSAGE(true, "unexpected value '" + m_Token.Value + "', expected '" + value + "'");
+        CSAW_MESSAGE_(true, m_Filename, m_Line, "unexpected value '" + m_Token.Value + "', expected '" + value + "'");
     Next();
 }
 

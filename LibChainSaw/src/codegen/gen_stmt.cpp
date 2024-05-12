@@ -1,3 +1,4 @@
+#include <iostream>
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
@@ -8,33 +9,43 @@
 
 void csaw::Builder::Gen(const StatementPtr& ptr)
 {
-    if (!ptr)
-        CSAW_MESSAGE(true, "statement must not be null");
-
-    if (const auto p = std::dynamic_pointer_cast<ScopeStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<ForStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<FunctionStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<IfStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<RetStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<DefStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<VariableStatement>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<WhileStatement>(ptr))
-        return Gen(*p);
-
-    if (const auto p = std::dynamic_pointer_cast<Expression>(ptr))
+    try
     {
-        (void)Gen(p);
-        return;
-    }
+        if (!ptr)
+            CSAW_MESSAGE_NONE(true, "statement must not be null");
 
-    CSAW_MESSAGE(true, "in line " + std::to_string(ptr->Line) + ": code generation for statement is not implemented");
+        if (const auto p = std::dynamic_pointer_cast<ScopeStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<ForStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<FunctionStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<IfStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<RetStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<DefStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<VariableStatement>(ptr))
+            return Gen(*p);
+        if (const auto p = std::dynamic_pointer_cast<WhileStatement>(ptr))
+            return Gen(*p);
+
+        if (const auto p = std::dynamic_pointer_cast<Expression>(ptr))
+        {
+            (void)Gen(p);
+            return;
+        }
+
+        CSAW_MESSAGE_STMT(true, *ptr, "code generation for statement is not implemented");
+    }
+    catch (const ChainSawMessage& error)
+    {
+        const auto file = error.SourceFile.empty() ? (ptr ? ptr->File : "<none>") : error.SourceFile;
+        const auto line = error.SourceLine == 0 ? (ptr ? ptr->Line : 0) : error.SourceLine;
+        std::cerr << file << "(" << line << "): " << error.Message << std::endl;
+        if (!error.CanRecover) throw;
+    }
 }
 
 void csaw::Builder::Gen(const ScopeStatement& statement)
@@ -89,7 +100,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         return;
 
     if (!ref.Function->empty())
-        CSAW_MESSAGE(true, "in line " + std::to_string(statement.Line) + ": function is already implemented");
+        CSAW_MESSAGE_STMT(true, statement, "function is already implemented");
 
     const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", ref.Function);
     m_Builder->SetInsertPoint(entry_block);
@@ -137,7 +148,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (verifyFunction(*ref.Function, &llvm::errs()))
     {
         ref.Function->viewCFG();
-        CSAW_MESSAGE(true, "in line " + std::to_string(statement.Line) + ": failed to verify function");
+        CSAW_MESSAGE_STMT(true, statement, "failed to verify function");
     }
 
     m_FPM->run(*ref.Function, *m_FAM);
@@ -145,40 +156,44 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
 
 void csaw::Builder::Gen(const IfStatement& statement)
 {
-    const auto condition = Gen(statement.Condition);
+    const auto parent = m_Builder->GetInsertBlock()->getParent();
+    auto true_block = llvm::BasicBlock::Create(*m_Context, "true", parent);
+    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end");
+    auto false_block = statement.False ? llvm::BasicBlock::Create(*m_Context, "false") : end_block;
 
-    const auto true_block = llvm::BasicBlock::Create(*m_Context, "true", m_Builder->GetInsertBlock()->getParent());
-    const auto false_block = llvm::BasicBlock::Create(*m_Context, "false", m_Builder->GetInsertBlock()->getParent());
-    const auto end_block = statement.False ? llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent()) : false_block;
+    const auto condition = Gen(statement.Condition);
+    m_Builder->CreateCondBr(condition.Load().GetValue(), true_block, false_block);
 
     bool need_end = false;
 
-    m_Builder->CreateCondBr(condition.Load().GetValue(), true_block, false_block);
-
     m_Builder->SetInsertPoint(true_block);
     Gen(statement.True);
+    true_block = m_Builder->GetInsertBlock();
     if (!true_block->getTerminator())
     {
         m_Builder->CreateBr(end_block);
         need_end = true;
     }
 
+    parent->insert(parent->end(), false_block);
     m_Builder->SetInsertPoint(false_block);
     if (statement.False)
     {
         Gen(statement.False);
+        false_block = m_Builder->GetInsertBlock();
         if (!false_block->getTerminator())
         {
             m_Builder->CreateBr(end_block);
             need_end = true;
         }
     }
-    else need_end = true;
+    else need_end = false;
 
-    if (!need_end)
-        end_block->eraseFromParent();
-    else
+    if (need_end)
+    {
+        parent->insert(parent->end(), end_block);
         m_Builder->SetInsertPoint(end_block);
+    }
 }
 
 void csaw::Builder::Gen(const RetStatement& statement)
@@ -201,8 +216,6 @@ void csaw::Builder::Gen(const DefStatement& statement) const
         return;
     }
 
-    StructType::Get(statement.Name, statement.Elements);
-
     if (statement.Elements.empty())
     {
         if (!llvm::StructType::getTypeByName(*m_Context, statement.Name))
@@ -212,7 +225,7 @@ void csaw::Builder::Gen(const DefStatement& statement) const
 
     const auto type = llvm::StructType::getTypeByName(*m_Context, statement.Name);
     if (type && !type->isEmptyTy())
-        CSAW_MESSAGE(true, "in line " + std::to_string(statement.Line) + ": struct is already implemented");
+        CSAW_MESSAGE_STMT(true, statement, "struct is already implemented");
 
     std::vector<llvm::Type*> elements(statement.Elements.size());
     for (size_t i = 0; i < elements.size(); ++i)

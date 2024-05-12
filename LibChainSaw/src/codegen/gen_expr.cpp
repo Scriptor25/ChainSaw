@@ -7,7 +7,7 @@
 csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
 {
     if (!ptr)
-        CSAW_MESSAGE(true, "expression must not be null");
+        CSAW_MESSAGE_NONE(true, "expression must not be null");
 
     if (const auto p = std::dynamic_pointer_cast<BinaryExpression>(ptr))
         return Gen(*p);
@@ -40,7 +40,7 @@ csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
     if (const auto p = std::dynamic_pointer_cast<VarArgExpression>(ptr))
         return Gen(*p);
 
-    CSAW_MESSAGE(true, "in line " + std::to_string(ptr->Line) + ": code generation for expression is not implemented");
+    CSAW_MESSAGE_STMT(true, *ptr, "code generation for expression is not implemented");
 }
 
 csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
@@ -57,7 +57,7 @@ csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
 
     if (const auto function = GetFunction(op, left.Load().GetRawBaseType(), {right.GetRawBaseType()}))
     {
-        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.GetValue(), right.Load().GetValue()});
+        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.Load().GetValue(), right.Load().GetValue()});
         return ValueRef::Constant(this, value, function->Result);
     }
 
@@ -98,7 +98,7 @@ csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
     }
 
     if (value.Invalid())
-        CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": binary operation " + lhs.GetRawType()->Name + " " + expression.Operator + " " + rhs.GetRawType()->Name + " is not implemented");
+        CSAW_MESSAGE_STMT(true, expression, "binary operation " + lhs.GetRawType()->Name + " " + expression.Operator + " " + rhs.GetRawType()->Name + " is not implemented");
 
     return value;
 }
@@ -122,7 +122,7 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
             callee = callee.Load();
     }
     else
-        CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": WTF");
+        CSAW_MESSAGE_STMT(true, expression, "WTF");
 
     if (!callee.Invalid())
         args.push_back(callee.GetValue());
@@ -136,7 +136,7 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
 
     const auto function = GetFunction(name, callee.Invalid() ? nullptr : callee.GetRawBaseType(), arg_raw_types);
     if (!function)
-        CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": cannot resolve function '" + name + "', member of " + (callee.Invalid() ? "<none>" : callee.GetRawBaseType()->Name));
+        CSAW_MESSAGE_STMT(true, expression, "cannot resolve function '" + name + "', signature " + FunctionSignatureString(callee.Invalid() ? nullptr : callee.GetRawBaseType(), arg_raw_types));
 
     ValueRef output;
     if (function->IsConstructor)
@@ -211,7 +211,7 @@ csaw::ValueRef csaw::Builder::Gen(const CastExpression& expression)
         }
     }
 
-    CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": cast from " + value.GetRawType()->Name + " to " + expression.Type->Name + " is not implemented");
+    CSAW_MESSAGE_STMT(true, expression, "cast from " + value.GetRawType()->Name + " to " + expression.Type->Name + " is not implemented");
 }
 
 csaw::ValueRef csaw::Builder::Gen(const CharExpression& expression)
@@ -224,7 +224,7 @@ csaw::ValueRef csaw::Builder::Gen(const DereferenceExpression& expression)
 {
     const auto value = Gen(expression.Value).Load();
     if (!value.GetRawType()->IsPointer())
-        CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": cannot dereference non-pointer value");
+        CSAW_MESSAGE_STMT(true, expression, "cannot dereference non-pointer value");
     const auto deref = m_Builder->CreateLoad(value.GetBaseType(), value.GetValue());
     return ValueRef::Constant(this, deref, value.GetRawBaseType());
 }
@@ -313,6 +313,23 @@ csaw::ValueRef csaw::Builder::Gen(const UnaryExpression& expression)
     const auto value = Gen(expression.Value);
     const auto op = expression.Operator;
 
+    if (expression.OpRight)
+    {
+        if (const auto function = GetFunction(op, nullptr, {value.GetRawBaseType()}))
+        {
+            const auto result = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {value.Load().GetValue()});
+            return ValueRef::Constant(this, result, function->Result);
+        }
+    }
+    else
+    {
+        if (const auto function = GetFunction(op, value.GetRawBaseType(), {}))
+        {
+            const auto result = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {value.GetValue()});
+            return ValueRef::Constant(this, result, function->Result);
+        }
+    }
+
     ValueRef result;
     if (op == "-") result = GenNeg(value);
     if (op == "!") result = GenNot(value);
@@ -324,9 +341,9 @@ csaw::ValueRef csaw::Builder::Gen(const UnaryExpression& expression)
     {
         const auto op_c = op.c_str();
         const auto ty_c = value.GetRawBaseType()->Name.c_str();
-        std::string left = expression.OpRight ? ty_c : op_c;
-        std::string right = expression.OpRight ? op_c : ty_c;
-        CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": unary operation " + left + right + " not implemented");
+        const std::string left = expression.OpRight ? ty_c : op_c;
+        const std::string right = expression.OpRight ? op_c : ty_c;
+        CSAW_MESSAGE_STMT(true, expression, "unary operation " + left + right + " not implemented");
     }
 
     return result;
@@ -334,5 +351,5 @@ csaw::ValueRef csaw::Builder::Gen(const UnaryExpression& expression)
 
 csaw::ValueRef csaw::Builder::Gen(const VarArgExpression& expression)
 {
-    CSAW_MESSAGE(true, "in line " + std::to_string(expression.Line) + ": code generation for varargs not yet implemented");
+    CSAW_MESSAGE_STMT(true, expression, "code generation for varargs not yet implemented");
 }

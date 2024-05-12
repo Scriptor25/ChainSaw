@@ -135,7 +135,7 @@ csaw::Token& csaw::Parser::Next()
             if (c == '.')
             {
                 if (period)
-                    CSAW_MESSAGE(false, "a floating point number can only have one period");
+                    CSAW_MESSAGE_(false, m_Filename, m_Line, "a floating point number can only have one period");
 
                 period = true;
                 value += static_cast<char>(c);

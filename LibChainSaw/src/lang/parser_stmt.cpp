@@ -34,7 +34,7 @@ csaw::ScopeStatementPtr csaw::Parser::ParseScopeStatement()
         content.push_back(ParseStatement());
     Expect("}");
 
-    return std::make_shared<ScopeStatement>(line, content);
+    return std::make_shared<ScopeStatement>(m_Filename, line, content);
 }
 
 csaw::ForStatementPtr csaw::Parser::ParseForStatement()
@@ -60,7 +60,7 @@ csaw::ForStatementPtr csaw::Parser::ParseForStatement()
 
     auto body = ParseStatement();
 
-    return std::make_shared<ForStatement>(line, pre, condition, loop, body);
+    return std::make_shared<ForStatement>(m_Filename, line, pre, condition, loop, body);
 }
 
 csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
@@ -119,7 +119,7 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
     {
         body = ParseExpression();
         Expect(";");
-        return std::make_shared<FunctionStatement>(line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
+        return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
     }
 
     if (NextIfAt("["))
@@ -132,17 +132,17 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
         }
         while (!At("]") && !AtEOF());
         Expect("]");
-        CSAW_MESSAGE(true, "Feature is not yet implemented");
+        CSAW_MESSAGE_(true, m_Filename, line, "Feature is not yet implemented");
     }
 
     if (!At("{"))
     {
         Expect(";");
-        return std::make_shared<FunctionStatement>(line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
+        return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
     }
 
     body = ParseScopeStatement();
-    return std::make_shared<FunctionStatement>(line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
+    return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
 }
 
 csaw::IfStatementPtr csaw::Parser::ParseIfStatement()
@@ -158,10 +158,10 @@ csaw::IfStatementPtr csaw::Parser::ParseIfStatement()
 
     auto _true = ParseStatement();
     if (!NextIfAt("else"))
-        return std::make_shared<IfStatement>(line, condition, _true, StatementPtr());
+        return std::make_shared<IfStatement>(m_Filename, line, condition, _true, StatementPtr());
 
     auto _false = ParseStatement();
-    return std::make_shared<IfStatement>(line, condition, _true, _false);
+    return std::make_shared<IfStatement>(m_Filename, line, condition, _true, _false);
 }
 
 csaw::RetStatementPtr csaw::Parser::ParseRetStatement(const bool end)
@@ -171,12 +171,12 @@ csaw::RetStatementPtr csaw::Parser::ParseRetStatement(const bool end)
     Expect("ret");
 
     if (NextIfAt(";"))
-        return std::make_shared<RetStatement>(line, ExpressionPtr());
+        return std::make_shared<RetStatement>(m_Filename, line, ExpressionPtr());
 
     auto value = ParseExpression();
     if (end) Expect(";");
 
-    return std::make_shared<RetStatement>(line, value);
+    return std::make_shared<RetStatement>(m_Filename, line, value);
 }
 
 csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
@@ -187,14 +187,17 @@ csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
     std::string name = Expect(TK_IDENTIFIER).Value;
 
     if (NextIfAt(";"))
-        return std::make_shared<DefStatement>(line, name);
+    {
+        StructType::Create(name, {});
+        return std::make_shared<DefStatement>(m_Filename, line, name);
+    }
 
     if (!NextIfAt("{"))
     {
         Expect("=");
         const auto type = ParseType();
         Expect(";");
-        return std::make_shared<DefStatement>(line, name, type);
+        return std::make_shared<DefStatement>(m_Filename, line, name, type);
     }
 
     std::vector<std::pair<std::string, TypePtr>> elements;
@@ -210,9 +213,9 @@ csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
     }
     Expect("}");
 
-    StructType::Get(name, elements);
+    StructType::Create(name, elements);
 
-    return std::make_shared<DefStatement>(line, name, elements);
+    return std::make_shared<DefStatement>(m_Filename, line, name, elements);
 }
 
 csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const ExpressionPtr& expr, const bool end)
@@ -229,14 +232,14 @@ csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const Expression
         if (!At("="))
         {
             if (end) Expect(";");
-            return std::make_shared<VariableStatement>(line, name->Id, type, nullptr);
+            return std::make_shared<VariableStatement>(m_Filename, line, name->Id, type, nullptr);
         }
 
         Expect("=");
         auto value = ParseExpression();
 
         if (end) Expect(";");
-        return std::make_shared<VariableStatement>(line, name->Id, type, value);
+        return std::make_shared<VariableStatement>(m_Filename, line, name->Id, type, value);
     }
 
     return nullptr;
@@ -255,5 +258,5 @@ csaw::WhileStatementPtr csaw::Parser::ParseWhileStatement()
 
     auto body = ParseStatement();
 
-    return std::make_shared<WhileStatement>(line, condition, body);
+    return std::make_shared<WhileStatement>(m_Filename, line, condition, body);
 }

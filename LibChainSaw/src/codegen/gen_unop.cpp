@@ -19,6 +19,12 @@ csaw::ValueRef csaw::Builder::GenNeg(const ValueRef& reference)
 
 csaw::ValueRef csaw::Builder::GenNot(const ValueRef& reference)
 {
+    if (reference.GetBaseType()->isIntegerTy(1))
+    {
+        const auto value = m_Builder->CreateNot(reference.Load().GetValue());
+        return ValueRef::Constant(this, value, Type::GetInt1());
+    }
+
     return {};
 }
 

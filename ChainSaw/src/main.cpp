@@ -13,7 +13,6 @@ int main(int argc, const char** argv)
     std::string file;
     bool to_args = false;
     std::vector<const char*> args;
-    args.push_back(exec.c_str());
 
     for (int i = 1; i < argc; ++i)
     {
@@ -125,6 +124,7 @@ int main(int argc, const char** argv)
 
     builder.GetModule().print(outstream, nullptr);
 
+    args.insert(args.begin(), file.c_str());
     const auto code = builder.Main(static_cast<int>(args.size()), args.data());
     std::cout << "Exit Code " << code << std::endl;
 

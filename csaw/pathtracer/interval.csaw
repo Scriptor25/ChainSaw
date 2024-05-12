@@ -1,0 +1,14 @@
+def interval {
+    min: flt64,
+    max: flt64
+}
+
+$interval(min: flt64, max: flt64) {
+    me!min = min;
+    me!max = max;
+}
+
+@size:interval:flt64 = me!max - me!min;
+
+@contains:interval(x: flt64): bool = me!min <= x && x <= me!max;
+@surrounds:interval(x: flt64): bool = me!min < x && x < me!max;
