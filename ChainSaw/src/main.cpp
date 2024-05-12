@@ -111,8 +111,8 @@ int main(int argc, const char** argv)
         // std::cout << ptr << std::endl;
         builder.Generate(ptr);
     }, includePaths);
-
     stream.close();
+    builder.Build();
 
     std::error_code err;
     auto outstream = llvm::raw_fd_ostream("output.ll", err);

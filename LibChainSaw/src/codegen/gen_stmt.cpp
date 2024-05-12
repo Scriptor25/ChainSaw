@@ -56,9 +56,10 @@ void csaw::Builder::Gen(const ScopeStatement& statement)
 
 void csaw::Builder::Gen(const ForStatement& statement)
 {
-    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", m_Builder->GetInsertBlock()->getParent());
-    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", m_Builder->GetInsertBlock()->getParent());
-    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent());
+    const auto parent = m_Builder->GetInsertBlock()->getParent();
+    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", parent);
+    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", parent);
+    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", parent);
 
     if (statement.Pre) Gen(statement.Pre);
     m_Builder->CreateBr(hdr_block);
@@ -103,6 +104,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         CSAW_MESSAGE_STMT(true, statement, "function is already implemented");
 
     const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", ref.Function);
+    const auto backup_block = m_Builder->GetInsertBlock();
     m_Builder->SetInsertPoint(entry_block);
 
     m_Values.clear();
@@ -143,11 +145,12 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         m_Builder->CreateRetVoid();
     }
 
-    m_Builder->SetInsertPoint(static_cast<llvm::BasicBlock*>(nullptr));
+    m_Builder->SetInsertPoint(backup_block);
 
     if (verifyFunction(*ref.Function, &llvm::errs()))
     {
         ref.Function->viewCFG();
+        ref.Function->eraseFromParent();
         CSAW_MESSAGE_STMT(true, statement, "failed to verify function");
     }
 
@@ -239,31 +242,37 @@ void csaw::Builder::Gen(const DefStatement& statement) const
 
 void csaw::Builder::Gen(const VariableStatement& statement)
 {
-    if (IsGlobal())
+    const auto type = Gen(statement.Type);
+
+    ValueRef initializer;
+    if (statement.Value) initializer = Gen(statement.Value);
+
+    if (m_Builder->GetInsertBlock() == &m_GlobalParent->getEntryBlock())
     {
-        llvm::Constant* global_initializer = nullptr;
-        if (statement.Value)
-        {
-            const auto initializer = Gen(statement.Value);
-            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer.Load().GetValue());
-        }
+        auto global_initializer = llvm::dyn_cast<llvm::Constant>(initializer.Load().GetValue());
+        const bool is_initialized = global_initializer;
+        if (!is_initialized)
+            global_initializer = llvm::Constant::getNullValue(type);
 
-        const auto type = Gen(statement.Type);
         const auto value = new llvm::GlobalVariable(*m_Module, type, false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
+        const auto ref = ValueRef::Pointer(this, value, statement.Type);
 
-        m_GlobalValues[statement.Name] = ValueRef::Pointer(this, value, statement.Type);
+        if (!is_initialized && !initializer.Invalid())
+            (void)ref.Store(initializer);
 
+        m_GlobalValues[statement.Name] = ref;
         return;
     }
 
-    m_Values[statement.Name] = ValueRef::Allocate(this, statement.Value ? Gen(statement.Value).Load().GetValue() : nullptr, statement.Type);
+    m_Values[statement.Name] = ValueRef::Allocate(this, statement.Value ? Gen(statement.Value).Load().GetValue() : llvm::Constant::getNullValue(type), statement.Type);
 }
 
 void csaw::Builder::Gen(const WhileStatement& statement)
 {
-    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", m_Builder->GetInsertBlock()->getParent());
-    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", m_Builder->GetInsertBlock()->getParent());
-    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent());
+    const auto parent = m_Builder->GetInsertBlock()->getParent();
+    const auto hdr_block = llvm::BasicBlock::Create(*m_Context, "hdr", parent);
+    const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop", parent);
+    const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", parent);
 
     m_Builder->CreateBr(hdr_block);
     m_Builder->SetInsertPoint(hdr_block);

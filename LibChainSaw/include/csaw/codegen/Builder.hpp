@@ -28,6 +28,7 @@ namespace csaw
         [[nodiscard]] llvm::Module& GetModule() const;
 
         void Generate(const StatementPtr& ptr);
+        void Build() const;
         int Main(int argc, const char** argv);
 
         [[nodiscard]] llvm::Type* Gen(const TypePtr& ptr) const;
@@ -38,8 +39,6 @@ namespace csaw
 
         static std::string FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args);
         static std::pair<int, TypePtr> ElementInStruct(const TypePtr& rawType, const std::string& element);
-
-        [[nodiscard]] bool IsGlobal() const;
 
         std::pair<ValueRef, ValueRef> CastToBestOf(const ValueRef& left, const ValueRef& right);
 
@@ -113,5 +112,7 @@ namespace csaw
         std::map<std::string, std::vector<FunctionRef>> m_Functions;
         std::map<std::string, ValueRef> m_GlobalValues;
         std::map<std::string, ValueRef> m_Values;
+
+        llvm::Function* m_GlobalParent;
     };
 }

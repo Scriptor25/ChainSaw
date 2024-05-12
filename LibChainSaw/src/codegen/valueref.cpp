@@ -61,6 +61,15 @@ csaw::TypePtr csaw::ValueRef::GetRawBaseType() const
     return m_RawType;
 }
 
+csaw::TypePtr csaw::ValueRef::GetRawBaseTypeBase() const
+{
+    Check();
+    auto type = GetRawBaseType();
+    if (type->IsPointer())
+        return std::dynamic_pointer_cast<PointerType>(type)->Base;
+    return type;
+}
+
 csaw::ValueRef csaw::ValueRef::GetReference() const
 {
     Check();

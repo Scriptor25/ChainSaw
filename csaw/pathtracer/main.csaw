@@ -1,15 +1,15 @@
-## STD INCLUDES
+## STD INCLUDE LIST
 \inc "std/stdio.csaw"
 \inc "std/stdlib.csaw"
 \inc "std/stdimg.csaw"
 \inc "std/stdbool.csaw"
 \inc "std/math.csaw"
 
-## PROJECT INCLUDES
+## PROJECT INCLUDE LIST
 \inc "def.csaw"
 \inc "vec3.csaw"
-\inc "color.csaw"
 \inc "interval.csaw"
+\inc "color.csaw"
 \inc "ray.csaw"
 \inc "hittable.csaw"
 \inc "sphere.csaw"
@@ -37,6 +37,7 @@
     cam: camera = camera();
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
+    cam.samples_per_pixel = 100;
 
     cam.render(ppArgv[1], [hittable*]&world);
 

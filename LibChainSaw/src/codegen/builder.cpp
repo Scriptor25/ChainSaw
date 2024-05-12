@@ -2,6 +2,7 @@
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
 #include <csaw/lang/Stmt.hpp>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
@@ -50,6 +51,11 @@ csaw::Builder::Builder(const std::string& moduleName)
     pb.registerModuleAnalyses(*m_MAM);
     pb.registerFunctionAnalyses(*m_FAM);
     pb.crossRegisterProxies(*m_LAM, *m_FAM, *m_CGAM, *m_MAM);
+
+    const auto function_type = llvm::FunctionType::get(m_Builder->getVoidTy(), false);
+    m_GlobalParent = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, "__global__", *m_Module);
+    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", m_GlobalParent);
+    m_Builder->SetInsertPoint(entry_block);
 }
 
 llvm::LLVMContext& csaw::Builder::GetContext() const
@@ -72,9 +78,24 @@ void csaw::Builder::Generate(const StatementPtr& ptr)
     Gen(ptr);
 }
 
+void csaw::Builder::Build() const
+{
+    m_Builder->CreateRetVoid();
+    if (verifyFunction(*m_GlobalParent, &llvm::errs()))
+    {
+        m_GlobalParent->viewCFG();
+        m_GlobalParent->eraseFromParent();
+        CSAW_MESSAGE_NONE(true, "failed to verify __global__");
+    }
+    m_FPM->run(*m_GlobalParent, *m_FAM);
+}
+
 int csaw::Builder::Main(const int argc, const char** argv)
 {
     m_Error(m_JIT->addIRModule(llvm::orc::ThreadSafeModule(std::move(m_Module), std::move(m_Context))));
+
+    const auto global_fn = m_Error(m_JIT->lookup("__global__")).toPtr<void(*)()>();
+    global_fn();
 
     const auto main_fn = m_Error(m_JIT->lookup("main")).toPtr<int(*)(int, const char**)>();
     return main_fn(argc, argv);
@@ -150,11 +171,6 @@ std::pair<int, csaw::TypePtr> csaw::Builder::ElementInStruct(const TypePtr& rawT
     }
 
     CSAW_MESSAGE_NONE(true, rawType->Name + " does not have a member '" + element + "'");
-}
-
-bool csaw::Builder::IsGlobal() const
-{
-    return !m_Builder->GetInsertBlock();
 }
 
 std::pair<csaw::ValueRef, csaw::ValueRef> csaw::Builder::CastToBestOf(const ValueRef& left, const ValueRef& right)

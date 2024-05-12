@@ -55,10 +55,19 @@ csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
         return ValueRef::Constant(this, value, function->Result);
     }
 
-    if (const auto function = GetFunction(op, left.Load().GetRawBaseType(), {right.GetRawBaseType()}))
+    if (!left.IsRValue())
     {
-        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.Load().GetValue(), right.Load().GetValue()});
-        return ValueRef::Constant(this, value, function->Result);
+        if (const auto function = GetFunction(op, left.GetRawBaseType(), {right.GetRawBaseType()}))
+        {
+            const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.GetValue(), right.Load().GetValue()});
+            return ValueRef::Pointer(this, value, function->Result);
+        }
+
+        if (const auto function = GetFunction(op, left.GetRawBaseTypeBase(), {right.GetRawBaseType()}))
+        {
+            const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.Load().GetValue(), right.Load().GetValue()});
+            return ValueRef::Pointer(this, value, function->Result);
+        }
     }
 
     if (op == "=")
