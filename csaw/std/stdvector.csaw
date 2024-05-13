@@ -1,0 +1,33 @@
+## STDVECTOR ##
+
+def vector {
+    size: int64,
+    reserved: int64,
+    ptr: void**,
+}
+
+$vector {
+    me!size = [int64]0;
+    me!reserved = [int64]10;
+    me!ptr = malloc(me!reserved * 8);
+}
+
+$vector(reserved: int64) {
+    me!size = 0;
+    me!reserved = reserved;
+    me!ptr = malloc(me!reserved * 8);
+}
+
+@push_back:vector(ptr: void*) {
+    if (me!size == me!reserved) {
+        me!reserved *= 2;
+        me!ptr = realloc([void*]me!ptr, me!reserved * 8);
+    }
+    me!ptr[me!size] = ptr;
+    ++me!size;
+}
+
+@at:vector(i: int64): void* = me!ptr[i];
+@([]):vector(i: int64): void* = me!ptr[i];
+
+@destroy:vector = free([void*]me!ptr);

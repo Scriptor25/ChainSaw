@@ -47,6 +47,12 @@ llvm::Type* csaw::ValueRef::GetBaseType() const
     return m_Builder->Gen(GetRawBaseType());
 }
 
+llvm::Type* csaw::ValueRef::GetBaseTypeBase() const
+{
+    Check();
+    return m_Builder->Gen(GetRawBaseTypeBase());
+}
+
 csaw::TypePtr csaw::ValueRef::GetRawType() const
 {
     Check();

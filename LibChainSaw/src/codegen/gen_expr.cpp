@@ -157,7 +157,7 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
     const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, args);
 
     if (function->IsConstructor)
-        return ValueRef::Constant(this, output.Load().GetValue(), output.GetRawBaseType());
+        return output;
     return ValueRef::Constant(this, value, function->Result);
 }
 
@@ -253,11 +253,17 @@ csaw::ValueRef csaw::Builder::Gen(const IdentifierExpression& expression)
 
 csaw::ValueRef csaw::Builder::Gen(const IndexExpression& expression)
 {
-    const auto array = Gen(expression.Array).Load();
+    const auto array = Gen(expression.Array);
     const auto index = Gen(expression.Index).Load();
 
-    const auto value = m_Builder->CreateGEP(array.GetBaseType(), array.GetValue(), {index.GetValue()});
-    return ValueRef::Pointer(this, value, array.GetRawBaseType());
+    if (const auto function = GetFunction("[]", array.GetRawBaseType(), {index.GetRawType()}))
+    {
+        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {array.GetValue(), index.GetValue()});
+        return ValueRef::Constant(this, value, function->Result);
+    }
+
+    const auto value = m_Builder->CreateGEP(array.GetBaseTypeBase(), array.Load().GetValue(), {index.GetValue()});
+    return ValueRef::Pointer(this, value, array.GetRawBaseTypeBase());
 }
 
 csaw::ValueRef csaw::Builder::Gen(const IntExpression& expression)

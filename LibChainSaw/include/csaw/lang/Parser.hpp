@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <string>
 #include <vector>
@@ -57,7 +58,7 @@ namespace csaw
     private:
         static int Escape(int c);
 
-        explicit Parser(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
+        Parser(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
 
         Token& Next();
 

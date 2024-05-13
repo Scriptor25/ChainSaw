@@ -1,19 +1,29 @@
 def sphere {
     type: int8,
     center: point3,
-    radius: flt64
-}
+    radius: flt64,
+    mat: material*
+} ## size: 1 + 3 * 8 + 8 + 8 = 41
 
-$sphere(center: point3, radius: flt64) {
+$sphere(center: point3, radius: flt64, mat: material*) {
     me!type = 'S';
     me!center = center;
     me!radius = fmax(0.0, radius);
+    me!mat = mat;
 }
 
-@hit:sphere(r: ray*, rec: hit_record*): bool {
-    oc: vec3 = me!center - r!origin;
-    a: flt64 = r!direction.length_squared();
-    h: flt64 = dot(r!direction, oc);
+@(=):sphere(s: sphere): sphere* {
+    me!type = s.type;
+    me!center = s.center;
+    me!radius = s.radius;
+    me!mat = s.mat;
+    ret me;
+}
+
+@hit:sphere(r: ray, rec: hit_record*): bool {
+    oc: vec3 = me!center - r.origin;
+    a: flt64 = r.direction.length_squared();
+    h: flt64 = dot(r.direction, oc);
     c: flt64 = oc.length_squared() - me!radius * me!radius;
 
     discriminant: flt64 = h * h - a * c;
@@ -25,16 +35,17 @@ $sphere(center: point3, radius: flt64) {
 
     ## Find the nearest root that lies in the acceptable range
     root: flt64 = (h - sqrtd) * inva;
-    if (!r!t.surrounds(root)) {
+    if (!r.t.surrounds(root)) {
         root = (h + sqrtd) * inva;
-        if (!r!t.surrounds(root))
+        if (!r.t.surrounds(root))
             ret false;
     }
 
     rec!t = root;
-    rec!p = r!at(rec!t);
+    rec!p = r.at(rec!t);
     outward_normal: vec3 = (rec!p - me!center) / me!radius;
     rec!set_face_normal(r, outward_normal);
+    rec!mat = me!mat;
 
     ret true;
 }

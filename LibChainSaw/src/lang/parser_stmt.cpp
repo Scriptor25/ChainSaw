@@ -6,6 +6,7 @@
 csaw::StatementPtr csaw::Parser::ParseStatement(const bool end)
 {
     while (At(TK_COMPILE_DIRECTIVE)) ParseCompileDirective();
+    if (AtEOF()) return nullptr;
 
     if (At("{")) return ParseScopeStatement();
     if (At("for")) return ParseForStatement();

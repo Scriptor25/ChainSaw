@@ -88,13 +88,6 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         const auto result_type = statement.IsConstructor ? Gen(Type::GetVoid()) : Gen(statement.Result);
         const auto function_type = llvm::FunctionType::get(result_type, arg_types, statement.IsVarArg);
         ref.Function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, statement.Name, *m_Module);
-
-        int i = has_ptr ? -1 : 0;
-        for (auto& arg : ref.Function->args())
-        {
-            arg.setName(i < 0 ? "me" : statement.Args[i].first);
-            ++i;
-        }
     }
 
     if (!statement.Body)
@@ -111,14 +104,17 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     int i = has_ptr ? -1 : 0;
     for (auto& arg : ref.Function->args())
     {
+        const auto name = i < 0 ? "me" : statement.Args[i].first;
+        arg.setName(name);
+
         if (i < 0)
         {
             const auto type = statement.IsConstructor ? Type::Get(statement.Name) : statement.Callee;
-            m_Values[arg.getName().str()] = ValueRef::Allocate(this, &arg, PointerType::Get(type));
+            m_Values["me"] = ValueRef::Allocate(this, &arg, PointerType::Get(type));
         }
         else
         {
-            m_Values[arg.getName().str()] = ValueRef::Allocate(this, &arg, statement.Args[i].second);
+            m_Values[name] = ValueRef::Allocate(this, &arg, statement.Args[i].second);
         }
         ++i;
     }
@@ -246,6 +242,11 @@ void csaw::Builder::Gen(const VariableStatement& statement)
 
     ValueRef initializer;
     if (statement.Value) initializer = Gen(statement.Value);
+    else if (const auto function = GetFunction(statement.Type->Name, nullptr, {}); function && function->IsConstructor)
+    {
+        initializer = ValueRef::Allocate(this, nullptr, Type::Get(function->Name));
+        m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {initializer.GetValue()});
+    }
 
     if (m_Builder->GetInsertBlock() == &m_GlobalParent->getEntryBlock())
     {
@@ -264,7 +265,7 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         return;
     }
 
-    m_Values[statement.Name] = ValueRef::Allocate(this, statement.Value ? Gen(statement.Value).Load().GetValue() : llvm::Constant::getNullValue(type), statement.Type);
+    m_Values[statement.Name] = ValueRef::Allocate(this, !initializer.Invalid() ? initializer.Load().GetValue() : llvm::Constant::getNullValue(type), statement.Type);
 }
 
 void csaw::Builder::Gen(const WhileStatement& statement)

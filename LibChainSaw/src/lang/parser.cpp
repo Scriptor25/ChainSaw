@@ -5,8 +5,8 @@
 void csaw::Parser::Parse(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths)
 {
     Parser parser(filename, stream, callback, includePaths);
-
     parser.Next();
+
     do
     {
         try { callback(parser.ParseStatement()); }

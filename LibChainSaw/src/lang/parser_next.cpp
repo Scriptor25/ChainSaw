@@ -144,6 +144,10 @@ csaw::Token& csaw::Parser::Next()
 
             if (c == 'e' || c == 'E')
             {
+                if (period)
+                    CSAW_MESSAGE_(false, m_Filename, m_Line, "a floating point number can only have one period");
+
+                period = true;
                 value += static_cast<char>(c);
                 c = m_Stream.get();
                 if (c == '-')

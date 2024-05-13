@@ -18,6 +18,7 @@ namespace csaw
         [[nodiscard]] llvm::Value* GetValue() const;
         [[nodiscard]] llvm::Type* GetType() const;
         [[nodiscard]] llvm::Type* GetBaseType() const;
+        [[nodiscard]] llvm::Type* GetBaseTypeBase() const;
         [[nodiscard]] TypePtr GetRawType() const;
         [[nodiscard]] TypePtr GetRawBaseType() const;
         [[nodiscard]] TypePtr GetRawBaseTypeBase() const;

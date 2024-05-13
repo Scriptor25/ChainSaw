@@ -10,4 +10,11 @@ $ray(origin: point3, direction: vec3, t: interval) {
     me!t = t;
 }
 
+@(=):ray(r: ray): ray* {
+    me!origin = r.origin;
+    me!direction = r.direction;
+    me!t = r.t;
+    ret me;
+}
+
 @at:ray(t: flt64): point3 = me!origin + t * me!direction;

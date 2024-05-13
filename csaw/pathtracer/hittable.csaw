@@ -1,27 +1,27 @@
+def material;
+
 def hit_record {
     p: point3,
     normal: vec3,
+    mat: material*,
     t: flt64,
     front_face: bool
 }
 
-@set:hit_record(rec: hit_record) {
+@(=):hit_record(rec: hit_record): hit_record* {
     me!p = rec.p;
     me!normal = rec.normal;
+    me!mat = rec.mat;
     me!t = rec.t;
     me!front_face = rec.front_face;
-}
-
-@(=):hit_record(rec: hit_record): hit_record* {
-    me!set(rec);
     ret me;
 }
 
-@set_face_normal:hit_record(r: ray*, outward_normal: vec3) {
+@set_face_normal:hit_record(r: ray, outward_normal: vec3) {
     ## Sets the hit record normal vector.
     ## NOTE: the parameter `outward_normal` is assumed to have unit length.
 
-    me!front_face = dot(r!direction, outward_normal) < 0;
+    me!front_face = dot(r.direction, outward_normal) < 0;
     me!normal = me!front_face ? outward_normal : -outward_normal;
 }
 
@@ -29,9 +29,12 @@ def hittable {
     type: int8
 }
 
-@hit:sphere(r: ray*, rec: hit_record*): bool;
-@hit:hittable_list(r: ray*, rec: hit_record*): bool;
-@hit:hittable(r: ray*, rec: hit_record*): bool {
+def sphere;
+def hittable_list;
+@hit:sphere(r: ray, rec: hit_record*): bool;
+@hit:hittable_list(r: ray, rec: hit_record*): bool;
+
+@hit:hittable(r: ray, rec: hit_record*): bool {
     if (me!type == 'S') ret ([sphere*]me)!hit(r, rec);
     if (me!type == 'L') ret ([hittable_list*]me)!hit(r, rec);
     ret false;
