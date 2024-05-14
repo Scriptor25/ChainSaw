@@ -1,0 +1,38 @@
+def hittable_list {
+    type: int8,
+    objects: vector
+}
+
+@add:hittable_list(object: hittable*);
+
+$hittable_list {
+    me!type = 'L';
+    me!objects = vector();
+}
+
+$hittable_list(object: hittable*) {
+    me!type = 'L';
+    me!objects = vector();
+    me!add(object);
+}
+
+@add:hittable_list(object: hittable*) = me!objects.push_back([void*]object);
+@get:hittable_list(i: int64): hittable* = me!objects.at(i);
+
+@hit:hittable_list(r: ray, rec: hit_record*): bool {
+    temp_rec: hit_record;
+    hit_anything: bool = false;
+
+    for (i: int64; i < me!objects.size; ++i) {
+        object: hittable* = me!get(i);
+        if (object!hit(r, &temp_rec)) {
+            hit_anything = true;
+            r.t.max = temp_rec.t;
+            rec = temp_rec;
+        }
+    }
+
+    ret hit_anything;
+}
+
+@destroy:hittable_list = me!objects.destroy();

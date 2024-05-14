@@ -1,3 +1,0 @@
-@format(fmt: str, args?): str;
-@printf(fmt: str, args?);
-@readf(fmt: str, args?): str;

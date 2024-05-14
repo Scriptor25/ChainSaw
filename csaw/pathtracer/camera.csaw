@@ -1,0 +1,145 @@
+def camera {
+    ## public
+    aspect_ratio: flt64,        ## Ratio of image width over height
+    image_width: int32,         ## Rendered image width in pixel count
+    samples_per_pixel: int32,   ## Count of random samples for each pixel
+    max_depth: int32,           ## Maximum number of ray bounces into scene
+
+    vfov: flt64,                ## Vertical view angle (field of view)
+    lookfrom: point3,           ## Point camera is looking from
+    lookat: point3,             ## Point camera is looking at
+    vup: vec3,                  ## Camera-relative "up" direction
+
+    defocus_angle: flt64,       ## Variation angle of rays through each pixel
+    focus_dist: flt64,          ## Distance from camera lookfrom point to plane of perfect focus
+
+    ## private
+    image_height: int32,        ## Rendered image height
+    pixel_samples_scale: flt64, ## Color scale factor for a sum of pixel samples
+    center: point3,             ## Camera center
+    pixel00_loc: point3,        ## Location of pixel 0, 0
+    pixel_delta_u: vec3,        ## Offset to pixel to the right
+    pixel_delta_v: vec3,        ## Offset to pixel below
+    u: vec3,                    ## Camera frame basis vector
+    v: vec3,                    ##
+    w: vec3,                    ##
+    defocus_disk_u: vec3,       ## Defocus disk horizontal radius
+    defocus_disk_v: vec3        ## Defocus disk vertical radius
+}
+
+$camera {
+    me!aspect_ratio = 1.0;
+    me!image_width = 100;
+    me!samples_per_pixel = 10;
+    me!max_depth = 10;
+
+    me!vfov = 90.0;
+    me!lookfrom = vec3(0.0, 0.0, 0.0);
+    me!lookat = vec3(0.0, 0.0, -1.0);
+    me!vup = vec3(0.0, 1.0, 0.0);
+
+    me!defocus_angle = 0.0;
+    me!focus_dist = 10.0;
+}
+
+@initialize:camera {
+    me!image_height = [int32](me!image_width / me!aspect_ratio);
+    me!image_height = (me!image_height < 1) ? 1 : me!image_height;
+
+    me!pixel_samples_scale = 1.0 / me!samples_per_pixel;
+
+    me!center = me!lookfrom;
+
+    ## Determine viewport dimensions.
+    theta: flt64 = to_radians(me!vfov);
+    h: flt64 = tan(theta / 2);
+    viewport_height: flt64 = 2 * h * me!focus_dist;
+    viewport_width: flt64 = viewport_height * [flt64]me!image_width / me!image_height;
+
+    ## Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+    me!w = unit_vector(me!lookfrom - me!lookat);
+    me!u = unit_vector(cross(me!vup, me!w));
+    me!v = cross(me!w, me!u);
+
+    ## Calculate the vectors across the horizontal and down the vertical viewport edges.
+    viewport_u: vec3 = viewport_width * me!u;       ## Vector across viewport horizontal edge
+    viewport_v: vec3 = viewport_height * -me!v;     ## Vector down viewport vertical edge
+
+    ## Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    me!pixel_delta_u = viewport_u / [flt64]me!image_width;
+    me!pixel_delta_v = viewport_v / [flt64]me!image_height;
+
+    ## Calculate the location of the upper left pixel.
+    viewport_upper_left: point3 = me!center - (me!focus_dist * me!w) - viewport_u / 2.0 - viewport_v / 2.0;
+    me!pixel00_loc = viewport_upper_left + 0.5 * (me!pixel_delta_u + me!pixel_delta_v);
+
+    ## Calculate the camera defocus disk basis vectors.
+    defocus_radius: flt64 = me!focus_dist * tan(to_radians(me!defocus_angle / 2));
+    me!defocus_disk_u = me!u * defocus_radius;
+    me!defocus_disk_v = me!v * defocus_radius;
+}
+
+## Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+@sample_square:camera:point3 = vec3(random() - 0.5, random() - 0.5, 0.0);
+
+@defocus_disk_sample:camera:point3 {
+    ## Returns a random point in the camera defocus disk.
+    p: point3 = random_in_unit_disk();
+    ret me!center + (p.x * me!defocus_disk_u) + (p.y * me!defocus_disk_v);
+}
+
+@get_ray:camera(i: int32, j: int32): ray {
+    ## Construct a camera ray originating from the defocus disk and directed at a randomly
+    ## sampled point around the pixel location i, j.
+
+    offset: vec3 = me!sample_square();
+    pixel_sample: point3 = me!pixel00_loc + ((i + offset.x) * me!pixel_delta_u) + ((j + offset.y) * me!pixel_delta_v);
+
+    ray_origin: point3 = (me!defocus_angle <= 0) ? me!center : me!defocus_disk_sample();
+    ray_direction: vec3 = pixel_sample - ray_origin;
+
+    ret ray(ray_origin, ray_direction, interval(0.001, infinity));
+}
+
+@ray_color:camera(r: ray, depth: int32, world: hittable*): color {
+    ## If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        ret vec3(0.0, 0.0, 0.0);
+
+    rec: hit_record;
+    if (world!hit(r, &rec)) {
+        scattered: ray;
+        attenuation: color;
+        if (rec.mat!scatter(r, rec, &attenuation, &scattered))
+            ret attenuation * me!ray_color(scattered, depth - 1, world);
+        ret vec3(0.0, 0.0, 0.0);
+    }
+
+    unit_direction: vec3 = unit_vector(r.direction);
+    a: flt64 = 0.5 * (unit_direction.y + 1.0);
+    ret (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+}
+
+@render:camera(filename: int8*, world: hittable*) {
+    me!initialize();
+
+    out: image = image(me!image_width, me!image_height);
+
+    for (j: int32 = 0; j < out.height; ++j) {
+        printf("\rScanlines remaining: %5d", out.height - j);
+        for (i: int32 = 0; i < out.width; ++i) {
+            pixel_color: color = vec3(0.0, 0.0, 0.0);
+            for (sample: int32 = 0; sample < me!samples_per_pixel; ++sample) {
+                r: ray = me!get_ray(i, j);
+                col: color = me!ray_color(r, me!max_depth, world);
+                pixel_color += col;
+            }
+            out.pixel(i, j, toint(me!pixel_samples_scale * pixel_color));
+        }
+    }
+
+    out.toppm(filename);
+    out.destroy();
+
+    printf("\rDone.                       \n");
+}

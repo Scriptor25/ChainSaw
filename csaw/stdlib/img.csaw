@@ -1,6 +1,0 @@
-thing: img;
-
-$img(width: num, height: num);
-
-@set->img(x: num, y: num, argb: num);
-@write->img(format: str, filename: str);

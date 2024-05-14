@@ -1,0 +1,27 @@
+## STD INCLUDES
+\inc "std/stdio.csaw"
+\inc "std/stdlib.csaw"
+\inc "std/stdbool.csaw"
+\inc "std/stdimg.csaw"
+\inc "std/stdvector.csaw"
+\inc "std/math.csaw"
+
+infinity: flt64 = 1.0 / 0.0;
+pi: flt64 = 3.1415926535897932385;
+
+@to_radians(degrees: flt64): flt64 = degrees * pi / 180.0;
+@random::flt64 = rand() / (RAND_MAX + 1.0);
+@random(min: flt64, max: flt64): flt64 = min + (max - min) * random();
+
+## PROJECT INCLUDES
+\inc "interval.csaw"
+\inc "vec3.csaw"
+\inc "color.csaw"
+\inc "ray.csaw"
+\inc "hittable.csaw"
+\inc "material.csaw"
+\inc "camera.csaw"
+\inc "hittable_list.csaw"
+\inc "sphere.csaw"
+
+@main(argc: int32, ppArgv: int8**): int32;

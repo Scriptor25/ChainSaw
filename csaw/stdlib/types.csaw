@@ -1,5 +1,0 @@
-$num(x: chr);
-$num(x: str);
-$chr(x: num);
-$str(x: num);
-$str(x: chr);

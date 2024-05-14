@@ -1,7 +1,0 @@
-@random(minc: num, mexc: num): num {
-    ret minc + (mexc - minc) * random();
-}
-
-@randomInt(minc: num, mexc: num): num {
-    ret floor(random(minc, mexc));
-}
