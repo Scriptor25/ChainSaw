@@ -37,13 +37,13 @@ namespace csaw
         explicit Type(const std::string& name);
         virtual ~Type() = default;
 
-        [[nodiscard]] virtual bool IsPointer() const;
-        [[nodiscard]] virtual bool IsArray() const;
-        [[nodiscard]] virtual bool IsStruct() const;
+        virtual bool IsPointer() const;
+        virtual bool IsArray() const;
+        virtual bool IsStruct() const;
 
-        [[nodiscard]] const PointerType* AsPointer() const;
-        [[nodiscard]] const ArrayType* AsArray() const;
-        [[nodiscard]] const StructType* AsStruct() const;
+        const PointerType* AsPointer() const;
+        const ArrayType* AsArray() const;
+        const StructType* AsStruct() const;
 
         std::string Name;
     };
@@ -54,7 +54,7 @@ namespace csaw
 
         PointerType(const std::string& name, const TypePtr& base);
 
-        [[nodiscard]] bool IsPointer() const override;
+        bool IsPointer() const override;
 
         TypePtr Base;
     };
@@ -65,7 +65,7 @@ namespace csaw
 
         ArrayType(const std::string& name, const TypePtr& base, size_t size);
 
-        [[nodiscard]] bool IsArray() const override;
+        bool IsArray() const override;
 
         TypePtr Base;
         size_t Size;
@@ -78,7 +78,7 @@ namespace csaw
 
         StructType(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);
 
-        [[nodiscard]] bool IsStruct() const override;
+        bool IsStruct() const override;
 
         std::vector<std::pair<std::string, TypePtr>> Elements;
     };

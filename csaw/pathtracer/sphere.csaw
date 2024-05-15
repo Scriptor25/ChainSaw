@@ -12,14 +12,6 @@ $sphere(center: point3, radius: flt64, mat: material*) {
     me!mat = mat;
 }
 
-@(=):sphere(s: sphere): sphere* {
-    me!type = s.type;
-    me!center = s.center;
-    me!radius = s.radius;
-    me!mat = s.mat;
-    ret me;
-}
-
 @hit:sphere(r: ray, rec: hit_record*): bool {
     oc: vec3 = me!center - r.origin;
     a: flt64 = r.direction.length_squared();
@@ -49,3 +41,5 @@ $sphere(center: point3, radius: flt64, mat: material*) {
 
     ret true;
 }
+
+@dump:sphere = printf("%p: type=%c center=[%f, %f, %f] radius=%f mat=%p\n", me, me!type, me!center.x, me!center.y, me!center.z, me!radius, me!mat);

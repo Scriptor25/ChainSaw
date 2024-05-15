@@ -1,32 +1,25 @@
 ## INCLUDES
 \inc "std/stdio.csaw"
 \inc "std/stdlib.csaw"
+\inc "std/stdbool.csaw"
 
 ## RANDOM
-@randomInt(minc: int32, mexc: int32): int32
-    = minc + ((mexc - minc) * rand()) / RAND_MAX;
-
-## BOOL
-def bool = int1;
-true:  bool = [bool]1;
-false: bool = [bool]0;
+@random::flt64 = rand() / (RAND_MAX + 1.0);
+@randomInt(minc: int32, mexc: int32): int32 = minc + [int32]((mexc - minc) * random());
 
 ## Main - Ghost Game
 @main(argc: int32, argv: int8**): int32 {
 
     printf("Ghost Game\n\n");
 
-    still_running: bool = true;
+    running: bool = true;
     score: int32 = 0;
 	
-	door_with_ghost: int32;
-	door: int32;
-
-    while (still_running) {
-        door_with_ghost = randomInt(1, 3);
+    while (running) {
+        door_with_ghost: int32 = randomInt(1, 3);
         printf("There are three doors.\nThere's a ghost behind one of them.\nWhich one do you open?\n");
         
-		door = 0;
+		door: int32 = 0;
         while (door < 1 || 3 < door) {
             printf("1, 2 or 3? ");
             scanf("%d", &door);
@@ -34,7 +27,7 @@ false: bool = [bool]0;
         
         if (door == door_with_ghost) {
             printf("GHOST!\n");
-            still_running = false;
+            running = false;
         } else {
             printf("No one there!\nYou can go one room further.\n");
             ++score;

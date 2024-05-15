@@ -21,8 +21,9 @@ void csaw::Parser::Parse(const std::string& filename, std::istream& stream, cons
     while (!parser.AtEOF());
 }
 
-int csaw::Parser::Escape(const int c)
+int csaw::Parser::Escape() const
 {
+    int c = m_Stream.get();
     switch (c)
     {
     case 'a': return '\a';
@@ -32,8 +33,31 @@ int csaw::Parser::Escape(const int c)
     case 'r': return '\r';
     case 't': return '\t';
     case 'v': return '\v';
-    default: return c;
+    default: break;
     }
+
+    if (isdigit(c)) // nnn (oct)
+    {
+        std::string value;
+        value += static_cast<char>(c);
+        c = m_Stream.get();
+        value += static_cast<char>(c);
+        c = m_Stream.get();
+        value += static_cast<char>(c);
+        return std::stoi(value, nullptr, 8);
+    }
+
+    if (c == 'x') // hh (hex)
+    {
+        std::string value;
+        c = m_Stream.get();
+        value += static_cast<char>(c);
+        c = m_Stream.get();
+        value += static_cast<char>(c);
+        return std::stoi(value, nullptr, 16);
+    }
+
+    return c;
 }
 
 csaw::Parser::Parser(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths)

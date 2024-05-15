@@ -9,11 +9,31 @@
     material_bubble: dielectric = dielectric(1.00 / 1.50);
     material_right: metal       = metal(vec3(0.8, 0.6, 0.2), 1.0);
 
-    world.add([hittable*]&sphere(vec3( 0.0, -100.5, -1.0), 100.0, [material*]&material_ground));
-    world.add([hittable*]&sphere(vec3( 0.0,    0.0, -1.2),   0.5, [material*]&material_center));
-    world.add([hittable*]&sphere(vec3(-1.0,    0.0, -1.0),   0.5, [material*]&material_left));
-    world.add([hittable*]&sphere(vec3(-1.0,    0.0, -1.0),   0.4, [material*]&material_bubble));
-    world.add([hittable*]&sphere(vec3( 1.0,    0.0, -1.0),   0.5, [material*]&material_right));
+    s1: sphere = sphere(vec3( 0.0, -100.5, -1.0), 100.0, [material*]&material_ground);
+    s2: sphere = sphere(vec3( 0.0,    0.0, -1.2),   0.5, [material*]&material_center);
+    s3: sphere = sphere(vec3(-1.0,    0.0, -1.0),   0.5, [material*]&material_left);
+    s4: sphere = sphere(vec3(-1.0,    0.0, -1.0),   0.4, [material*]&material_bubble);
+    s5: sphere = sphere(vec3( 1.0,    0.0, -1.0),   0.5, [material*]&material_right);
+
+    world.add([hittable*]&s1);
+    world.add([hittable*]&s2);
+    world.add([hittable*]&s3);
+    world.add([hittable*]&s4);
+    world.add([hittable*]&s5);
+
+    printf("%p %p %p %p %p\n", &material_ground, &material_center, &material_left, &material_bubble, &material_right);
+    material_ground.dump();
+    material_center.dump();
+    material_left.dump();
+    material_bubble.dump();
+    material_right.dump();
+
+    printf("%p %p %p %p %p\n", &s1, &s2, &s3, &s4, &s5);
+    s1.dump();
+    s2.dump();
+    s3.dump();
+    s4.dump();
+    s5.dump();
 
     cam: camera;
     cam.aspect_ratio = 16.0 / 9.0;
@@ -37,11 +57,7 @@
 @final(filename: int8*) {
     world: hittable_list;
 
-    ground_material: lambertian = lambertian(vec3(0.5, 0.5, 0.5));
-    world.add([hittable*]&sphere(vec3(0.0, -1000.0, 0.0), 1000.0, [material*]&ground_material));
-
     pointers: vector;
-
     for (a: int32 = -11; a < 11; ++a) {
         for (b: int32 = -11; b < 11; ++b) {
             choose_mat: flt64 = random();
@@ -49,33 +65,25 @@
 
             dc: vec3 = center - vec3(4.0, 0.2, 0.0);
             if (dc.length() > 0.9) {
-                sp: sphere* = malloc([int64]41);
-                sp!type = 'S';
-                sp!center = center;
-                sp!radius = 0.2;
+                mp: material*;
 
                 if (choose_mat < 0.8) {
                     ## diffuse
                     albedo: color = random_vec3() * random_vec3();
-                    lmt: lambertian* = malloc([int64]25);
-                    lmt = lambertian(albedo);
-                    sp!mat = lmt;
-                    pointers.push_back([void*]lmt);
+                    mp = malloc([int64]25);
+                    *([lambertian*]mp) = lambertian(albedo);
                 } else if (choose_mat < 0.95) {
                     ## metal
                     albedo: color = random_vec3(0.5, 1.0);
                     fuzz: flt64 = random(0.0, 0.5);
-                    mmt: metal* = malloc([int64]33);
-                    mmt = metal(albedo, fuzz);
-                    sp!mat = mmt;
-                    pointers.push_back([void*]mmt);
+                    *([metal*]mp) = metal(albedo, fuzz);
                 } else {
                     ## glass
-                    dmt: dielectric* = malloc([int64]9);
-                    dmt = dielectric(1.5);
-                    sp!mat = dmt;
-                    pointers.push_back([void*]dmt);
+                    *([dielectric*]mp) = dielectric(1.5);
                 }
+
+                sp: sphere* = malloc([int64]41);
+                sp = sphere(center, 0.2, mp);
 
                 pointers.push_back([void*]sp);
                 world.add([hittable*]sp);
@@ -83,14 +91,21 @@
         }
     }
 
+    ground_material: lambertian = lambertian(vec3(0.5, 0.5, 0.5));
+    s1: sphere = sphere(vec3(0.0, -1000.0, 0.0), 1000.0, [material*]&ground_material);
+    world.add([hittable*]&s1);
+
     material1: dielectric = dielectric(1.5);
-    world.add([hittable*]&sphere(vec3(0.0, 1.0, 0.0), 1.0, [material*]&material1));
+    s2: sphere = sphere(vec3(0.0, 1.0, 0.0), 1.0, [material*]&material1);
+    world.add([hittable*]&s2);
 
     material2: lambertian = lambertian(vec3(0.4, 0.2, 0.1));
-    world.add([hittable*]&sphere(vec3(-4.0, 1.0, 0.0), 1.0, [material*]&material2));
+    s3: sphere = sphere(vec3(-4.0, 1.0, 0.0), 1.0, [material*]&material2);
+    world.add([hittable*]&s3);
 
     material3: metal = metal(vec3(0.7, 0.6, 0.5), 0.0);
-    world.add([hittable*]&sphere(vec3(4.0, 1.0, 0.0), 1.0, [material*]&material3));
+    s4: sphere = sphere(vec3(4.0, 1.0, 0.0), 1.0, [material*]&material3);
+    world.add([hittable*]&s4);
 
     cam: camera;
 
@@ -111,25 +126,25 @@
 
     world.destroy();
 
-    #for (i: int64; i < pointers.size; ++i) {
-        ptr: void* = pointers[i];
+    for (i: int64; i < pointers.size; ++i) {
+        ptr: void* = pointers.at(i);
         printf("%p (%c)\n", ptr, *([int8*]ptr));
         free(ptr);
-    }# ## TODO: fix cleanup of allocated pointers
+    }
     pointers.destroy();
 }
 
 ## MAIN
-@main(argc: int32, ppArgv: int8**): int32 {
+@main(argc: int32, argv: int8**): int32 {
 
     for (a: int32; a < argc; ++a)
-        printf("#%-3d: %s\n", a, ppArgv[a]);
+        printf("#%-3d: %s\n", a, argv[a]);
 
     if (argc != 2)
         ret 1;
 
-    filename: int8* = ppArgv[1];
-    final(filename);
+    filename: int8* = argv[1];
+    simple(filename);
 
     ret 0;
 }

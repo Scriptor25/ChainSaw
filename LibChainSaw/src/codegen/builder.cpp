@@ -1,6 +1,6 @@
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/FunctionRef.hpp>
+#include <csaw/codegen/Value.hpp>
 #include <csaw/lang/Stmt.hpp>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Passes/PassBuilder.h>
@@ -101,112 +101,11 @@ int csaw::Builder::Main(const int argc, const char** argv)
     return main_fn(argc, argv);
 }
 
-const csaw::FunctionRef* csaw::Builder::GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args)
+llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* arraySize) const
 {
-    for (const auto& ref : m_Functions[name])
-    {
-        if (name != ref.Name) continue;
-        if (callee != ref.Callee) continue;
-        if (args.size() < ref.Args.size() || (args.size() > ref.Args.size() && !ref.IsVarArg)) continue;
-
-        size_t i = 0;
-        for (; i < ref.Args.size(); ++i)
-            if (ref.Args[i] != args[i]) break;
-        if (i < ref.Args.size()) continue;
-
-        return &ref;
-    }
-
-    return nullptr;
-}
-
-csaw::FunctionRef& csaw::Builder::GetOrCreateFunction(const std::string& name, const TypePtr& callee, const TypePtr& result, const std::vector<TypePtr>& args, const bool isConstructor, const bool isVarArg)
-{
-    for (auto& ref : m_Functions[name])
-    {
-        if (name != ref.Name) continue;
-        if (isConstructor != ref.IsConstructor) continue;
-        if (callee != ref.Callee) continue;
-        if (args.size() != ref.Args.size()) continue;
-        if (isVarArg != ref.IsVarArg) continue;
-        if (result != ref.Result) continue;
-
-        size_t i = 0;
-        for (; i < ref.Args.size(); ++i)
-            if (ref.Args[i] != args[i]) break;
-        if (i < ref.Args.size()) continue;
-
-        return ref;
-    }
-
-    return m_Functions[name].emplace_back(nullptr, name, callee, result, args, isConstructor, isVarArg);
-}
-
-std::string csaw::Builder::FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args)
-{
-    std::string signature;
-    if (callee) signature += callee->Name;
-    else signature += "<none>";
-    signature += '(';
-    for (size_t i = 0; i < args.size(); ++i)
-    {
-        if (i > 0) signature += ", ";
-        signature += args[i]->Name;
-    }
-    signature += ')';
-    return signature;
-}
-
-std::pair<int, csaw::TypePtr> csaw::Builder::ElementInStruct(const TypePtr& rawType, const std::string& element)
-{
-    if (!rawType->IsStruct())
-        CSAW_MESSAGE_NONE(true, "type " + rawType->Name + " is not a struct");
-
-    int i = 0;
-    for (const auto& [name, type] : rawType->AsStruct()->Elements)
-    {
-        if (name == element)
-            return {i, type};
-        ++i;
-    }
-
-    CSAW_MESSAGE_NONE(true, rawType->Name + " does not have a member '" + element + "'");
-}
-
-std::pair<csaw::ValueRef, csaw::ValueRef> csaw::Builder::CastToBestOf(const ValueRef& left, const ValueRef& right)
-{
-    if (left.GetType() == right.GetType())
-        return {left, right};
-
-    if (left.GetType()->isIntegerTy())
-    {
-        if (right.GetType()->isIntegerTy())
-        {
-            if (left.GetType()->getIntegerBitWidth() > right.GetType()->getIntegerBitWidth())
-            {
-                const auto value = m_Builder->CreateIntCast(right.GetValue(), left.GetType(), true);
-                return {left, ValueRef::Constant(this, value, left.GetRawType())};
-            }
-
-            const auto value = m_Builder->CreateIntCast(left.GetValue(), right.GetType(), true);
-            return {ValueRef::Constant(this, value, right.GetRawType()), right};
-        }
-
-        if (right.GetType()->isFloatingPointTy())
-        {
-            const auto value = m_Builder->CreateSIToFP(left.GetValue(), right.GetType());
-            return {ValueRef::Constant(this, value, right.GetRawType()), right};
-        }
-    }
-
-    if (left.GetType()->isFloatingPointTy())
-    {
-        if (right.GetType()->isIntegerTy())
-        {
-            const auto value = m_Builder->CreateSIToFP(right.GetValue(), left.GetType());
-            return {left, ValueRef::Constant(this, value, left.GetRawType())};
-        }
-    }
-
-    CSAW_MESSAGE_NONE(true, "superior cast between " + left.GetRawType()->Name + " and " + right.GetRawType()->Name + " is not implemented");
+    const auto block = m_Builder->GetInsertBlock();
+    m_Builder->SetInsertPointPastAllocas(block->getParent());
+    const auto inst = m_Builder->CreateAlloca(type, arraySize);
+    m_Builder->SetInsertPoint(block);
+    return inst;
 }

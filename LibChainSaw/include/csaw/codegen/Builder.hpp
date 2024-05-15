@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 #include <csaw/Type.hpp>
+#include <csaw/codegen/Def.hpp>
 #include <csaw/codegen/FunctionRef.hpp>
-#include <csaw/codegen/ValueRef.hpp>
 #include <csaw/lang/Def.hpp>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
@@ -23,24 +23,26 @@ namespace csaw
     public:
         explicit Builder(const std::string& moduleName);
 
-        [[nodiscard]] llvm::LLVMContext& GetContext() const;
-        [[nodiscard]] llvm::IRBuilder<>& GetBuilder() const;
-        [[nodiscard]] llvm::Module& GetModule() const;
+        llvm::LLVMContext& GetContext() const;
+        llvm::IRBuilder<>& GetBuilder() const;
+        llvm::Module& GetModule() const;
 
         void Generate(const StatementPtr& ptr);
         void Build() const;
         int Main(int argc, const char** argv);
 
-        [[nodiscard]] llvm::Type* Gen(const TypePtr& ptr) const;
+        llvm::Type* Gen(const TypePtr& type) const;
+
+        llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* arraySize = nullptr) const;
 
     private:
         const FunctionRef* GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
         FunctionRef& GetOrCreateFunction(const std::string& name, const TypePtr& callee, const TypePtr& result, const std::vector<TypePtr>& args, bool isConstructor, bool isVarArg);
 
         static std::string FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args);
-        static std::pair<int, TypePtr> ElementInStruct(const TypePtr& rawType, const std::string& element);
+        static std::pair<int, TypePtr> ElementInStruct(const TypePtr& type, const std::string& element);
 
-        std::pair<ValueRef, ValueRef> CastToBestOf(const ValueRef& left, const ValueRef& right);
+        std::pair<RValuePtr, RValuePtr> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
 
         void Gen(const StatementPtr& ptr);
         void Gen(const ScopeStatement& statement);
@@ -52,47 +54,46 @@ namespace csaw
         void Gen(const VariableStatement& statement);
         void Gen(const WhileStatement& statement);
 
-        ValueRef Gen(const ExpressionPtr& ptr);
-        ValueRef Gen(const BinaryExpression& expression);
-        ValueRef Gen(const CallExpression& expression);
-        ValueRef Gen(const CastExpression& expression);
-        ValueRef Gen(const CharExpression& expression);
-        ValueRef Gen(const DereferenceExpression& expression);
-        ValueRef Gen(const FloatExpression& expression);
-        ValueRef Gen(const IdentifierExpression& expression);
-        ValueRef Gen(const IndexExpression& expression);
-        ValueRef Gen(const IntExpression& expression);
-        ValueRef Gen(const MemberExpression& expression);
-        ValueRef Gen(const ReferenceExpression& expression);
-        ValueRef Gen(const SelectExpression& expression);
-        ValueRef Gen(const StringExpression& expression);
-        ValueRef Gen(const UnaryExpression& expression);
-        ValueRef Gen(const VarArgExpression& expression);
+        ValuePtr Gen(const ExpressionPtr& ptr);
+        RValuePtr Gen(const BinaryExpression& expression);
+        RValuePtr Gen(const CallExpression& expression);
+        RValuePtr Gen(const CastExpression& expression);
+        RValuePtr Gen(const CharExpression& expression) const;
+        LValuePtr Gen(const DereferenceExpression& expression);
+        RValuePtr Gen(const FloatExpression& expression) const;
+        LValuePtr Gen(const IdentifierExpression& expression);
+        LValuePtr Gen(const IndexExpression& expression);
+        RValuePtr Gen(const IntExpression& expression) const;
+        LValuePtr Gen(const MemberExpression& expression);
+        RValuePtr Gen(const ReferenceExpression& expression);
+        ValuePtr Gen(const SelectExpression& expression);
+        RValuePtr Gen(const StringExpression& expression) const;
+        RValuePtr Gen(const UnaryExpression& expression);
 
-        ValueRef GenCmpEQ(const ValueRef& left, const ValueRef& right);
-        ValueRef GenCmpNE(const ValueRef& left, const ValueRef& right);
-        ValueRef GenCmpLE(const ValueRef& left, const ValueRef& right);
-        ValueRef GenCmpGE(const ValueRef& left, const ValueRef& right);
-        ValueRef GenAnd(const ValueRef& left, const ValueRef& right);
-        ValueRef GenLogicalAnd(const ValueRef& left, const ValueRef& right);
-        ValueRef GenOr(const ValueRef& left, const ValueRef& right);
-        ValueRef GenLogicalOr(const ValueRef& left, const ValueRef& right);
-        ValueRef GenXor(const ValueRef& left, const ValueRef& right);
-        ValueRef GenCmpLT(const ValueRef& left, const ValueRef& right);
-        ValueRef GenCmpGT(const ValueRef& left, const ValueRef& right);
-        ValueRef GenShl(const ValueRef& left, const ValueRef& right);
-        ValueRef GenAShr(const ValueRef& left, const ValueRef& right);
-        ValueRef GenLShr(const ValueRef& left, const ValueRef& right);
-        ValueRef GenAdd(const ValueRef& left, const ValueRef& right);
-        ValueRef GenSub(const ValueRef& left, const ValueRef& right);
-        ValueRef GenMul(const ValueRef& left, const ValueRef& right);
-        ValueRef GenDiv(const ValueRef& left, const ValueRef& right);
-        ValueRef GenRem(const ValueRef& left, const ValueRef& right);
-        ValueRef GenNeg(const ValueRef& reference);
-        ValueRef GenNot(const ValueRef& reference);
-        ValueRef GenInv(const ValueRef& reference);
-        ValueRef GenInc(const ValueRef& reference, bool opRight);
-        ValueRef GenDec(const ValueRef& reference, bool opRight);
+        RValuePtr GenCmpEQ(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenCmpNE(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenCmpLE(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenCmpGE(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenAnd(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenLogicalAnd(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenOr(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenLogicalOr(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenXor(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenCmpLT(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenCmpGT(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenShl(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenAShr(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenLShr(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenAdd(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenSub(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenMul(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenDiv(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenRem(const RValuePtr& left, const RValuePtr& right) const;
+        RValuePtr GenNeg(const RValuePtr& value) const;
+        RValuePtr GenNot(const RValuePtr& value) const;
+        RValuePtr GenInv(const RValuePtr& value) const;
+        RValuePtr GenInc(const RValuePtr& value) const;
+        RValuePtr GenDec(const RValuePtr& value) const;
 
         llvm::ExitOnError m_Error;
         std::unique_ptr<llvm::orc::LLJIT> m_JIT;
@@ -110,8 +111,8 @@ namespace csaw
         std::unique_ptr<llvm::StandardInstrumentations> m_SI;
 
         std::map<std::string, std::vector<FunctionRef>> m_Functions;
-        std::map<std::string, ValueRef> m_GlobalValues;
-        std::map<std::string, ValueRef> m_Values;
+        std::map<std::string, LValuePtr> m_GlobalValues;
+        std::map<std::string, LValuePtr> m_Values;
 
         llvm::Function* m_GlobalParent;
     };

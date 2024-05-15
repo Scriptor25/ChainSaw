@@ -1,56 +1,65 @@
 #include <csaw/codegen/Builder.hpp>
+#include <csaw/codegen/Value.hpp>
 
-csaw::ValueRef csaw::Builder::GenNeg(const ValueRef& reference)
+csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value) const
 {
-    if (reference.GetBaseType()->isIntegerTy())
+    const auto vty = Gen(value->GetType());
+
+    if (vty->isIntegerTy())
     {
-        const auto value = m_Builder->CreateNeg(reference.Load().GetValue());
-        return ValueRef::Constant(this, value, reference.GetRawBaseType());
+        const auto result = m_Builder->CreateNeg(value->GetValue());
+        return RValue::Direct(value->GetType(), result);
     }
 
-    if (reference.GetBaseType()->isFloatingPointTy())
+    if (vty->isFloatingPointTy())
     {
-        const auto value = m_Builder->CreateFNeg(reference.Load().GetValue());
-        return ValueRef::Constant(this, value, reference.GetRawBaseType());
-    }
-
-    return {};
-}
-
-csaw::ValueRef csaw::Builder::GenNot(const ValueRef& reference)
-{
-    if (reference.GetBaseType()->isIntegerTy(1))
-    {
-        const auto value = m_Builder->CreateNot(reference.Load().GetValue());
-        return ValueRef::Constant(this, value, Type::GetInt1());
+        const auto result = m_Builder->CreateFNeg(value->GetValue());
+        return RValue::Direct(value->GetType(), result);
     }
 
     return {};
 }
 
-csaw::ValueRef csaw::Builder::GenInv(const ValueRef& reference)
+csaw::RValuePtr csaw::Builder::GenNot(const RValuePtr& value) const
 {
-    return {};
-}
+    const auto vty = Gen(value->GetType());
 
-csaw::ValueRef csaw::Builder::GenInc(const ValueRef& reference, const bool opRight)
-{
-    const auto base_type = reference.GetBaseType();
-    if (base_type->isIntegerTy())
+    if (vty->isIntegerTy(1))
     {
-        const auto one = llvm::ConstantInt::get(base_type, 1, true);
-        const auto value = m_Builder->CreateAdd(reference.Load().GetValue(), one);
-        auto result = ValueRef::Constant(this, value, reference.GetRawBaseType());
-        (void)reference.Store(result);
-        if (opRight)
-            return result;
-        return reference;
+        const auto result = m_Builder->CreateNot(value->GetValue());
+        return RValue::Direct(value->GetType(), result);
     }
 
     return {};
 }
 
-csaw::ValueRef csaw::Builder::GenDec(const ValueRef& reference, const bool opRight)
+csaw::RValuePtr csaw::Builder::GenInv(const RValuePtr& value) const
 {
+    return {};
+}
+
+csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value) const
+{
+    const auto vty = Gen(value->GetType());
+
+    if (vty->isIntegerTy())
+    {
+        const auto result = m_Builder->CreateAdd(value->GetValue(), llvm::ConstantInt::get(vty, 1, true));
+        return RValue::Direct(value->GetType(), result);
+    }
+
+    return {};
+}
+
+csaw::RValuePtr csaw::Builder::GenDec(const RValuePtr& value) const
+{
+    const auto vty = Gen(value->GetType());
+
+    if (vty->isIntegerTy())
+    {
+        const auto result = m_Builder->CreateSub(value->GetValue(), llvm::ConstantInt::get(vty, 1, true));
+        return RValue::Direct(value->GetType(), result);
+    }
+
     return {};
 }

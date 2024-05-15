@@ -8,7 +8,7 @@ namespace csaw
     {
         ChainSawMessage(const std::string& file, size_t line, const std::string& sourceFile, size_t sourceLine, bool canRecover, const std::string& message);
 
-        [[nodiscard]] char const* what() const override;
+        char const* what() const override;
 
         std::string File;
         size_t Line;

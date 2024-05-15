@@ -12,12 +12,6 @@ $lambertian(albedo: color) {
     me!albedo = albedo;
 }
 
-@(=):lambertian(l: lambertian): lambertian* {
-    me!type = l.type;
-    me!albedo = l.albedo;
-    ret me;
-}
-
 @scatter:lambertian(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     scatter_direction: vec3 = rec.normal + random_unit_vector();
 
@@ -29,6 +23,8 @@ $lambertian(albedo: color) {
     attenuation = me!albedo;
     ret true;
 }
+
+@dump:lambertian = printf("%p: type=%c albedo=[%f, %f, %f]\n", me, me!type, me!albedo.x, me!albedo.y, me!albedo.z);
 
 def metal {
     type: int8,
@@ -42,20 +38,16 @@ $metal(albedo: color, fuzz: flt64) {
     me!fuzz = fuzz < 1 ? fuzz : 1.0;
 }
 
-@(=):metal(m: metal): metal* {
-    me!type = m.type;
-    me!albedo = m.albedo;
-    me!fuzz = m.fuzz;
-    ret me;
-}
-
 @scatter:metal(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     reflected: vec3 = reflect(r_in.direction, rec.normal);
     reflected = unit_vector(reflected) + (me!fuzz * random_unit_vector());
     scattered = ray(rec.p, reflected, r_in.t);
     attenuation = me!albedo;
+    scattered!dump();
     ret dot(scattered!direction, rec.normal) > 0;
 }
+
+@dump:metal = printf("%p: type=%c albedo=[%f, %f, %f] fuzz=%f\n", me, me!type, me!albedo.x, me!albedo.y, me!albedo.z, me!fuzz);
 
 def dielectric {
     type: int8,
@@ -67,12 +59,6 @@ def dielectric {
 $dielectric(refraction_index: flt64) {
     me!type = 'D';
     me!refraction_index = refraction_index;
-}
-
-@(=):dielectric(d: dielectric): dielectric* {
-    me!type = d.type;
-    me!refraction_index = d.refraction_index;
-    ret me;
 }
 
 @reflectance(cosine: flt64, refraction_index: flt64): flt64 {
@@ -103,9 +89,12 @@ $dielectric(refraction_index: flt64) {
     ret true;
 }
 
+@dump:dielectric = printf("%p: type=%c refraction_index=%f\n", me, me!type, me!refraction_index);
+
 @scatter:material(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     if (me!type == 'L') ret ([lambertian*]me)!scatter(r_in, rec, attenuation, scattered);
     if (me!type == 'M') ret ([metal*]me)!scatter(r_in, rec, attenuation, scattered);
     if (me!type == 'D') ret ([dielectric*]me)!scatter(r_in, rec, attenuation, scattered);
+    printf("%c\n", me!type);
     ret false;
 }

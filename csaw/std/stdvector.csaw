@@ -28,6 +28,5 @@ $vector(reserved: int64) {
 }
 
 @at:vector(i: int64): void* = me!ptr[i];
-@([]):vector(i: int64): void* = me!ptr[i];
 
 @destroy:vector = free([void*]me!ptr);

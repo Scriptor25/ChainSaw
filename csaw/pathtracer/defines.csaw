@@ -24,4 +24,4 @@ pi: flt64 = 3.1415926535897932385;
 \inc "hittable_list.csaw"
 \inc "sphere.csaw"
 
-@main(argc: int32, ppArgv: int8**): int32;
+@main(argc: int32, argv: int8**): int32;

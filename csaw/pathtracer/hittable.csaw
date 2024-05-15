@@ -8,15 +8,6 @@ def hit_record {
     front_face: bool
 }
 
-@(=):hit_record(rec: hit_record): hit_record* {
-    me!p = rec.p;
-    me!normal = rec.normal;
-    me!mat = rec.mat;
-    me!t = rec.t;
-    me!front_face = rec.front_face;
-    ret me;
-}
-
 @set_face_normal:hit_record(r: ray, outward_normal: vec3) {
     ## Sets the hit record normal vector.
     ## NOTE: the parameter `outward_normal` is assumed to have unit length.
@@ -24,6 +15,8 @@ def hit_record {
     me!front_face = dot(r.direction, outward_normal) < 0;
     me!normal = me!front_face ? outward_normal : -outward_normal;
 }
+
+@dump:hit_record = printf("%p: p=[%f, %f, %f] normal=[%f, %f, %f] mat=%p, t=%f front_face=%c\n", me, me!p.x, me!p.y, me!p.z, me!normal.x, me!normal.y, me!normal.z, me!mat, me!t, me!front_face ? '1' : '0');
 
 def hittable {
     type: int8
@@ -37,5 +30,6 @@ def hittable_list;
 @hit:hittable(r: ray, rec: hit_record*): bool {
     if (me!type == 'S') ret ([sphere*]me)!hit(r, rec);
     if (me!type == 'L') ret ([hittable_list*]me)!hit(r, rec);
+    printf("%c\n", me!type);
     ret false;
 }

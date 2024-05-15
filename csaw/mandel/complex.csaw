@@ -31,7 +31,7 @@ $complex(real: flt64, imaginary: flt64) {
 @conjugate:complex:complex;
 @mod:complex:flt64;
 @(/=):complex(z: complex): complex* {
-    me *= z.conjugate();
+    *me *= z.conjugate();
     zmod: flt64 = z.mod();
     div:  flt64 = 1 / (zmod * zmod);
     me!real      *= div;
@@ -58,14 +58,14 @@ $complex(real: flt64, imaginary: flt64) {
 @(+)(z1: complex, z2: complex): complex = complex(z1.real + z2.real, z1.imaginary + z2.imaginary);
 @(-)(z1: complex, z2: complex): complex = complex(z1.real - z2.real, z1.imaginary - z2.imaginary);
 @(*)(z1: complex, z2: complex): complex {
-    real:      flt64 = z1.real * z2.real      - z1.imaginary * z2.imaginary;
-    imaginary: flt64 = z1.real * z2.imaginary + z1.imaginary * z2.real;
-    ret complex(real, imaginary);
+    r: flt64 = z1.real * z2.real      - z1.imaginary * z2.imaginary;
+    i: flt64 = z1.real * z2.imaginary + z1.imaginary * z2.real;
+    ret complex(r, i);
 }
 @(/)(z1: complex, z2: complex): complex {
     res: complex = z1 * z2.conjugate();
-    zmod:  flt64 = z2.mod();
-    div:   flt64 = 1 / (zmod * zmod);
+    zmod: flt64  = z2.mod();
+    div: flt64   = 1 / (zmod * zmod);
     ret complex(res.real * div, res.imaginary * div);
 }
 
