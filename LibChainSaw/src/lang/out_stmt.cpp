@@ -71,24 +71,17 @@ std::ostream& csaw::operator<<(std::ostream& out, const ForStatement& statement)
 
 std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& statement)
 {
-    if (statement.IsConstructor) out << '$';
-    else out << '@';
+    out << '@';
 
-    bool op = false;
-    for (const auto c : statement.Name)
-        if (!isalnum(c) && c != '_')
-        {
-            op = true;
-            break;
-        }
-    if (op) out << '(';
+    const auto is_str = std::ranges::find_if(statement.Name.begin(), statement.Name.end(), [](const char c) { return isalnum(c) || c == '_'; }) != statement.Name.end();
+    if (is_str) out << '"';
     out << statement.Name;
-    if (op) out << ')';
+    if (is_str) out << '"';
 
-    if (statement.Callee)
-        out << ':' << statement.Callee;
+    if (statement.Parent)
+        out << ':' << statement.Parent;
 
-    if (!statement.Args.empty() || statement.IsVarArg)
+    if (!statement.Args.empty())
     {
         out << '(';
         for (size_t i = 0; i < statement.Args.size(); i++)
@@ -97,13 +90,18 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
                 out << ", ";
             out << statement.Args[i].first << ": " << statement.Args[i].second;
         }
-        if (statement.IsVarArg)
+        if (statement.IsVarArgs)
             out << ", ?";
         out << ')';
     }
+    else if (statement.IsVarArgs)
+        out << "(?)";
 
-    if (!statement.IsConstructor && statement.Result)
-        out << (statement.Args.empty() && !statement.IsVarArg && !statement.Callee ? "::" : ": ") << statement.Result;
+    if (statement.Result)
+    {
+        const auto has_args = statement.Args.empty() && !statement.IsVarArgs;
+        out << (has_args ? ": " : statement.Parent ? ":" : "::") << statement.Result;
+    }
 
     if (!statement.Body)
         return out << ';';

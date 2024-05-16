@@ -3,20 +3,20 @@ def hittable_list {
     objects: vector
 }
 
-@add:hittable_list(object: hittable*);
+@add:hittable_list(object: hittable*): void;
 
-$hittable_list {
+@hittable_list {
     me!type = 'L';
     me!objects = vector();
 }
 
-$hittable_list(object: hittable*) {
+@hittable_list(object: hittable*) {
     me!type = 'L';
     me!objects = vector();
     me!add(object);
 }
 
-@add:hittable_list(object: hittable*) = me!objects.push_back([void*]object);
+@add:hittable_list(object: hittable*): void = me!objects.push_back([void*]object);
 
 @hit:hittable_list(r: ray, rec: hit_record*): bool {
     temp_rec: hit_record;
@@ -34,4 +34,4 @@ $hittable_list(object: hittable*) {
     ret hit_anything;
 }
 
-@destroy:hittable_list = me!objects.destroy();
+@destroy:hittable_list:void = me!objects.destroy();

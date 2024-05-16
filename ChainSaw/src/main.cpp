@@ -109,7 +109,7 @@ int main(int argc, const char** argv)
     csaw::Parser::Parse(file, stream, [&builder](const csaw::StatementPtr& ptr)
     {
         // std::cout << ptr << std::endl;
-        builder.Generate(ptr);
+        builder.Gen(ptr);
     }, includePaths);
     stream.close();
     builder.Build();

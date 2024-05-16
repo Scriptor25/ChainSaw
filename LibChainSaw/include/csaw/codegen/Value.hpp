@@ -15,9 +15,7 @@ namespace csaw
         virtual llvm::Value* GetValue() const = 0;
 
         virtual bool IsLValue() const = 0;
-        virtual bool IsRValue() const = 0;
-
-        virtual RValuePtr GetRValue() = 0;
+        virtual RValuePtr GetRValue() const = 0;
     };
 
     class LValue : public Value
@@ -36,9 +34,7 @@ namespace csaw
         llvm::Value* GetValue() const override;
 
         bool IsLValue() const override;
-        bool IsRValue() const override;
-
-        RValuePtr GetRValue() override;
+        RValuePtr GetRValue() const override;
 
     private:
         LValue(Builder* builder, const TypePtr& type, llvm::Value* pointer);
@@ -48,12 +44,10 @@ namespace csaw
         llvm::Value* m_Pointer;
     };
 
-    class RValue
-            : public Value,
-              public std::enable_shared_from_this<RValue>
+    class RValue : public Value
     {
     public:
-        static RValuePtr Direct(const TypePtr& type, llvm::Value* value);
+        static RValuePtr Create(const TypePtr& type, llvm::Value* value);
 
         LValuePtr Dereference(Builder* builder) const;
 
@@ -61,9 +55,7 @@ namespace csaw
         llvm::Value* GetValue() const override;
 
         bool IsLValue() const override;
-        bool IsRValue() const override;
-
-        RValuePtr GetRValue() override;
+        RValuePtr GetRValue() const override;
 
     private:
         RValue(const TypePtr& type, llvm::Value* value);

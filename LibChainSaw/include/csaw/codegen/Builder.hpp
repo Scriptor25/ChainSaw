@@ -2,10 +2,8 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 #include <csaw/Type.hpp>
 #include <csaw/codegen/Def.hpp>
-#include <csaw/codegen/FunctionRef.hpp>
 #include <csaw/lang/Def.hpp>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
@@ -27,24 +25,20 @@ namespace csaw
         llvm::IRBuilder<>& GetBuilder() const;
         llvm::Module& GetModule() const;
 
-        void Generate(const StatementPtr& ptr);
         void Build() const;
         int Main(int argc, const char** argv);
 
-        llvm::Type* Gen(const TypePtr& type) const;
-
         llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* arraySize = nullptr) const;
 
+        void Gen(const StatementPtr& ptr);
+        llvm::Type* Gen(const TypePtr& type) const;
+
     private:
-        const FunctionRef* GetFunction(const std::string& name, const TypePtr& callee, const std::vector<TypePtr>& args);
-        FunctionRef& GetOrCreateFunction(const std::string& name, const TypePtr& callee, const TypePtr& result, const std::vector<TypePtr>& args, bool isConstructor, bool isVarArg);
-
-        static std::string FunctionSignatureString(const TypePtr& callee, const std::vector<TypePtr>& args);
-        static std::pair<int, TypePtr> ElementInStruct(const TypePtr& type, const std::string& element);
-
+        RValuePtr Cast(const ValuePtr& value, const TypePtr& type) const;
         std::pair<RValuePtr, RValuePtr> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
 
-        void Gen(const StatementPtr& ptr);
+        std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
+
         void Gen(const ScopeStatement& statement);
         void Gen(const ForStatement& statement);
         void Gen(const FunctionStatement& statement);
@@ -110,7 +104,6 @@ namespace csaw
         std::unique_ptr<llvm::PassInstrumentationCallbacks> m_PIC;
         std::unique_ptr<llvm::StandardInstrumentations> m_SI;
 
-        std::map<std::string, std::vector<FunctionRef>> m_Functions;
         std::map<std::string, LValuePtr> m_GlobalValues;
         std::map<std::string, LValuePtr> m_Values;
 

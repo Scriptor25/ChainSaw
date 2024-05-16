@@ -40,7 +40,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
 
 std::ostream& csaw::operator<<(std::ostream& out, const BinaryExpression& expression)
 {
-    return out << '(' << expression.Left << ' ' << expression.Operator << ' ' << expression.Right << ')';
+    return out << expression.Left << ' ' << expression.Operator << ' ' << expression.Right;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const CallExpression& expression)
@@ -57,7 +57,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const CallExpression& expressi
 
 std::ostream& csaw::operator<<(std::ostream& out, const CastExpression& expression)
 {
-    return out << "([" << expression.Type << ']' << expression.Value << ')';
+    return out << '[' << expression.Type << ']' << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const CharExpression& expression)
@@ -67,7 +67,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const CharExpression& expressi
 
 std::ostream& csaw::operator<<(std::ostream& out, const DereferenceExpression& expression)
 {
-    return out << "*(" << expression.Value << ')';
+    return out << '*' << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const FloatExpression& expression)
@@ -97,12 +97,12 @@ std::ostream& csaw::operator<<(std::ostream& out, const MemberExpression& expres
 
 std::ostream& csaw::operator<<(std::ostream& out, const ReferenceExpression& expression)
 {
-    return out << "&(" << expression.Value << ')';
+    return out << '&' << expression.Value;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const SelectExpression& expression)
 {
-    return out << '(' << expression.Condition << " ? " << expression.True << " : " << expression.False << ')';
+    return out << expression.Condition << " ? " << expression.True << " : " << expression.False;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const StringExpression& expression)
@@ -137,11 +137,10 @@ std::ostream& csaw::operator<<(std::ostream& out, const StringExpression& expres
 
 std::ostream& csaw::operator<<(std::ostream& out, const UnaryExpression& expression)
 {
-    out << '(';
     if (!expression.OpRight) out << expression.Operator;
     out << expression.Value;
     if (expression.OpRight) out << expression.Operator;
-    return out << ')';
+    return out;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const VarArgExpression& expression)

@@ -10,7 +10,7 @@ csaw::StatementPtr csaw::Parser::ParseStatement(const bool end)
 
     if (At("{")) return ParseScopeStatement();
     if (At("for")) return ParseForStatement();
-    if (At("@") || At("$")) return ParseFunctionStatement();
+    if (At("@")) return ParseFunctionStatement();
     if (At("if")) return ParseIfStatement();
     if (At("ret")) return ParseRetStatement(end);
     if (At("def")) return ParseDefStatement();
@@ -66,40 +66,39 @@ csaw::ForStatementPtr csaw::Parser::ParseForStatement()
 
 csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
 {
-    auto line = m_Line;
+    const auto line = m_Line;
 
-    std::string name;
-    TypePtr callee_type = nullptr;
-    TypePtr result_type = nullptr;
-    std::vector<std::pair<std::string, TypePtr>> args;
-    bool is_constructor = false;
-    bool is_vararg = false;
-    StatementPtr body = nullptr;
-    std::vector<ExpressionPtr> alt_body;
+    Expect("@");
 
-    is_constructor = NextIfAt("$");
-    if (!is_constructor)
-        Expect("@");
-
-    if (NextIfAt("("))
+    std::vector<std::string> mods;
+    if (NextIfAt("["))
     {
-        do { name += Get().Value; }
-        while (!At(")") && !AtEOF());
-        Expect(")");
+        while (!At("]") && !AtEOF())
+        {
+            const auto mod = Expect(TK_IDENTIFIER).Value;
+            mods.push_back(mod);
+            if (!At("]"))
+                Expect(",");
+        }
+        Expect("]");
     }
-    else name = Expect(TK_IDENTIFIER).Value;
 
+    const auto name = Expect(TK_IDENTIFIER | TK_STRING).Value;
+
+    TypePtr parent;
     if (NextIfAt(":"))
         if (!At(":"))
-            callee_type = ParseType();
+            parent = ParseType();
 
+    std::vector<std::pair<std::string, TypePtr>> args;
+    bool is_varargs = false;
     if (NextIfAt("("))
     {
         while (!At(")") && !AtEOF())
         {
             if (NextIfAt("?"))
             {
-                is_vararg = true;
+                is_varargs = true;
                 break;
             }
 
@@ -113,37 +112,25 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
         Expect(")");
     }
 
+    TypePtr result;
     if (NextIfAt(":"))
-        result_type = ParseType();
+        result = ParseType();
 
     if (NextIfAt("="))
     {
-        body = ParseExpression();
+        const auto body = ParseExpression();
         Expect(";");
-        return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
-    }
-
-    if (NextIfAt("["))
-    {
-        do
-        {
-            alt_body.push_back(ParseExpression());
-            if (!At("]"))
-                Expect(",");
-        }
-        while (!At("]") && !AtEOF());
-        Expect("]");
-        CSAW_MESSAGE_(true, m_Filename, line, "Feature is not yet implemented");
+        return std::make_shared<FunctionStatement>(m_Filename, line, name, parent, result, mods, args, is_varargs, body);
     }
 
     if (!At("{"))
     {
         Expect(";");
-        return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
+        return std::make_shared<FunctionStatement>(m_Filename, line, name, parent, result, mods, args, is_varargs, StatementPtr());
     }
 
-    body = ParseScopeStatement();
-    return std::make_shared<FunctionStatement>(m_Filename, line, name, callee_type, result_type, args, is_constructor, is_vararg, body);
+    const auto body = ParseScopeStatement();
+    return std::make_shared<FunctionStatement>(m_Filename, line, name, parent, result, mods, args, is_varargs, body);
 }
 
 csaw::IfStatementPtr csaw::Parser::ParseIfStatement()

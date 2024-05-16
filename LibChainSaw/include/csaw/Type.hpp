@@ -34,7 +34,7 @@ namespace csaw
         static TypePtr GetOrCreate(const std::string& name);
         static void Alias(const std::string& name, const TypePtr& origin);
 
-        explicit Type(const std::string& name);
+        Type(const std::string& name, bool is_flt, size_t bits);
         virtual ~Type() = default;
 
         virtual bool IsPointer() const;
@@ -45,7 +45,11 @@ namespace csaw
         const ArrayType* AsArray() const;
         const StructType* AsStruct() const;
 
+        bool ParentOf(const TypePtr& type) const;
+
         std::string Name;
+        bool IsFlt;
+        size_t Bits;
     };
 
     struct PointerType : Type
@@ -79,6 +83,8 @@ namespace csaw
         StructType(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements);
 
         bool IsStruct() const override;
+
+        std::pair<int, TypePtr> GetElement(const std::string& name) const;
 
         std::vector<std::pair<std::string, TypePtr>> Elements;
     };

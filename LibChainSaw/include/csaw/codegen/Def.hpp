@@ -3,6 +3,7 @@
 namespace csaw
 {
     class Builder;
+    struct Signature;
 
     class Value;
     class LValue;
@@ -10,6 +11,4 @@ namespace csaw
     typedef std::shared_ptr<Value> ValuePtr;
     typedef std::shared_ptr<LValue> LValuePtr;
     typedef std::shared_ptr<RValue> RValuePtr;
-
-    struct FunctionRef;
 }

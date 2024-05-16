@@ -2,7 +2,7 @@
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Value.hpp>
 
-csaw::RValuePtr csaw::RValue::Direct(const TypePtr& type, llvm::Value* value)
+csaw::RValuePtr csaw::RValue::Create(const TypePtr& type, llvm::Value* value)
 {
     return std::shared_ptr<RValue>(new RValue(type, value));
 }
@@ -32,14 +32,9 @@ bool csaw::RValue::IsLValue() const
     return false;
 }
 
-bool csaw::RValue::IsRValue() const
+csaw::RValuePtr csaw::RValue::GetRValue() const
 {
-    return true;
-}
-
-csaw::RValuePtr csaw::RValue::GetRValue()
-{
-    return shared_from_this();
+    return Create(m_Type, m_Value);
 }
 
 csaw::RValue::RValue(const TypePtr& type, llvm::Value* value)

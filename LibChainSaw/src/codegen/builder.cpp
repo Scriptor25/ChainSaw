@@ -1,7 +1,7 @@
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
+#include <csaw/codegen/Signature.hpp>
 #include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Stmt.hpp>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
@@ -73,11 +73,6 @@ llvm::Module& csaw::Builder::GetModule() const
     return *m_Module;
 }
 
-void csaw::Builder::Generate(const StatementPtr& ptr)
-{
-    Gen(ptr);
-}
-
 void csaw::Builder::Build() const
 {
     m_Builder->CreateRetVoid();
@@ -108,4 +103,22 @@ llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* arr
     const auto inst = m_Builder->CreateAlloca(type, arraySize);
     m_Builder->SetInsertPoint(block);
     return inst;
+}
+
+std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const
+{
+    for (auto& function : m_Module->functions())
+    {
+        const auto s = Signature::Demangle(function);
+        if (s.Name != name) continue;
+        if (s.Parent != parent) continue;
+        if (s.Args.size() > args.size() || (!s.IsVarargs && s.Args.size() != args.size())) continue;
+        size_t i = 0;
+        for (; i < s.Args.size(); ++i)
+            if (!s.Args[i]->ParentOf(args[i]))
+                break;
+        if (i < s.Args.size()) continue;
+        return {s, &function};
+    }
+    return {Signature(name, parent, nullptr, args, false), nullptr};
 }

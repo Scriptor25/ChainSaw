@@ -1,13 +1,14 @@
 \inc "std/stdio.csaw"
 \inc "std/stdlib.csaw"
 \inc "std/stdimg.csaw"
+\inc "std/math.csaw"
 
 \inc "complex.csaw"
 
 MAX_ITER: int32 = 100;
 SAMPLES:  int32 = 100;
 
-@strcmp(str1: int8*, str2: int8*): int32;
+@[c]strcmp(str1: int8*, str2: int8*): int32;
 
 @random::flt64 = rand() / (RAND_MAX + 1.0);
 
@@ -19,7 +20,7 @@ SAMPLES:  int32 = 100;
     ret t;
 }
 
-@main(argc: int32, argv: int8**): int32 {
+@main::int32 {
 
     xc:     flt64;
     yc:     flt64;

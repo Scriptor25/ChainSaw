@@ -3,7 +3,7 @@ def interval {
     max: flt64
 }
 
-$interval(min: flt64, max: flt64) {
+@interval(min: flt64, max: flt64) {
     me!min = min;
     me!max = max;
 }

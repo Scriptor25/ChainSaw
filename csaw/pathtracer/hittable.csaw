@@ -8,7 +8,7 @@ def hit_record {
     front_face: bool
 }
 
-@set_face_normal:hit_record(r: ray, outward_normal: vec3) {
+@set_face_normal:hit_record(r: ray, outward_normal: vec3): void {
     ## Sets the hit record normal vector.
     ## NOTE: the parameter `outward_normal` is assumed to have unit length.
 
@@ -16,7 +16,7 @@ def hit_record {
     me!normal = me!front_face ? outward_normal : -outward_normal;
 }
 
-@dump:hit_record = printf("%p: p=[%f, %f, %f] normal=[%f, %f, %f] mat=%p, t=%f front_face=%c\n", me, me!p.x, me!p.y, me!p.z, me!normal.x, me!normal.y, me!normal.z, me!mat, me!t, me!front_face ? '1' : '0');
+@dump:hit_record:void = printf("%p: p=[%f, %f, %f] normal=[%f, %f, %f] mat=%p, t=%f front_face=%c\n", me, me!p.x, me!p.y, me!p.z, me!normal.x, me!normal.y, me!normal.z, me!mat, me!t, me!front_face ? '1' : '0');
 
 def hittable {
     type: int8

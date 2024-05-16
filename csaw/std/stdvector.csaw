@@ -6,19 +6,19 @@ def vector {
     ptr: void**,
 }
 
-$vector {
+@vector {
     me!size = [int64]0;
     me!reserved = [int64]10;
     me!ptr = malloc(me!reserved * 8);
 }
 
-$vector(reserved: int64) {
+@vector(reserved: int64) {
     me!size = 0;
     me!reserved = reserved;
     me!ptr = malloc(me!reserved * 8);
 }
 
-@push_back:vector(ptr: void*) {
+@push_back:vector(ptr: void*): void {
     if (me!size == me!reserved) {
         me!reserved *= 2;
         me!ptr = realloc([void*]me!ptr, me!reserved * 8);
@@ -29,4 +29,4 @@ $vector(reserved: int64) {
 
 @at:vector(i: int64): void* = me!ptr[i];
 
-@destroy:vector = free([void*]me!ptr);
+@destroy:vector:void = free([void*]me!ptr);

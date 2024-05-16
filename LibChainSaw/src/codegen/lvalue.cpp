@@ -27,7 +27,7 @@ void csaw::LValue::StoreValue(llvm::Value* value) const
 
 csaw::RValuePtr csaw::LValue::GetReference() const
 {
-    return RValue::Direct(PointerType::Get(m_Type), m_Pointer);
+    return RValue::Create(PointerType::Get(m_Type), m_Pointer);
 }
 
 csaw::LValuePtr csaw::LValue::Dereference() const
@@ -60,15 +60,9 @@ bool csaw::LValue::IsLValue() const
     return true;
 }
 
-bool csaw::LValue::IsRValue() const
+csaw::RValuePtr csaw::LValue::GetRValue() const
 {
-    return false;
-}
-
-csaw::RValuePtr csaw::LValue::GetRValue()
-{
-    const auto value = GetValue();
-    return RValue::Direct(m_Type, value);
+    return RValue::Create(m_Type, GetValue());
 }
 
 csaw::LValue::LValue(Builder* builder, const TypePtr& type, llvm::Value* pointer)

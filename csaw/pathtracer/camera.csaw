@@ -27,7 +27,7 @@ def camera {
     defocus_disk_v: vec3        ## Defocus disk vertical radius
 }
 
-$camera {
+@camera {
     me!aspect_ratio = 1.0;
     me!image_width = 100;
     me!samples_per_pixel = 10;
@@ -42,7 +42,7 @@ $camera {
     me!focus_dist = 10.0;
 }
 
-@initialize:camera {
+@initialize:camera:void {
     me!image_height = [int32](me!image_width / me!aspect_ratio);
     me!image_height = (me!image_height < 1) ? 1 : me!image_height;
 
@@ -120,7 +120,7 @@ $camera {
     ret (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
 }
 
-@render:camera(filename: int8*, world: hittable*) {
+@render:camera(filename: int8*, world: hittable*): void {
     me!initialize();
 
     out: image = image(me!image_width, me!image_height);
