@@ -1,6 +1,6 @@
 ﻿file(GLOB_RECURSE src src/**.cpp include/**.hpp)
-add_executable(ChainSaw ${src})
-target_include_directories(ChainSaw PUBLIC include)
-target_link_libraries(ChainSaw PUBLIC LibChainSaw)
+add_executable(csaw ${src})
+target_include_directories(csaw PUBLIC include)
+target_link_libraries(csaw PUBLIC LibChainSaw)
 
-install(TARGETS ChainSaw)
+install(TARGETS csaw)
