@@ -6,15 +6,15 @@ def image {
     buffer: int32*
 }
 
-$image(width: int32, height: int32) {
+@image(width: int32, height: int32) {
     me!width = width;
     me!height = height;
     me!buffer = malloc([int64]4 * width * height);
 }
 
-@pixel:image(x: int32, y: int32, color: int32) = me!buffer[x + y * me!width] = color;
+@pixel:image(x: int32, y: int32, color: int32): void = me!buffer[x + y * me!width] = color;
 
-@pixels:image(pixels: int32*, offset: int32, stride: int32, x: int32, y: int32, width: int32, height: int32) {
+@pixels:image(pixels: int32*, offset: int32, stride: int32, x: int32, y: int32, width: int32, height: int32): void {
     i: int32;
     j: int32;
 
@@ -24,19 +24,15 @@ $image(width: int32, height: int32) {
                 = pixels[offset + i + j * stride];
 }
 
-@toppm:image(filename: int8*) {
-    stream: FILE*;
-    i: int32;
-    c: int32;
-
-    stream = fopen(filename, "wb");
+@toppm:image(filename: int8*): void {
+    stream: FILE* = fopen(filename, "wb");
     fprintf(stream, "P6\n%d %d\n255\n", me!width, me!height);
-    for (i = 0; i < me!width * me!height; ++i)
+    for (i: int32; i < me!width * me!height; ++i)
     {
-        c = me!buffer[i];
+        c: int32 = me!buffer[i];
         fprintf(stream, "%c%c%c", (c >> 16) & 0xff, (c >> 8) & 0xff, c & 0xff);
     }
     fclose(stream);
 }
 
-@destroy:image = free([void*]me!buffer);
+@destroy:image:void = free([void*]me!buffer);

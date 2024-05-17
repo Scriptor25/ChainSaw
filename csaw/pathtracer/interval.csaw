@@ -3,17 +3,27 @@ def interval {
     max: flt64
 }
 
-$interval(min: flt64, max: flt64) {
+@interval(a: interval, b: interval) {
+    me!min = a.min <= b.min ? a.min : b.min;
+    me!max = a.max >= b.max ? a.max : b.max;
+}
+
+@interval(min: flt64, max: flt64) {
     me!min = min;
     me!max = max;
 }
 
+@interval = *me = interval(infinity, -infinity);
+
 @size:interval:flt64 = me!max - me!min;
 
 @contains:interval(x: flt64): bool = me!min <= x && x <= me!max;
+
 @surrounds:interval(x: flt64): bool = me!min < x && x < me!max;
-@clamp:interval(x: flt64): flt64 {
-    if (x < me!min) ret me!min;
-    if (x > me!max) ret me!max;
-    ret x;
+
+@clamp:interval(x: flt64): flt64 = (x < me!min) ? me!min : (x > me!max) ? me!max : x;
+
+@expand:interval(delta: flt64): interval {
+    padding: flt64 = delta / 2;
+    ret interval(me!min - padding, me!max + padding);
 }

@@ -13,55 +13,55 @@ RAND_MAX: int32 = 0x7fff;
 ## Functions
 
 ## String conversions
-@atof(str: int8*): flt64;
-@atoi(str: int8*): int32;
-@atol(str: int8*): int64;
-@atoll(str: int8*): int128;
-@strtod(str: int8*, endptr: int8**): flt64;
-@strtof(str: int8*, endptr: int8**): flt32;
-@strtol(str: int8*, endptr: int8**, base: int32): int64;
-@strtold(str: int8*, endptr: int8**): flt64;
-@strtoll(str: int8*, endptr: int8**, base: int32): int128;
-@strtoul(str: int8*, endptr: int8**, base: int32): int64;
-@strtoull(str: int8*, endptr: int8**, base: int32): int128;
+@[c]atof(str: int8*): flt64;
+@[c]atoi(str: int8*): int32;
+@[c]atol(str: int8*): int64;
+@[c]atoll(str: int8*): int128;
+@[c]strtod(str: int8*, endptr: int8**): flt64;
+@[c]strtof(str: int8*, endptr: int8**): flt32;
+@[c]strtol(str: int8*, endptr: int8**, base: int32): int64;
+@[c]strtold(str: int8*, endptr: int8**): flt64;
+@[c]strtoll(str: int8*, endptr: int8**, base: int32): int128;
+@[c]strtoul(str: int8*, endptr: int8**, base: int32): int64;
+@[c]strtoull(str: int8*, endptr: int8**, base: int32): int128;
 
 ## Pseudo-random sequence generation
-@rand::int32;
-@srand(seed: int32);
+@[c]rand::int32;
+@[c]srand(seed: int32): void;
 
 ## Dynamic memory management
-@calloc(num: size_t, size: size_t): void*;
-@free(ptr: void*);
-@malloc(size: size_t): void*;
-@realloc(ptr: void*, size: size_t): void*;
+@[c]calloc(num: size_t, size: size_t): void*;
+@[c]free(ptr: void*): void;
+@[c]malloc(size: size_t): void*;
+@[c]realloc(ptr: void*, size: size_t): void*;
 
 ## Environment
-@abort;
-##@atexit(func: void()): int32; ## No function pointers yet
-##@at_quick_exit(func: void()): int32; ## No function pointers yet
-@exit(status: int32);
-@getenv(name: int8*): int8*;
-@quick_exit(status: int32);
-@system(command: int8*): int32;
-@_Exit(status: int32);
+@[c]abort::void;
+@[c]atexit(func: [()void]*): int32;
+@[c]at_quick_exit(func: [()void]*): int32;
+@[c]exit(status: int32): void;
+@[c]getenv(name: int8*): int8*;
+@[c]quick_exit(status: int32): void;
+@[c]system(command: int8*): int32;
+@[c]_Exit(status: int32): void;
 
 ## Searching and sorting
-##@bsearch(key: void*, base: void*, num: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
-##@qsort(base: void*, num: size_t, size: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
+@[c]bsearch(key: void*, base: void*, num: size_t, compar: [(void*, void*)int32]*): void*;
+@[c]qsort(base: void*, num: size_t, size: size_t, compar: [(void*, void*)int32]*): void;
 
 ## Integer arithmetics
-@abs(n: int32): int32;
-@div(numer: int32, denom: int32): div_t;
-@labs(n: int64): int64;
-@ldiv(numer: int64, denom: int64): ldiv_t;
-@llabs(n: int128): int128;
-@lldiv(numer: int128, denom: int128): lldiv_t;
+@[c]abs(n: int32): int32;
+@[c]div(numer: int32, denom: int32): div_t;
+@[c]labs(n: int64): int64;
+@[c]ldiv(numer: int64, denom: int64): ldiv_t;
+@[c]llabs(n: int128): int128;
+@[c]lldiv(numer: int128, denom: int128): lldiv_t;
 
 ## Multibyte characters
-@mblen(pmb: int8*, max: size_t): int32;
-@mbtowc(pwc: wchar_t*, pmb: int8*, max: size_t): int32;
-@wctomb(pmb: int8*, wc: wchar_t): int32;
+@[c]mblen(pmb: int8*, max: size_t): int32;
+@[c]mbtowc(pwc: wchar_t*, pmb: int8*, max: size_t): int32;
+@[c]wctomb(pmb: int8*, wc: wchar_t): int32;
 
 ## Multibyte strings
-@mbstowcs(dest: wchar_t*, src: int8*, max: size_t): size_t;
-@wcstombs(dest: int8*, src: wchar_t*, max: size_t): size_t;
+@[c]mbstowcs(dest: wchar_t*, src: int8*, max: size_t): size_t;
+@[c]wcstombs(dest: int8*, src: wchar_t*, max: size_t): size_t;

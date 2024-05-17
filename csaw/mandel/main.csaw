@@ -1,15 +1,24 @@
 \inc "std/stdio.csaw"
 \inc "std/stdlib.csaw"
 \inc "std/stdimg.csaw"
+\inc "std/math.csaw"
 
 \inc "complex.csaw"
-
-@random::flt64 = [flt64]rand() / RAND_MAX;
 
 MAX_ITER: int32 = 100;
 SAMPLES:  int32 = 100;
 
-@mandel(z0: complex, max: int32): int32;
+@[c]strcmp(str1: int8*, str2: int8*): int32;
+
+@random::flt64 = rand() / (RAND_MAX + 1.0);
+
+@mandel(z0: complex, max: int32): int32 {
+    z: complex = z0;
+	t: int32;
+    for (t = 0; (t < max) && (z.abs() <= 2); ++t)
+        z = z.square() + z0;
+    ret t;
+}
 
 @main::int32 {
 
@@ -18,20 +27,11 @@ SAMPLES:  int32 = 100;
     size:   int32;
     width:  int32;
     height: int32;
-    out:    image;
-    j:      int32;
-    i:      int32;
-    n:      int32;
-    s:      int32;
-    x0:     flt64;
-    y0:     flt64;
-    z0:     complex;
-    grey:   int32;
 
     printf("xc: ");
-    scanf("%lf", &xc);   ## -0.5
+    scanf("%lf", &xc);  ## -0.5
     printf("yc: ");
-    scanf("%lf", &yc);   ##    0
+    scanf("%lf", &yc);  ##    0
     printf("size: ");
     scanf("%d", &size); ##    2
 
@@ -42,34 +42,33 @@ SAMPLES:  int32 = 100;
 
     printf("Rendering with xc=%f yc=%f size=%d width=%d height=%d\n", xc, yc, size, width, height);
 
-    out = image(width, height);
-    z0 = complex(0.0, 0.0);
-	
-    for (j = 0; j < out.height; ++j) {
-        for (i = 0; i < out.width; ++i) {
-            n = 0;
-            for (s = 0; s < SAMPLES; ++s) {
-				x0 = xc - size / 2 + size * (i + random()) /  out.width;
-                y0 = yc - size / 2 + size * (j + random()) / out.height;
-                z0.real = x0;
-                z0.imaginary = y0;
+    submit: int8* = [int8*]malloc([int64]2);
+    printf("Start? ([y]|n) ");
+    scanf("%1s", submit);
+    submit[1] = '\x00';
+    if (strcmp(submit, "y") != 0)
+        ret 1;
+
+    out: image = image(width, height);
+
+    for (j: int32; j < out.height; ++j) {
+        printf("\rScanlines remaining: %5d", out.height - j);
+        for (i: int32; i < out.width; ++i) {
+            n: int32 = 0;
+            for (s: int32; s < SAMPLES; ++s) {
+				x0: flt64 = xc - size / 2 + size * (i + random()) /  out.width;
+                y0: flt64 = yc - size / 2 + size * (j + random()) / out.height;
+                z0: complex = complex(x0, y0);
                 n += mandel(z0, MAX_ITER);
             }
-            grey = [int32](255.999 * n / (SAMPLES * MAX_ITER));
+            grey: int32 = [int32](255.999 * n / (SAMPLES * MAX_ITER));
             out.pixel(i, j, 0xff << 24 | (grey & 0xff) << 16 | (grey & 0xff) << 8 | (grey & 0xff));
         }
     }
-	
+
     out.toppm("mandel.ppm");
     out.destroy();
 
+    printf("\rDone.                       \n");
     ret 0;
-}
-
-@mandel(z0: complex, max: int32): int32 {
-    z: complex = z0;
-	t: int32;
-    for (t = 0; (t < max) && (z.abs() <= 2); ++t)
-        z = z.square() + z0;
-    ret t;
 }

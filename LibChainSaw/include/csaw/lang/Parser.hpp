@@ -39,7 +39,7 @@ namespace csaw
         explicit Token(size_t line);
         Token();
 
-        [[nodiscard]] uint32_t IntValue() const;
+        uint32_t IntValue() const;
 
         TokenType Type;
         std::string Value;
@@ -56,15 +56,15 @@ namespace csaw
         static void Parse(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
 
     private:
-        static int Escape(int c);
+        int Escape() const;
 
         Parser(const std::string& filename, std::istream& stream, const ParseCallback& callback, const std::vector<std::string>& includePaths);
 
         Token& Next();
 
-        [[nodiscard]] bool AtEOF() const;
-        [[nodiscard]] bool At(int type) const;
-        [[nodiscard]] bool At(const std::string& value) const;
+        bool AtEOF() const;
+        bool At(int type) const;
+        bool At(const std::string& value) const;
 
         Token Get();
         Token Expect(int type);

@@ -109,7 +109,7 @@ int main(int argc, const char** argv)
     csaw::Parser::Parse(file, stream, [&builder](const csaw::StatementPtr& ptr)
     {
         // std::cout << ptr << std::endl;
-        builder.Generate(ptr);
+        builder.Gen(ptr);
     }, includePaths);
     stream.close();
     builder.Build();
@@ -127,6 +127,12 @@ int main(int argc, const char** argv)
     args.insert(args.begin(), file.c_str());
     const auto code = builder.Main(static_cast<int>(args.size()), args.data());
     std::cout << "Exit Code " << code << std::endl;
+
+    if (std::ranges::find(flags, "hold") != flags.end())
+    {
+        std::cout << "Press enter to exit" << std::endl;
+        std::cin.get();
+    }
 
     return 0;
 }

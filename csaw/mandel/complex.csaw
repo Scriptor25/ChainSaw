@@ -3,75 +3,103 @@ def complex {
     imaginary: flt64,
 }
 
-$complex(real: flt64, imaginary: flt64) {
+@complex(real: flt64, imaginary: flt64);
+
+@"+=":complex(z: complex): complex;
+@"-=":complex(z: complex): complex;
+@"*=":complex(z: complex): complex;
+@"/=":complex(z: complex): complex;
+
+@conjugate:complex:complex;
+@mod:complex:flt64;
+@square:complex:complex;
+@arg:complex:flt64;
+@inverse:complex:complex;
+@abs:complex:flt64;
+@print:complex:void;
+
+@"+"(z1: complex, z2: complex): complex;
+@"-"(z1: complex, z2: complex): complex;
+@"*"(z1: complex, z2: complex): complex;
+@"/"(z1: complex, z2: complex): complex;
+
+@exp(z: complex): complex;
+@sin(z: complex): complex;
+@cos(z: complex): complex;
+@tan(z: complex): complex;
+@cot(z: complex): complex;
+@sec(z: complex): complex;
+@cosec(z: complex): complex;
+
+@complex(real: flt64, imaginary: flt64) {
     me!real = real;
     me!imaginary = imaginary;
 }
 
-@(+=):complex(z: complex): complex* {
+@"+=":complex(z: complex): complex {
     me!real += z.real;
     me!imaginary += z.imaginary;
-    ret me;
+    ret *me;
 }
 
-@(-=):complex(z: complex): complex* {
+@"-=":complex(z: complex): complex {
     me!real      -= z.real;
     me!imaginary -= z.imaginary;
-    ret me;
+    ret *me;
 }
 
-@(*=):complex(z: complex): complex* {
+@"*=":complex(z: complex): complex {
     real:      flt64 = me!real * z.real      - me!imaginary * z.imaginary;
     imaginary: flt64 = me!real * z.imaginary + me!imaginary * z.real;
     me!real = real;
     me!imaginary = imaginary;
-    ret me;
+    ret *me;
 }
 
-@conjugate:complex:complex;
-@mod:complex:flt64;
-@(/=):complex(z: complex): complex* {
-    me *= z.conjugate();
+@"/=":complex(z: complex): complex {
+    *me *= z.conjugate();
     zmod: flt64 = z.mod();
     div:  flt64 = 1 / (zmod * zmod);
     me!real      *= div;
     me!imaginary *= div;
-    ret me;
+    ret *me;
 }
 
 @conjugate:complex:complex = complex(me!real, -me!imaginary);
-@sqrt(x: flt64): flt64;
+
 @mod:complex:flt64 = sqrt(me!real * me!real + me!imaginary * me!imaginary);
+
 @square:complex:complex {
     real:      flt64 = me!real * me!real - me!imaginary * me!imaginary;
     imaginary: flt64 = 2 * me!real * me!imaginary;
     ret complex(real, imaginary);
 }
-@atan2(y: flt64, x: flt64): flt64;
+
 @arg:complex:flt64 = atan2(me!imaginary, me!real);
-@(/)(z1: complex, z2: complex): complex;
-@inverse:complex:complex = complex(1.0, 0.0) / *me;
+
+@inverse:complex:complex = complex(1, 0) / *me;
+
 @abs:complex:flt64 = sqrt(me!real * me!real + me!imaginary * me!imaginary);
 
-@print:complex = printf("%f %s%fi", me!real, (me!imaginary < 0 ? "" : "+ "), me!imaginary);
+@print:complex:void = printf("%f %s%fi", me!real, (me!imaginary < 0 ? "" : "+ "), me!imaginary);
 
-@(+)(z1: complex, z2: complex): complex = complex(z1.real + z2.real, z1.imaginary + z2.imaginary);
-@(-)(z1: complex, z2: complex): complex = complex(z1.real - z2.real, z1.imaginary - z2.imaginary);
-@(*)(z1: complex, z2: complex): complex {
-    real:      flt64 = z1.real * z2.real      - z1.imaginary * z2.imaginary;
-    imaginary: flt64 = z1.real * z2.imaginary + z1.imaginary * z2.real;
-    ret complex(real, imaginary);
+@"+"(z1: complex, z2: complex): complex = complex(z1.real + z2.real, z1.imaginary + z2.imaginary);
+
+@"-"(z1: complex, z2: complex): complex = complex(z1.real - z2.real, z1.imaginary - z2.imaginary);
+
+@"*"(z1: complex, z2: complex): complex {
+    r: flt64 = z1.real * z2.real      - z1.imaginary * z2.imaginary;
+    i: flt64 = z1.real * z2.imaginary + z1.imaginary * z2.real;
+    ret complex(r, i);
 }
-@(/)(z1: complex, z2: complex): complex {
+
+@"/"(z1: complex, z2: complex): complex {
     res: complex = z1 * z2.conjugate();
-    zmod:  flt64 = z2.mod();
-    div:   flt64 = 1 / (zmod * zmod);
+    zmod: flt64  = z2.mod();
+    div: flt64   = 1 / (zmod * zmod);
     ret complex(res.real * div, res.imaginary * div);
 }
 
-@exp(x: flt64): flt64;
-@cos(x: flt64): flt64;
-@sin(x: flt64): flt64;
 @exp(z: complex): complex {
     a: flt64 = z.real;
     b: flt64 = z.imaginary;
@@ -80,6 +108,7 @@ $complex(real: flt64, imaginary: flt64) {
     b = r * sin(b);
     ret complex(a, b);
 }
+
 @sin(z: complex): complex {
     x:     flt64 = exp(z.imaginary);
     x_inv: flt64 = 1 / x;
@@ -87,6 +116,7 @@ $complex(real: flt64, imaginary: flt64) {
     i: flt64 = cos(z.real) * (x - x_inv) / 2;
     ret complex(r, i);
 }
+
 @cos(z: complex): complex {
     x:     flt64 = exp(z.imaginary);
     x_inv: flt64 = 1 / x;
@@ -94,7 +124,11 @@ $complex(real: flt64, imaginary: flt64) {
     i: flt64 = -sin(z.real) * (x - x_inv) / 2;
     ret complex(r, i);
 }
+
 @tan(z: complex): complex   = sin(z) / cos(z);
-@cot(z: complex): complex   = complex(1.0, 0.0) / tan(z);
-@sec(z: complex): complex   = complex(1.0, 0.0) / cos(z);
-@cosec(z: complex): complex = complex(1.0, 0.0) / sin(z);
+
+@cot(z: complex): complex   = complex(1, 0) / tan(z);
+
+@sec(z: complex): complex   = complex(1, 0) / cos(z);
+
+@cosec(z: complex): complex = complex(1, 0) / sin(z);

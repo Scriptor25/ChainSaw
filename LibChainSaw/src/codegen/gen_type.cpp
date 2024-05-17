@@ -1,37 +1,37 @@
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 
-llvm::Type* csaw::Builder::Gen(const TypePtr& ptr) const
+llvm::Type* csaw::Builder::Gen(const TypePtr& type) const
 {
-    if (!ptr)
+    if (!type)
         CSAW_MESSAGE_NONE(true, "type must not be null");
 
-    if (ptr->IsPointer())
+    if (type->IsPointer() || type->IsFunction())
         return m_Builder->getPtrTy();
 
-    if (ptr->IsArray())
+    if (type->IsArray())
     {
-        const auto type = ptr->AsArray();
-        return llvm::ArrayType::get(Gen(type->Base), type->Size);
+        const auto arrayty = type->AsArray();
+        return llvm::ArrayType::get(Gen(arrayty->Base), arrayty->Size);
     }
 
-    if (ptr->IsStruct())
+    if (type->IsStruct())
     {
-        if (const auto type = llvm::StructType::getTypeByName(*m_Context, ptr->Name))
-            return type;
-        CSAW_MESSAGE_NONE(true, ptr->Name + " is a struct type, but there is no llvm struct type defined with this name");
+        if (const auto structty = llvm::StructType::getTypeByName(*m_Context, type->Name))
+            return structty;
+        CSAW_MESSAGE_NONE(true, type->Name + " is a struct type, but there is no llvm struct type defined with this name");
     }
 
-    if (ptr->Name == "void") return m_Builder->getVoidTy();
-    if (ptr->Name == "int1") return m_Builder->getInt1Ty();
-    if (ptr->Name == "int8") return m_Builder->getInt8Ty();
-    if (ptr->Name == "int16") return m_Builder->getInt16Ty();
-    if (ptr->Name == "int32") return m_Builder->getInt32Ty();
-    if (ptr->Name == "int64") return m_Builder->getInt64Ty();
-    if (ptr->Name == "int128") return m_Builder->getInt128Ty();
-    if (ptr->Name == "flt16") return m_Builder->getHalfTy();
-    if (ptr->Name == "flt32") return m_Builder->getFloatTy();
-    if (ptr->Name == "flt64") return m_Builder->getDoubleTy();
+    if (type->Name == "void") return m_Builder->getVoidTy();
+    if (type->Name == "int1") return m_Builder->getInt1Ty();
+    if (type->Name == "int8") return m_Builder->getInt8Ty();
+    if (type->Name == "int16") return m_Builder->getInt16Ty();
+    if (type->Name == "int32") return m_Builder->getInt32Ty();
+    if (type->Name == "int64") return m_Builder->getInt64Ty();
+    if (type->Name == "int128") return m_Builder->getInt128Ty();
+    if (type->Name == "flt16") return m_Builder->getHalfTy();
+    if (type->Name == "flt32") return m_Builder->getFloatTy();
+    if (type->Name == "flt64") return m_Builder->getDoubleTy();
 
-    CSAW_MESSAGE_NONE(true, "no type with name '" + ptr->Name + "' defined");
+    CSAW_MESSAGE_NONE(true, "no type with name '" + type->Name + "' defined");
 }

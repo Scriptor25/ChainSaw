@@ -7,93 +7,93 @@ def float_t = flt32;
 ## Functions
 
 ## Trigonometric functions
-@cos(x: flt64): flt64;
-@sin(x: flt64): flt64;
-@tan(x: flt64): flt64;
-@acos(x: flt64): flt64;
-@asin(x: flt64): flt64;
-@atan(x: flt64): flt64;
-@atan2(y: flt64, x: flt64): flt64;
+@[c]cos(x: flt64): flt64;
+@[c]sin(x: flt64): flt64;
+@[c]tan(x: flt64): flt64;
+@[c]acos(x: flt64): flt64;
+@[c]asin(x: flt64): flt64;
+@[c]atan(x: flt64): flt64;
+@[c]atan2(y: flt64, x: flt64): flt64;
 
 ## Hyperbolic functions
-@cosh(x: flt64): flt64;
-@sinh(x: flt64): flt64;
-@tanh(x: flt64): flt64;
-@acosh(x: flt64): flt64;
-@asinh(x: flt64): flt64;
-@atanh(x: flt64): flt64;
+@[c]cosh(x: flt64): flt64;
+@[c]sinh(x: flt64): flt64;
+@[c]tanh(x: flt64): flt64;
+@[c]acosh(x: flt64): flt64;
+@[c]asinh(x: flt64): flt64;
+@[c]atanh(x: flt64): flt64;
 
 ## Exponential and logarithmic functions
-@exp(x: flt64): flt64;
-@frexp(x: flt64, exp: int32*): flt64;
-@ldexp(x: flt64, exp: int32): flt64;
-@log(x: flt64): flt64;
-@log10(x: flt64): flt64;
-@modf(x: flt64, intpart: flt64*): flt64;
-@exp2(x: flt64): flt64;
-@expm1(x: flt64): flt64;
-@ilogb(x: flt64): int32;
-@log1p(x: flt64): flt64;
-@log2(x: flt64): flt64;
-@logb(x: flt64): flt64;
-@scalbn(x: flt64, n: int32): flt64;
-@scalbln(x: flt64, n: int64): flt64;
+@[c]exp(x: flt64): flt64;
+@[c]frexp(x: flt64, exp: int32*): flt64;
+@[c]ldexp(x: flt64, exp: int32): flt64;
+@[c]log(x: flt64): flt64;
+@[c]log10(x: flt64): flt64;
+@[c]modf(x: flt64, intpart: flt64*): flt64;
+@[c]exp2(x: flt64): flt64;
+@[c]expm1(x: flt64): flt64;
+@[c]ilogb(x: flt64): int32;
+@[c]log1p(x: flt64): flt64;
+@[c]log2(x: flt64): flt64;
+@[c]logb(x: flt64): flt64;
+@[c]scalbn(x: flt64, n: int32): flt64;
+@[c]scalbln(x: flt64, n: int64): flt64;
 
 ## Power functions
-@pow(base: flt64, exponent: flt64): flt64;
-@sqrt(x: flt64): flt64;
-@cbrt(x: flt64): flt64;
-@hypot(x: flt64, y: flt64): flt64;
+@[c]pow(base: flt64, exponent: flt64): flt64;
+@[c]sqrt(x: flt64): flt64;
+@[c]cbrt(x: flt64): flt64;
+@[c]hypot(x: flt64, y: flt64): flt64;
 
 ## Error and gamma functions
-@erf(x: flt64): flt64;
-@erfc(x: flt64): flt64;
-@tgamma(x: flt64): flt64;
-@lgamma(x: flt64): flt64;
+@[c]erf(x: flt64): flt64;
+@[c]erfc(x: flt64): flt64;
+@[c]tgamma(x: flt64): flt64;
+@[c]lgamma(x: flt64): flt64;
 
 ## Rounding and remainder functions
-@ceil(x: flt64): flt64;
-@floor(x: flt64): flt64;
-@fmod(numer: flt64, denom: flt64): flt64;
-@trunc(x: flt64): flt64;
-@round(x: flt64): flt64;
-@lround(x: flt64): int64;
-@llround(x: flt64): int128;
-@rint(x: flt64): flt64;
-@lrint(x: flt64): int64;
-@llrint(x: flt64): int128;
-@nearbyint(x: flt64): flt64;
-@remainder(numer: flt64, denom: flt64): flt64;
-@remquo(numer: flt64, denom: flt64, quot: int32*): flt64;
+@[c]ceil(x: flt64): flt64;
+@[c]floor(x: flt64): flt64;
+@[c]fmod(numer: flt64, denom: flt64): flt64;
+@[c]trunc(x: flt64): flt64;
+@[c]round(x: flt64): flt64;
+@[c]lround(x: flt64): int64;
+@[c]llround(x: flt64): int128;
+@[c]rint(x: flt64): flt64;
+@[c]lrint(x: flt64): int64;
+@[c]llrint(x: flt64): int128;
+@[c]nearbyint(x: flt64): flt64;
+@[c]remainder(numer: flt64, denom: flt64): flt64;
+@[c]remquo(numer: flt64, denom: flt64, quot: int32*): flt64;
 
 ## Floating-point manipulation functions
-@copysign(x: flt64, y: flt64): flt64;
-@nan(tagp: int8*): flt64;
-@nextafter(x: flt64, y: flt64): flt64;
-@nexttoward(x: flt64, y: flt64): flt64;
+@[c]copysign(x: flt64, y: flt64): flt64;
+@[c]nan(tagp: int8*): flt64;
+@[c]nextafter(x: flt64, y: flt64): flt64;
+@[c]nexttoward(x: flt64, y: flt64): flt64;
 
 ## Minimum, maximum, difference functions
-@fdim(x: flt64, y: flt64): flt64;
-@fmax(x: flt64, y: flt64): flt64;
-@fmin(x: flt64, y: flt64): flt64;
+@[c]fdim(x: flt64, y: flt64): flt64;
+@[c]fmax(x: flt64, y: flt64): flt64;
+@[c]fmin(x: flt64, y: flt64): flt64;
 
 ## Other functions
-@fabs(x: flt64): flt64;
-@abs(x: flt64): flt64;
-@fma(x: flt64, y: flt64, z: flt64): flt64;
+@[c]fabs(x: flt64): flt64;
+@[c]abs(x: flt64): flt64;
+@[c]fma(x: flt64, y: flt64, z: flt64): flt64;
 
 ## Classification functions
-@fpclassify(x: flt64): int32;
-@isfinite(x: flt64): int1;
-@isinf(x: flt64): int1;
-@isnan(x: flt64): int1;
-@isnormal(x: flt64): int1;
-@signbit(x: flt64): int1;
+@[c]fpclassify(x: flt64): int32;
+@[c]isfinite(x: flt64): int1;
+@[c]isinf(x: flt64): int1;
+@[c]isnan(x: flt64): int1;
+@[c]isnormal(x: flt64): int1;
+@[c]signbit(x: flt64): int1;
 
 ## Comparison functions
-@isgreater(x: flt64, y: flt64): int1;
-@isgreaterequal(x: flt64, y: flt64): int1;
-@isless(x: flt64, y: flt64): int1;
-@islessequal(x: flt64, y: flt64): int1;
-@islessgreater(x: flt64, y: flt64): int1;
-@isunordered(x: flt64, y: flt64): int1;
+@[c]isgreater(x: flt64, y: flt64): int1;
+@[c]isgreaterequal(x: flt64, y: flt64): int1;
+@[c]isless(x: flt64, y: flt64): int1;
+@[c]islessequal(x: flt64, y: flt64): int1;
+@[c]islessgreater(x: flt64, y: flt64): int1;
+@[c]isunordered(x: flt64, y: flt64): int1;

@@ -1,10 +1,10 @@
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/FunctionRef.hpp>
-#include <csaw/codegen/ValueRef.hpp>
+#include <csaw/codegen/Signature.hpp>
+#include <csaw/codegen/Value.hpp>
 #include <csaw/lang/Expr.hpp>
 
-csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
+csaw::ValuePtr csaw::Builder::Gen(const ExpressionPtr& ptr)
 {
     if (!ptr)
         CSAW_MESSAGE_NONE(true, "expression must not be null");
@@ -33,57 +33,62 @@ csaw::ValueRef csaw::Builder::Gen(const ExpressionPtr& ptr)
         return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<SelectExpression>(ptr))
         return Gen(*p);
+    if (const auto p = std::dynamic_pointer_cast<SizeOfExpression>(ptr))
+        return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<StringExpression>(ptr))
         return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<UnaryExpression>(ptr))
-        return Gen(*p);
-    if (const auto p = std::dynamic_pointer_cast<VarArgExpression>(ptr))
         return Gen(*p);
 
     CSAW_MESSAGE_STMT(true, *ptr, "code generation for expression is not implemented");
 }
 
-csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 {
-    auto left = Gen(expression.Left);
-    auto right = Gen(expression.Right);
+    const auto left = Gen(expression.Left);
+    const auto right = Gen(expression.Right);
     auto op = expression.Operator;
 
-    if (const auto function = GetFunction(op, nullptr, {left.GetRawBaseType(), right.GetRawBaseType()}))
+    if (const auto [signature, function] = FindFunction(op, nullptr, {left->GetType(), right->GetType()}); function)
     {
-        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.Load().GetValue(), right.Load().GetValue()});
-        return ValueRef::Constant(this, value, function->Result);
+        const auto rleft = Cast(left, signature.Args[0]);
+        const auto rright = Cast(right, signature.Args[1]);
+        const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {rleft->GetValue(), rright->GetValue()});
+        return RValue::Create(signature.Result, value);
     }
 
-    if (!left.IsRValue())
-    {
-        if (const auto function = GetFunction(op, left.GetRawBaseType(), {right.GetRawBaseType()}))
-        {
-            const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.GetValue(), right.Load().GetValue()});
-            return ValueRef::Pointer(this, value, function->Result);
-        }
+    const auto lleft = std::dynamic_pointer_cast<LValue>(left);
 
-        if (const auto function = GetFunction(op, left.GetRawBaseTypeBase(), {right.GetRawBaseType()}))
+    if (left->IsLValue())
+    {
+        if (const auto [signature, function] = FindFunction(op, left->GetType(), {right->GetType()}); function)
         {
-            const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {left.Load().GetValue(), right.Load().GetValue()});
-            return ValueRef::Pointer(this, value, function->Result);
+            const auto rright = Cast(right, signature.Args[0]);
+            const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {lleft->GetPointer(), rright->GetValue()});
+            return RValue::Create(signature.Result, value);
         }
     }
 
     if (op == "=")
-        return left.Store(right);
+    {
+        if (!left->IsLValue())
+            CSAW_MESSAGE_STMT(true, expression, "cannot assign to rvalue");
+        const auto rleft = Cast(right, lleft->GetType());
+        lleft->StoreValue(rleft->GetValue());
+        return lleft->GetRValue();
+    }
 
-    const auto [lhs, rhs] = CastToBestOf(left.Load(), right.Load());
+    const auto [lhs, rhs] = CastToBestOf(left->GetRValue(), right->GetRValue());
 
-    ValueRef value;
+    RValuePtr value;
     if (op == "==") value = GenCmpEQ(lhs, rhs);
     else if (op == "!=") value = GenCmpNE(lhs, rhs);
     else if (op == "<=") value = GenCmpLE(lhs, rhs);
     else if (op == ">=") value = GenCmpGE(lhs, rhs);
     else
     {
-        auto equ_idx = op.find('=');
-        auto assign = equ_idx != std::string::npos;
+        const auto equ_idx = op.find('=');
+        const auto assign = equ_idx != std::string::npos;
         if (assign) op = op.substr(0, equ_idx);
 
         if (op == "&") value = GenAnd(lhs, rhs);
@@ -102,22 +107,26 @@ csaw::ValueRef csaw::Builder::Gen(const BinaryExpression& expression)
         else if (op == "/") value = GenDiv(lhs, rhs);
         else if (op == "%") value = GenRem(lhs, rhs);
 
-        if (!value.Invalid() && assign)
-            return left.Store(value);
+        if (value && assign)
+        {
+            if (!left->IsLValue())
+                CSAW_MESSAGE_STMT(true, expression, "cannot assign to rvalue");
+            const auto rleft = Cast(value, lleft->GetType());
+            lleft->StoreValue(rleft->GetValue());
+            return lleft->GetRValue();
+        }
     }
 
-    if (value.Invalid())
-        CSAW_MESSAGE_STMT(true, expression, "binary operation " + lhs.GetRawType()->Name + " " + expression.Operator + " " + rhs.GetRawType()->Name + " is not implemented");
+    if (!value)
+        CSAW_MESSAGE_STMT(true, expression, "binary operation " + lhs->GetType()->Name + " " + expression.Operator + " " + rhs->GetType()->Name + " is not implemented");
 
     return value;
 }
 
-csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const CallExpression& expression)
 {
     std::string name;
-    ValueRef callee;
-    std::vector<llvm::Value*> args;
-    std::vector<TypePtr> arg_raw_types;
+    LValuePtr lobject;
 
     if (const auto identifier = std::dynamic_pointer_cast<IdentifierExpression>(expression.Callee))
     {
@@ -126,245 +135,305 @@ csaw::ValueRef csaw::Builder::Gen(const CallExpression& expression)
     else if (const auto member = std::dynamic_pointer_cast<MemberExpression>(expression.Callee))
     {
         name = member->Member;
-        callee = Gen(member->Object);
-        if (member->ShouldDeref)
-            callee = callee.Load();
+        const auto object = Gen(member->Object);
+        if (object->IsLValue())
+        {
+            lobject = std::dynamic_pointer_cast<LValue>(object);
+            if (member->ShouldDeref)
+                lobject = lobject->Dereference();
+        }
+        else
+        {
+            if (member->ShouldDeref)
+                lobject = object->GetRValue()->Dereference(this);
+            else
+                lobject = LValue::AllocateAndStore(this, object->GetType(), object->GetValue());
+        }
     }
     else
-        CSAW_MESSAGE_STMT(true, expression, "WTF");
+        CSAW_MESSAGE_STMT(true, expression, "WTF have you done");
 
-    if (!callee.Invalid())
-        args.push_back(callee.GetValue());
-
+    std::vector<ValuePtr> args;
+    std::vector<TypePtr> arg_types;
     for (const auto& arg : expression.Args)
     {
-        const auto value = Gen(arg).Load();
-        args.push_back(value.GetValue());
-        arg_raw_types.push_back(value.GetRawType());
+        const auto value = Gen(arg);
+        args.push_back(value);
+        arg_types.push_back(value->GetType());
     }
 
-    const auto function = GetFunction(name, callee.Invalid() ? nullptr : callee.GetRawBaseType(), arg_raw_types);
+    const auto [signature, function] = FindFunction(name, lobject ? lobject->GetType() : nullptr, arg_types, false);
     if (!function)
-        CSAW_MESSAGE_STMT(true, expression, "cannot resolve function '" + name + "', signature " + FunctionSignatureString(callee.Invalid() ? nullptr : callee.GetRawBaseType(), arg_raw_types));
+        CSAW_MESSAGE_STMT(true, expression, "cannot resolve function " + signature.Mangle());
 
-    ValueRef output;
-    if (function->IsConstructor)
+    std::vector<llvm::Value*> vargs;
+    LValuePtr lresult;
+    if (signature.IsConstructor())
     {
-        output = ValueRef::Allocate(this, nullptr, Type::Get(function->Name));
-        args.insert(args.begin(), output.GetValue());
+        lresult = LValue::Allocate(this, Type::Get(signature.Name));
+        vargs.push_back(lresult->GetPointer());
     }
 
-    const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, args);
+    if (lobject)
+        vargs.push_back(lobject->GetPointer());
 
-    if (function->IsConstructor)
-        return output;
-    return ValueRef::Constant(this, value, function->Result);
+    size_t i = 0;
+    for (; i < signature.Args.size(); ++i)
+        vargs.push_back(Cast(args[i], signature.Args[i])->GetValue());
+    for (; i < args.size(); ++i)
+        vargs.push_back(args[i]->GetValue());
+
+    const auto result = m_Builder->CreateCall(function->getFunctionType(), function, vargs);
+
+    if (signature.IsConstructor())
+        return lresult->GetRValue();
+
+    return RValue::Create(signature.Result, result);
 }
 
-csaw::ValueRef csaw::Builder::Gen(const CastExpression& expression)
-{
-    auto value = Gen(expression.Value).Load();
-    if (value.GetRawType() == expression.Type)
-        return value;
-
-    const auto type = Gen(expression.Type);
-
-    if (value.GetType()->isPointerTy())
-    {
-        if (type->isPointerTy())
-        {
-            const auto result = m_Builder->CreatePointerCast(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-
-        if (type->isIntegerTy())
-        {
-            const auto result = m_Builder->CreatePtrToInt(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-    }
-
-    if (value.GetType()->isIntegerTy())
-    {
-        if (type->isPointerTy())
-        {
-            const auto result = m_Builder->CreateIntToPtr(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-
-        if (type->isIntegerTy())
-        {
-            const auto result = m_Builder->CreateIntCast(value.GetValue(), type, true);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-
-        if (type->isFloatingPointTy())
-        {
-            const auto result = m_Builder->CreateSIToFP(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-    }
-
-    if (value.GetType()->isFloatingPointTy())
-    {
-        if (type->isIntegerTy())
-        {
-            const auto result = m_Builder->CreateFPToSI(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-
-        if (type->isFloatingPointTy())
-        {
-            const auto result = m_Builder->CreateFPCast(value.GetValue(), type);
-            return ValueRef::Constant(this, result, expression.Type);
-        }
-    }
-
-    CSAW_MESSAGE_STMT(true, expression, "cast from " + value.GetRawType()->Name + " to " + expression.Type->Name + " is not implemented");
-}
-
-csaw::ValueRef csaw::Builder::Gen(const CharExpression& expression)
-{
-    const auto value = m_Builder->getInt8(expression.Value);
-    return ValueRef::Constant(this, value, Type::GetInt8());
-}
-
-csaw::ValueRef csaw::Builder::Gen(const DereferenceExpression& expression)
-{
-    const auto value = Gen(expression.Value).Load();
-    if (!value.GetRawType()->IsPointer())
-        CSAW_MESSAGE_STMT(true, expression, "cannot dereference non-pointer value");
-    const auto deref = m_Builder->CreateLoad(value.GetBaseType(), value.GetValue());
-    return ValueRef::Constant(this, deref, value.GetRawBaseType());
-}
-
-csaw::ValueRef csaw::Builder::Gen(const FloatExpression& expression)
-{
-    const auto value = llvm::ConstantFP::get(m_Builder->getDoubleTy(), expression.Value);
-    return ValueRef::Constant(this, value, Type::GetFlt64());
-}
-
-csaw::ValueRef csaw::Builder::Gen(const IdentifierExpression& expression)
-{
-    if (const auto& value = m_Values[expression.Id]; !value.Invalid())
-        return value;
-    return m_GlobalValues[expression.Id];
-}
-
-csaw::ValueRef csaw::Builder::Gen(const IndexExpression& expression)
-{
-    const auto array = Gen(expression.Array);
-    const auto index = Gen(expression.Index).Load();
-
-    if (const auto function = GetFunction("[]", array.GetRawBaseType(), {index.GetRawType()}))
-    {
-        const auto value = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {array.GetValue(), index.GetValue()});
-        return ValueRef::Constant(this, value, function->Result);
-    }
-
-    const auto value = m_Builder->CreateGEP(array.GetBaseTypeBase(), array.Load().GetValue(), {index.GetValue()});
-    return ValueRef::Pointer(this, value, array.GetRawBaseTypeBase());
-}
-
-csaw::ValueRef csaw::Builder::Gen(const IntExpression& expression)
-{
-    const auto value = m_Builder->getInt32(expression.Value);
-    return ValueRef::Constant(this, value, Type::GetInt32());
-}
-
-csaw::ValueRef csaw::Builder::Gen(const MemberExpression& expression)
-{
-    auto object = Gen(expression.Object);
-    if (expression.ShouldDeref)
-        object = object.Load();
-
-    auto [index, type] = ElementInStruct(object.GetRawBaseType(), expression.Member);
-
-    const auto value = m_Builder->CreateStructGEP(object.GetBaseType(), object.GetValue(), index);
-    return ValueRef::Pointer(this, value, type);
-}
-
-csaw::ValueRef csaw::Builder::Gen(const ReferenceExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const CastExpression& expression)
 {
     const auto value = Gen(expression.Value);
-    return value.GetReference();
+    return Cast(value, expression.Type);
 }
 
-csaw::ValueRef csaw::Builder::Gen(const SelectExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const CharExpression& expression) const
+{
+    const auto value = m_Builder->getInt8(expression.Value);
+    return RValue::Create(Type::GetInt8(), value);
+}
+
+csaw::LValuePtr csaw::Builder::Gen(const DereferenceExpression& expression)
+{
+    const auto value = Gen(expression.Value);
+    const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
+    if (!value->IsLValue())
+        return value->GetRValue()->Dereference(this);
+    return lvalue->Dereference();
+}
+
+csaw::RValuePtr csaw::Builder::Gen(const FloatExpression& expression) const
+{
+    const auto value = llvm::ConstantFP::get(m_Builder->getDoubleTy(), expression.Value);
+    return RValue::Create(Type::GetFlt64(), value);
+}
+
+csaw::LValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
+{
+    if (const auto& value = m_Values[expression.Id])
+        return value;
+    if (const auto& value = m_GlobalValues[expression.Id])
+        return value;
+    if (const auto value = m_Module->getFunction(expression.Id))
+        return LValue::Direct(this, PointerType::Get(FromLLVM(value->getFunctionType())), value);
+    CSAW_MESSAGE_STMT(true, expression, "undefined identifier '" + expression.Id + "'");
+}
+
+csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
+{
+    const auto array = Gen(expression.Array);
+    const auto index = Gen(expression.Index);
+
+    if (array->IsLValue())
+    {
+        if (const auto [signature, function] = FindFunction("[]", array->GetType(), {index->GetType()}); function)
+        {
+            if (!signature.Result->IsPointer())
+                CSAW_MESSAGE_STMT(true, expression, "function overloading index operator must return pointer type");
+
+            const auto larray = std::dynamic_pointer_cast<LValue>(array);
+            const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {larray->GetPointer(), index->GetValue()});
+            return LValue::Direct(this, signature.Result->AsPointer()->Base, value);
+        }
+    }
+
+    if (!array->GetType()->IsPointer())
+        CSAW_MESSAGE_STMT(true, expression, "cannot compute offset from non-pointer type");
+
+    const auto type = array->GetType()->AsPointer()->Base;
+    const auto pointer = m_Builder->CreateGEP(Gen(type), array->GetValue(), {index->GetValue()});
+    return LValue::Direct(this, type, pointer);
+}
+
+csaw::RValuePtr csaw::Builder::Gen(const IntExpression& expression) const
+{
+    const auto value = m_Builder->getInt32(expression.Value);
+    return RValue::Create(Type::GetInt32(), value);
+}
+
+csaw::LValuePtr csaw::Builder::Gen(const MemberExpression& expression)
+{
+    const auto object = Gen(expression.Object);
+    LValuePtr lobject;
+    if (object->IsLValue())
+    {
+        lobject = std::dynamic_pointer_cast<LValue>(object);
+        if (expression.ShouldDeref)
+            lobject = lobject->Dereference();
+    }
+    else
+    {
+        if (!expression.ShouldDeref)
+            CSAW_MESSAGE_STMT(true, expression, "cannot get member from rvalue");
+        lobject = object->GetRValue()->Dereference(this);
+    }
+
+    if (!lobject->GetType()->IsStruct())
+        CSAW_MESSAGE_STMT(true, expression, "cannot get member of non-struct type");
+
+    const auto [eindex, etype] = lobject->GetType()->AsStruct()->GetElement(expression.Member);
+
+    if (eindex < 0 || !etype)
+        CSAW_MESSAGE_STMT(true, expression, "type " + lobject->GetType()->Name + " does not have member '" + expression.Member + "'");
+
+    const auto pointer = m_Builder->CreateStructGEP(Gen(lobject->GetType()), lobject->GetPointer(), eindex);
+    return LValue::Direct(this, etype, pointer);
+}
+
+csaw::RValuePtr csaw::Builder::Gen(const ReferenceExpression& expression)
+{
+    const auto lvalue = std::dynamic_pointer_cast<LValue>(Gen(expression.Value));
+    if (!lvalue)
+        CSAW_MESSAGE_STMT(true, expression, "cannot get reference to rvalue");
+    return lvalue->GetReference();
+}
+
+csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
 {
     const auto condition = Gen(expression.Condition);
 
-    const auto true_block = llvm::BasicBlock::Create(*m_Context, "true", m_Builder->GetInsertBlock()->getParent());
-    const auto false_block = llvm::BasicBlock::Create(*m_Context, "false", m_Builder->GetInsertBlock()->getParent());
+    auto true_block = llvm::BasicBlock::Create(*m_Context, "true", m_Builder->GetInsertBlock()->getParent());
+    auto false_block = llvm::BasicBlock::Create(*m_Context, "false", m_Builder->GetInsertBlock()->getParent());
     const auto end_block = llvm::BasicBlock::Create(*m_Context, "end", m_Builder->GetInsertBlock()->getParent());
 
-    m_Builder->CreateCondBr(condition.Load().GetValue(), true_block, false_block);
+    m_Builder->CreateCondBr(condition->GetValue(), true_block, false_block);
 
     m_Builder->SetInsertPoint(true_block);
-    const auto true_value = Gen(expression.True).Load();
+    const auto true_value = Gen(expression.True);
+    auto true_rvalue = true_value->GetRValue();
+    true_block = m_Builder->GetInsertBlock();
+
+    m_Builder->SetInsertPoint(false_block);
+    const auto false_value = Gen(expression.False);
+    auto false_rvalue = false_value->GetRValue();
+    false_block = m_Builder->GetInsertBlock();
+
+    if (false_rvalue->GetType()->ParentOf(true_rvalue->GetType()))
+    {
+        m_Builder->SetInsertPoint(true_block);
+        true_rvalue = Cast(true_rvalue, false_rvalue->GetType());
+    }
+    else
+    {
+        m_Builder->SetInsertPoint(false_block);
+        false_rvalue = Cast(false_rvalue, true_rvalue->GetType());
+    }
+
+    m_Builder->SetInsertPoint(true_block);
     m_Builder->CreateBr(end_block);
 
     m_Builder->SetInsertPoint(false_block);
-    const auto false_value = Gen(expression.False).Load();
     m_Builder->CreateBr(end_block);
 
     m_Builder->SetInsertPoint(end_block);
 
-    const auto phi = m_Builder->CreatePHI(true_value.GetType(), 2);
-    phi->addIncoming(true_value.GetValue(), true_block);
-    phi->addIncoming(false_value.GetValue(), false_block);
+    if (true_value->IsLValue() && false_value->IsLValue())
+    {
+        if (true_rvalue->GetType() != false_rvalue->GetType())
+            CSAW_MESSAGE_STMT(true, expression, "cannot use select with lvalues of differing types");
 
-    return ValueRef::Constant(this, phi, true_value.GetRawType());
+        const auto true_lvalue = std::dynamic_pointer_cast<LValue>(true_value);
+        const auto false_lvalue = std::dynamic_pointer_cast<LValue>(false_value);
+
+        const auto phi = m_Builder->CreatePHI(m_Builder->getPtrTy(), 2);
+        phi->addIncoming(true_lvalue->GetPointer(), true_block);
+        phi->addIncoming(false_lvalue->GetPointer(), false_block);
+        return LValue::Direct(this, true_lvalue->GetType(), phi);
+    }
+
+    const auto phi = m_Builder->CreatePHI(Gen(true_rvalue->GetType()), 2);
+    phi->addIncoming(true_rvalue->GetValue(), true_block);
+    phi->addIncoming(false_rvalue->GetValue(), false_block);
+    return RValue::Create(true_rvalue->GetType(), phi);
 }
 
-csaw::ValueRef csaw::Builder::Gen(const StringExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const SizeOfExpression& expression) const
 {
-    const auto value = m_Builder->CreateGlobalString(expression.Value);
-    return ValueRef::Constant(this, value, PointerType::Get(Type::GetInt8()));
+    const auto type = Gen(expression.Type);
+    const auto size = m_Module->getDataLayout().getTypeAllocSize(type);
+    return RValue::Create(Type::GetInt64(), m_Builder->getInt64(size));
 }
 
-csaw::ValueRef csaw::Builder::Gen(const UnaryExpression& expression)
+csaw::RValuePtr csaw::Builder::Gen(const StringExpression& expression) const
+{
+    const auto value = m_Builder->CreateGlobalStringPtr(expression.Value);
+    return RValue::Create(PointerType::Get(Type::GetInt8()), value);
+}
+
+csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
 {
     const auto value = Gen(expression.Value);
     const auto op = expression.Operator;
 
-    if (expression.OpRight)
+    const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
+    if (lvalue)
     {
-        if (const auto function = GetFunction(op, nullptr, {value.GetRawBaseType()}))
+        if (expression.OpRight) // get and op (@(++):vec3(t: int1): vec3 ...)
         {
-            const auto result = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {value.Load().GetValue()});
-            return ValueRef::Constant(this, result, function->Result);
+            if (const auto [signature, function] = FindFunction(op, value->GetType(), {Type::GetInt1()}); function)
+            {
+                const auto result = m_Builder->CreateCall(function->getFunctionType(), function, {lvalue->GetPointer(), m_Builder->getInt1(true)});
+                return RValue::Create(signature.Result, result);
+            }
         }
-    }
-    else
-    {
-        if (const auto function = GetFunction(op, value.GetRawBaseType(), {}))
+        else // op and get (@(++):vec3:vec3 ...)
         {
-            const auto result = m_Builder->CreateCall(function->Function->getFunctionType(), function->Function, {value.GetValue()});
-            return ValueRef::Constant(this, result, function->Result);
+            if (const auto [signature, function] = FindFunction(op, value->GetType(), {}); function)
+            {
+                const auto result = m_Builder->CreateCall(function->getFunctionType(), function, {lvalue->GetPointer()});
+                return RValue::Create(signature.Result, result);
+            }
         }
     }
 
-    ValueRef result;
-    if (op == "-") result = GenNeg(value);
-    if (op == "!") result = GenNot(value);
-    if (op == "~") result = GenInv(value);
-    if (op == "++") result = GenInc(value, expression.OpRight);
-    if (op == "--") result = GenDec(value, expression.OpRight);
+    const auto rvalue = value->GetRValue();
 
-    if (result.Invalid())
+    RValuePtr result;
+    if (op == "-") result = GenNeg(rvalue);
+    else if (op == "!") result = GenNot(rvalue);
+    else if (op == "~") result = GenInv(rvalue);
+    else if (op == "++")
     {
-        const auto op_c = op.c_str();
-        const auto ty_c = value.GetRawBaseType()->Name.c_str();
-        const std::string left = expression.OpRight ? ty_c : op_c;
-        const std::string right = expression.OpRight ? op_c : ty_c;
+        result = GenInc(rvalue);
+        if (result)
+        {
+            if (!value->IsLValue())
+                CSAW_MESSAGE_STMT(true, expression, "cannot assign to rvalue");
+            const auto casted = Cast(result, lvalue->GetType());
+            lvalue->StoreValue(casted->GetValue());
+            if (expression.OpRight) result = rvalue;
+        }
+    }
+    else if (op == "--")
+    {
+        result = GenDec(rvalue);
+        if (result)
+        {
+            if (!value->IsLValue())
+                CSAW_MESSAGE_STMT(true, expression, "cannot assign to rvalue");
+            const auto casted = Cast(result, lvalue->GetType());
+            lvalue->StoreValue(casted->GetValue());
+            if (expression.OpRight) result = rvalue;
+        }
+    }
+
+    if (!result)
+    {
+        const auto ty = value->GetType()->Name;
+        const std::string left = expression.OpRight ? ty : op;
+        const std::string right = expression.OpRight ? op : ty;
         CSAW_MESSAGE_STMT(true, expression, "unary operation " + left + right + " not implemented");
     }
 
     return result;
-}
-
-csaw::ValueRef csaw::Builder::Gen(const VarArgExpression& expression)
-{
-    CSAW_MESSAGE_STMT(true, expression, "code generation for varargs not yet implemented");
 }

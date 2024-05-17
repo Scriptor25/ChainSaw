@@ -63,7 +63,7 @@ csaw::Token& csaw::Parser::Next()
         while (c != EOF && c != '"')
         {
             if (c == '\\')
-                c = Escape(m_Stream.get());
+                c = Escape();
 
             value += static_cast<char>(c);
             c = m_Stream.get();
@@ -80,7 +80,7 @@ csaw::Token& csaw::Parser::Next()
         while (c != EOF && c != '\'')
         {
             if (c == '\\')
-                c = Escape(m_Stream.get());
+                c = Escape();
 
             value += static_cast<char>(c);
             c = m_Stream.get();

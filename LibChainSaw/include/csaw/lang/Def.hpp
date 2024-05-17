@@ -47,6 +47,7 @@ namespace csaw
     struct MemberExpression;
     struct ReferenceExpression;
     struct SelectExpression;
+    struct SizeOfExpression;
     struct StringExpression;
     struct UnaryExpression;
     struct VarArgExpression;
@@ -57,11 +58,13 @@ namespace csaw
     typedef std::shared_ptr<CastExpression> CastExpressionPtr;
     typedef std::shared_ptr<CharExpression> CharExpressionPtr;
     typedef std::shared_ptr<DereferenceExpression> DereferenceExpressionPtr;
+    typedef std::shared_ptr<FloatExpression> FloatExpressionPtr;
     typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
     typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
     typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
     typedef std::shared_ptr<ReferenceExpression> ReferenceExpressionPtr;
     typedef std::shared_ptr<SelectExpression> SelectExpressionPtr;
+    typedef std::shared_ptr<SizeOfExpression> SizeOfExpressionPtr;
     typedef std::shared_ptr<StringExpression> StringExpressionPtr;
     typedef std::shared_ptr<UnaryExpression> UnaryExpressionPtr;
     typedef std::shared_ptr<VarArgExpression> VarArgExpressionPtr;
