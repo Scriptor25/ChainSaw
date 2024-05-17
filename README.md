@@ -1,5 +1,7 @@
 # ChainSaw - A programming language
 
+# Warning: this documentation is still in the making, dont belive everything, or better, anything written here!
+
 1. [Why](#why)
 2. [Usage](#usage)
 3. [The language specifications](#the-language-specifications)
