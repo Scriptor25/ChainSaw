@@ -37,8 +37,8 @@ RAND_MAX: int32 = 0x7fff;
 
 ## Environment
 @[c]abort::void;
-##@[c]atexit(func: void()): int32; ## No function pointers yet
-##@[c]at_quick_exit(func: void()): int32; ## No function pointers yet
+@[c]atexit(func: [()void]*): int32;
+@[c]at_quick_exit(func: [()void]*): int32;
 @[c]exit(status: int32): void;
 @[c]getenv(name: int8*): int8*;
 @[c]quick_exit(status: int32): void;
@@ -46,8 +46,8 @@ RAND_MAX: int32 = 0x7fff;
 @[c]_Exit(status: int32): void;
 
 ## Searching and sorting
-##@[c]bsearch(key: void*, base: void*, num: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
-##@[c]qsort(base: void*, num: size_t, size: size_t, compar: int(void*, void*)): void*; ## No function pointers yet
+@[c]bsearch(key: void*, base: void*, num: size_t, compar: [(void*, void*)int32]*): void*;
+@[c]qsort(base: void*, num: size_t, size: size_t, compar: [(void*, void*)int32]*): void;
 
 ## Integer arithmetics
 @[c]abs(n: int32): int32;

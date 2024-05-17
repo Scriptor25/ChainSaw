@@ -1,15 +1,17 @@
 def ray {
     origin: point3,
     direction: vec3,
-    t: interval
+    time: flt64
 }
 
-@ray(origin: point3, direction: vec3, t: interval) {
+@ray(origin: point3, direction: vec3, time: flt64) {
     me!origin = origin;
     me!direction = direction;
-    me!t = t;
+    me!time = time;
 }
+
+@ray(origin: point3, direction: vec3) = *me = ray(origin, direction, 0);
+@ray = *me = ray(vec3(), vec3(), 0);
 
 @at:ray(t: flt64): point3 = me!origin + t * me!direction;
 
-@dump:ray:void = printf("%p: origin=[%f, %f, %f] direction=[%f, %f, %f] t=[%f, %f]\n", me, me!origin.x, me!origin.y, me!origin.z, me!direction.x, me!direction.y, me!direction.z, me!t.min, me!t.max);

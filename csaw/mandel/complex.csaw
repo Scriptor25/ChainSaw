@@ -3,6 +3,34 @@ def complex {
     imaginary: flt64,
 }
 
+@complex(real: flt64, imaginary: flt64);
+
+@"+=":complex(z: complex): complex;
+@"-=":complex(z: complex): complex;
+@"*=":complex(z: complex): complex;
+@"/=":complex(z: complex): complex;
+
+@conjugate:complex:complex;
+@mod:complex:flt64;
+@square:complex:complex;
+@arg:complex:flt64;
+@inverse:complex:complex;
+@abs:complex:flt64;
+@print:complex:void;
+
+@"+"(z1: complex, z2: complex): complex;
+@"-"(z1: complex, z2: complex): complex;
+@"*"(z1: complex, z2: complex): complex;
+@"/"(z1: complex, z2: complex): complex;
+
+@exp(z: complex): complex;
+@sin(z: complex): complex;
+@cos(z: complex): complex;
+@tan(z: complex): complex;
+@cot(z: complex): complex;
+@sec(z: complex): complex;
+@cosec(z: complex): complex;
+
 @complex(real: flt64, imaginary: flt64) {
     me!real = real;
     me!imaginary = imaginary;
@@ -49,7 +77,7 @@ def complex {
 
 @arg:complex:flt64 = atan2(me!imaginary, me!real);
 
-@inverse:complex:complex = complex(1.0, 0.0) / *me;
+@inverse:complex:complex = complex(1, 0) / *me;
 
 @abs:complex:flt64 = sqrt(me!real * me!real + me!imaginary * me!imaginary);
 
@@ -99,8 +127,8 @@ def complex {
 
 @tan(z: complex): complex   = sin(z) / cos(z);
 
-@cot(z: complex): complex   = complex(1.0, 0.0) / tan(z);
+@cot(z: complex): complex   = complex(1, 0) / tan(z);
 
-@sec(z: complex): complex   = complex(1.0, 0.0) / cos(z);
+@sec(z: complex): complex   = complex(1, 0) / cos(z);
 
-@cosec(z: complex): complex = complex(1.0, 0.0) / sin(z);
+@cosec(z: complex): complex = complex(1, 0) / sin(z);

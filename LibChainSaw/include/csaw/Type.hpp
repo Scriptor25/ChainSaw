@@ -10,11 +10,13 @@ namespace csaw
     struct PointerType;
     struct ArrayType;
     struct StructType;
+    struct FunctionType;
 
     typedef std::shared_ptr<Type> TypePtr;
     typedef std::shared_ptr<PointerType> PointerTypePtr;
     typedef std::shared_ptr<ArrayType> ArrayTypePtr;
     typedef std::shared_ptr<StructType> StructTypePtr;
+    typedef std::shared_ptr<FunctionType> FunctionTypePtr;
 
     std::ostream& operator<<(std::ostream& out, const TypePtr& ptr);
 
@@ -40,10 +42,12 @@ namespace csaw
         virtual bool IsPointer() const;
         virtual bool IsArray() const;
         virtual bool IsStruct() const;
+        virtual bool IsFunction() const;
 
         const PointerType* AsPointer() const;
         const ArrayType* AsArray() const;
         const StructType* AsStruct() const;
+        const FunctionType* AsFunction() const;
 
         bool ParentOf(const TypePtr& type) const;
 
@@ -87,5 +91,18 @@ namespace csaw
         std::pair<int, TypePtr> GetElement(const std::string& name) const;
 
         std::vector<std::pair<std::string, TypePtr>> Elements;
+    };
+
+    struct FunctionType : Type
+    {
+        static FunctionTypePtr Get(const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+
+        FunctionType(const std::string& name, const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+
+        bool IsFunction() const override;
+
+        std::vector<TypePtr> Args;
+        bool IsVararg;
+        TypePtr Result;
     };
 }

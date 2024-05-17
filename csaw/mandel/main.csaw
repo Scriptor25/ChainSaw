@@ -52,6 +52,7 @@ SAMPLES:  int32 = 100;
     out: image = image(width, height);
 
     for (j: int32; j < out.height; ++j) {
+        printf("\rScanlines remaining: %5d", out.height - j);
         for (i: int32; i < out.width; ++i) {
             n: int32 = 0;
             for (s: int32; s < SAMPLES; ++s) {
@@ -65,10 +66,9 @@ SAMPLES:  int32 = 100;
         }
     }
 
-    printf("C");
-
     out.toppm("mandel.ppm");
     out.destroy();
 
+    printf("\rDone.                       \n");
     ret 0;
 }

@@ -141,7 +141,12 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         const auto result = Gen(expression);
         if (function->getFunctionType()->getReturnType()->isVoidTy())
             m_Builder->CreateRetVoid();
-        else m_Builder->CreateRet(result->GetValue());
+        else
+        {
+            const auto type = FromLLVM(function->getFunctionType()->getReturnType());
+            const auto rresult = Cast(result, type);
+            m_Builder->CreateRet(rresult->GetValue());
+        }
     }
     else
     {
@@ -211,7 +216,8 @@ void csaw::Builder::Gen(const RetStatement& statement)
         return;
     }
 
-    const auto value = Gen(statement.Value);
+    const auto type = FromLLVM(m_Builder->getCurrentFunctionReturnType());
+    const auto value = Cast(Gen(statement.Value), type);
     m_Builder->CreateRet(value->GetValue());
 }
 

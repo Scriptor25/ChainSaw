@@ -21,6 +21,8 @@
     world.add([hittable*]&s4);
     world.add([hittable*]&s5);
 
+    bvh: bvh_node = bvh_node(world);
+
     cam: camera;
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
@@ -35,7 +37,7 @@
     cam.defocus_angle = 10;
     cam.focus_dist = 3.4;
 
-    cam.render(filename, [hittable*]&world);
+    cam.render(filename, [hittable*]&bvh);
 
     world.destroy();
 }
@@ -51,27 +53,29 @@
 
             dc: vec3 = center - vec3(4, 0.2, 0);
             if (dc.length() > 0.9) {
+                sp: sphere* = malloc($sphere);
                 mp: material*;
 
                 if (choose_mat < 0.8) {
                     ## diffuse
                     albedo: color = random_vec3() * random_vec3();
-                    mp = malloc(25);
-                    *([lambertian*]mp) = lambertian(albedo);
+                    mp = malloc($lambertian);
+                    *[lambertian*]mp = lambertian(albedo);
+                    center2: point3 = center + vec3(0, random(0, 0.5), 0);
+                    *sp = sphere(center, center2, 0.2, mp);
                 } else if (choose_mat < 0.95) {
                     ## metal
                     albedo: color = random_vec3(0.5, 1.0);
                     fuzz: flt64 = random(0.0, 0.5);
-                    mp = malloc(33);
-                    *([metal*]mp) = metal(albedo, fuzz);
+                    mp = malloc($metal);
+                    *[metal*]mp = metal(albedo, fuzz);
+                    *sp = sphere(center, 0.2, mp);
                 } else {
                     ## glass
-                    mp = malloc(9);
-                    *([dielectric*]mp) = dielectric(1.5);
+                    mp = malloc($dielectric);
+                    *[dielectric*]mp = dielectric(1.5);
+                    *sp = sphere(center, 0.2, mp);
                 }
-
-                sp: sphere* = malloc(41);
-                *sp = sphere(center, 0.2, mp);
 
                 pointers.push_back(sp);
                 pointers.push_back(mp);
@@ -96,11 +100,13 @@
     s4: sphere = sphere(vec3(4, 1, 0), 1, [material*]&material3);
     world.add([hittable*]&s4);
 
+    bvh: bvh_node = bvh_node(world);
+
     cam: camera;
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 50;
+    cam.samples_per_pixel = 500;
     cam.max_depth         = 50;
 
     cam.vfov     = 20;
@@ -111,7 +117,7 @@
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10;
 
-    cam.render(filename, [hittable*]&world);
+    cam.render(filename, [hittable*]&bvh);
 
     world.destroy();
 
@@ -122,6 +128,8 @@
     }#
     pointers.destroy();
 }
+
+@[c]cmp_int32(a: void*, b: void*): int32 = *[int32*]a - *[int32*]b;
 
 ## MAIN
 @main(argc: int32, argv: int8**): int32 {

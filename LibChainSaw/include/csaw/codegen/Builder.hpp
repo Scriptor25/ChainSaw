@@ -33,11 +33,13 @@ namespace csaw
         void Gen(const StatementPtr& ptr);
         llvm::Type* Gen(const TypePtr& type) const;
 
+        static TypePtr FromLLVM(const llvm::Type* type);
+
     private:
         RValuePtr Cast(const ValuePtr& value, const TypePtr& type) const;
         std::pair<RValuePtr, RValuePtr> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
 
-        std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
+        std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, bool testing = true) const;
 
         void Gen(const ScopeStatement& statement);
         void Gen(const ForStatement& statement);
@@ -61,6 +63,7 @@ namespace csaw
         LValuePtr Gen(const MemberExpression& expression);
         RValuePtr Gen(const ReferenceExpression& expression);
         ValuePtr Gen(const SelectExpression& expression);
+        RValuePtr Gen(const SizeOfExpression& expression) const;
         RValuePtr Gen(const StringExpression& expression) const;
         RValuePtr Gen(const UnaryExpression& expression);
 

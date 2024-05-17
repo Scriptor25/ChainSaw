@@ -6,7 +6,7 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& type) const
     if (!type)
         CSAW_MESSAGE_NONE(true, "type must not be null");
 
-    if (type->IsPointer())
+    if (type->IsPointer() || type->IsFunction())
         return m_Builder->getPtrTy();
 
     if (type->IsArray())

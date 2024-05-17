@@ -128,5 +128,11 @@ int main(int argc, const char** argv)
     const auto code = builder.Main(static_cast<int>(args.size()), args.data());
     std::cout << "Exit Code " << code << std::endl;
 
+    if (std::ranges::find(flags, "hold") != flags.end())
+    {
+        std::cout << "Press enter to exit" << std::endl;
+        std::cin.get();
+    }
+
     return 0;
 }

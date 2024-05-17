@@ -111,6 +111,11 @@ bool csaw::Type::IsStruct() const
     return false;
 }
 
+bool csaw::Type::IsFunction() const
+{
+    return false;
+}
+
 const csaw::PointerType* csaw::Type::AsPointer() const
 {
     return dynamic_cast<const PointerType*>(this);
@@ -126,16 +131,21 @@ const csaw::StructType* csaw::Type::AsStruct() const
     return dynamic_cast<const StructType*>(this);
 }
 
+const csaw::FunctionType* csaw::Type::AsFunction() const
+{
+    return dynamic_cast<const FunctionType*>(this);
+}
+
 bool csaw::Type::ParentOf(const TypePtr& type) const
 {
     if (this == type.get() || this == GetVoid().get())
         return true;
 
-    if (IsStruct() || type->IsStruct())
+    if (IsStruct() || type->IsStruct() || IsFunction())
         return false;
 
     if (IsPointer())
-        return type->IsPointer() ? AsPointer()->Base->ParentOf(type->AsPointer()->Base) : false;
+        return type->IsPointer() ? AsPointer()->Base->ParentOf(type->AsPointer()->Base) : type->IsFunction() ? AsPointer()->Base->ParentOf(type) : false;
 
     if (Bits >= type->Bits && (IsFlt || !type->IsFlt))
         return true;
@@ -216,4 +226,30 @@ std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& na
     }
 
     return {-1, {}};
+}
+
+csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
+{
+    std::string name = "(";
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        if (i > 0) name += ", ";
+        name += args[i]->Name;
+    }
+    name += ')' + result->Name;
+
+    auto& type = Types[name];
+    if (!type)
+        type = std::make_shared<FunctionType>(name, args, is_vararg, result);
+    return std::dynamic_pointer_cast<FunctionType>(type);
+}
+
+csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
+    : Type(name, false, 0), Args(args), IsVararg(is_vararg), Result(result)
+{
+}
+
+bool csaw::FunctionType::IsFunction() const
+{
+    return true;
 }

@@ -1,6 +1,7 @@
 def hittable_list {
     type: int8,
-    objects: vector
+    objects: vector,
+    bbox: aabb
 }
 
 @add:hittable_list(object: hittable*): void;
@@ -16,22 +17,28 @@ def hittable_list {
     me!add(object);
 }
 
-@add:hittable_list(object: hittable*): void = me!objects.push_back([void*]object);
+@add:hittable_list(object: hittable*): void {
+    me!objects.push_back(object);
+    me!bbox = aabb(me!bbox, object!bounding_box());
+}
 
-@hit:hittable_list(r: ray, rec: hit_record*): bool {
+@hit:hittable_list(r: ray, ray_t: interval, rec: hit_record*): bool {
     temp_rec: hit_record;
     hit_anything: bool = false;
+    closest_so_far: flt64 = ray_t.max;
 
     for (i: int64; i < me!objects.size; ++i) {
-        object: hittable* = [hittable*]me!objects.at(i);
-        if (object!hit(r, &temp_rec)) {
+        object: hittable* = me!objects.at(i);
+        if (object!hit(r, interval(ray_t.min, closest_so_far), &temp_rec)) {
             hit_anything = true;
-            r.t.max = temp_rec.t;
+            closest_so_far = temp_rec.t;
             *rec = temp_rec;
         }
     }
 
     ret hit_anything;
 }
+
+@bounding_box:hittable_list:aabb = me!bbox;
 
 @destroy:hittable_list:void = me!objects.destroy();

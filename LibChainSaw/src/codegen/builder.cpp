@@ -1,3 +1,4 @@
+#include <iostream>
 #include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Signature.hpp>
@@ -105,12 +106,40 @@ llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* arr
     return inst;
 }
 
-std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const
+csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
 {
+    if (type->isVoidTy()) return Type::GetVoid();
+    if (type->isPointerTy()) return PointerType::Get(Type::GetVoid());
+    if (type->isStructTy()) return Type::Get(type->getStructName().str());
+    if (type->isFunctionTy())
+    {
+        std::vector<TypePtr> args;
+        for (size_t i = 0; i < type->getFunctionNumParams(); ++i)
+            args.push_back(FromLLVM(type->getFunctionParamType(i)));
+        const bool is_vararg = type->isFunctionVarArg();
+        const auto result = FromLLVM(llvm::dyn_cast<llvm::FunctionType>(type)->getReturnType());
+        return FunctionType::Get(args, is_vararg, result);
+    }
+    if (type->isIntegerTy(1)) return Type::GetInt1();
+    if (type->isIntegerTy(8)) return Type::GetInt8();
+    if (type->isIntegerTy(16)) return Type::GetInt16();
+    if (type->isIntegerTy(32)) return Type::GetInt32();
+    if (type->isIntegerTy(64)) return Type::GetInt64();
+    if (type->isIntegerTy(128)) return Type::GetInt128();
+    if (type->isHalfTy()) return Type::GetFlt16();
+    if (type->isFloatTy()) return Type::GetFlt32();
+    if (type->isDoubleTy()) return Type::GetFlt64();
+    CSAW_MESSAGE_NONE(true, "cannot get csaw type for llvm type");
+}
+
+std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, const bool testing) const
+{
+    std::vector<Signature> alt;
     for (auto& function : m_Module->functions())
     {
         const auto s = Signature::Demangle(function);
         if (s.Name != name) continue;
+        alt.push_back(s);
         if (s.Parent != parent) continue;
         if (s.Args.size() > args.size() || (!s.IsVarargs && s.Args.size() != args.size())) continue;
         size_t i = 0;
@@ -119,6 +148,12 @@ std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const st
                 break;
         if (i < s.Args.size()) continue;
         return {s, &function};
+    }
+    if (!testing)
+    {
+        std::cout << "Alternative signatures: " << std::endl;
+        for (const auto& s : alt)
+            std::cout << s.Mangle(true) << std::endl;
     }
     return {Signature(name, parent, nullptr, args, false), nullptr};
 }

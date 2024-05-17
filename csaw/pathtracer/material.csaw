@@ -19,12 +19,10 @@ def lambertian {
     if (scatter_direction.near_zero())
         scatter_direction = rec.normal;
 
-    *scattered = ray(rec.p, scatter_direction, r_in.t);
+    *scattered = ray(rec.p, scatter_direction, r_in.time);
     *attenuation = me!albedo;
     ret true;
 }
-
-@dump:lambertian:void = printf("%p: type=%c albedo=[%f, %f, %f]\n", me, me!type, me!albedo.x, me!albedo.y, me!albedo.z);
 
 def metal {
     type: int8,
@@ -35,18 +33,16 @@ def metal {
 @metal(albedo: color, fuzz: flt64) {
     me!type = 'M';
     me!albedo = albedo;
-    me!fuzz = fuzz < 1 ? fuzz : 1.0;
+    me!fuzz = fuzz < 1 ? fuzz : 1;
 }
 
 @scatter:metal(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     reflected: vec3 = reflect(r_in.direction, rec.normal);
     reflected = unit_vector(reflected) + (me!fuzz * random_unit_vector());
-    *scattered = ray(rec.p, reflected, r_in.t);
+    *scattered = ray(rec.p, reflected, r_in.time);
     *attenuation = me!albedo;
     ret dot(scattered!direction, rec.normal) > 0;
 }
-
-@dump:metal:void = printf("%p: type=%c albedo=[%f, %f, %f] fuzz=%f\n", me, me!type, me!albedo.x, me!albedo.y, me!albedo.z, me!fuzz);
 
 def dielectric {
     type: int8,
@@ -70,13 +66,13 @@ def dielectric {
 @scatter:dielectric(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     *attenuation = vec3(1.0, 1.0, 1.0);
     ri: flt64 = me!refraction_index;
-    if (rec.front_face) ri = 1.0 / ri;
+    if (rec.front_face) ri = 1 / ri;
 
     unit_direction: vec3 = unit_vector(r_in.direction);
-    cos_theta: flt64 = fmin(dot(-unit_direction, rec.normal), 1.0);
-    sin_theta: flt64 = sqrt(1.0 - cos_theta * cos_theta);
+    cos_theta: flt64 = fmin(dot(-unit_direction, rec.normal), 1);
+    sin_theta: flt64 = sqrt(1 - cos_theta * cos_theta);
 
-    cannot_refract: bool = ri * sin_theta > 1.0;
+    cannot_refract: bool = ri * sin_theta > 1;
     direction: vec3;
 
     if (cannot_refract || reflectance(cos_theta, ri) > random())
@@ -84,16 +80,14 @@ def dielectric {
     else
         direction = refract(unit_direction, rec.normal, ri);
 
-    *scattered = ray(rec.p, direction, r_in.t);
+    *scattered = ray(rec.p, direction, r_in.time);
     ret true;
 }
-
-@dump:dielectric:void = printf("%p: type=%c refraction_index=%f\n", me, me!type, me!refraction_index);
 
 @scatter:material(r_in: ray, rec: hit_record, attenuation: color*, scattered: ray*): bool {
     if (me!type == 'L') ret ([lambertian*]me)!scatter(r_in, rec, attenuation, scattered);
     if (me!type == 'M') ret ([metal*]me)!scatter(r_in, rec, attenuation, scattered);
     if (me!type == 'D') ret ([dielectric*]me)!scatter(r_in, rec, attenuation, scattered);
-    printf("%c\n", me!type);
+    printf("scatter:material %c\n", me!type);
     ret false;
 }

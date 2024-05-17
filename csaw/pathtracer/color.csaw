@@ -3,7 +3,7 @@ def color = vec3;
 @linear_to_gamma(linear_component: flt64): flt64 {
     if (linear_component > 0)
         ret sqrt(linear_component);
-    ret 0.0;
+    ret 0;
 }
 
 intensity: interval = interval(0.000, 0.999);
@@ -18,9 +18,9 @@ intensity: interval = interval(0.000, 0.999);
     b = linear_to_gamma(b);
 
     ## Translate the [0,1] component values to the byte range [0,255].
-    rbyte: int32 = [int32](256 * intensity.clamp(r));
-    gbyte: int32 = [int32](256 * intensity.clamp(g));
-    bbyte: int32 = [int32](256 * intensity.clamp(b));
+    rbyte: int32 = 256 * intensity.clamp(r);
+    gbyte: int32 = 256 * intensity.clamp(g);
+    bbyte: int32 = 256 * intensity.clamp(b);
 
     ## Merge components into 24 bit color
     ret 0xff << 24 | (rbyte & 0xff) << 16 | (gbyte & 0xff) << 8 | (bbyte & 0xff);

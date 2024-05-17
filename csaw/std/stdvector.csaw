@@ -7,26 +7,28 @@ def vector {
 }
 
 @vector {
-    me!size = [int64]0;
-    me!reserved = [int64]10;
-    me!ptr = malloc(me!reserved * 8);
+    me!size = 0;
+    me!reserved = 10;
+    me!ptr = malloc(me!reserved * $void*);
 }
 
 @vector(reserved: int64) {
     me!size = 0;
     me!reserved = reserved;
-    me!ptr = malloc(me!reserved * 8);
+    me!ptr = malloc(me!reserved * $void*);
 }
 
 @push_back:vector(ptr: void*): void {
     if (me!size == me!reserved) {
         me!reserved *= 2;
-        me!ptr = realloc([void*]me!ptr, me!reserved * 8);
+        me!ptr = realloc(me!ptr, me!reserved * $void*);
     }
-    me!ptr[me!size] = ptr;
-    ++me!size;
+    me!ptr[me!size++] = ptr;
 }
 
 @at:vector(i: int64): void* = me!ptr[i];
+@"[]":vector(i: int64): void** = &me!ptr[i];
 
-@destroy:vector:void = free([void*]me!ptr);
+@sort:vector(start: int64, num: int64, comparator: [(void*, void*)int32]*): void = qsort(&me!ptr[start], num, $void*, comparator);
+
+@destroy:vector:void = free(me!ptr);

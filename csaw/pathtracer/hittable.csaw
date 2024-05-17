@@ -16,20 +16,34 @@ def hit_record {
     me!normal = me!front_face ? outward_normal : -outward_normal;
 }
 
-@dump:hit_record:void = printf("%p: p=[%f, %f, %f] normal=[%f, %f, %f] mat=%p, t=%f front_face=%c\n", me, me!p.x, me!p.y, me!p.z, me!normal.x, me!normal.y, me!normal.z, me!mat, me!t, me!front_face ? '1' : '0');
-
 def hittable {
     type: int8
 }
 
 def sphere;
-def hittable_list;
-@hit:sphere(r: ray, rec: hit_record*): bool;
-@hit:hittable_list(r: ray, rec: hit_record*): bool;
+@hit:sphere(r: ray, ray_t: interval, rec: hit_record*): bool;
+@bounding_box:sphere:aabb;
 
-@hit:hittable(r: ray, rec: hit_record*): bool {
-    if (me!type == 'S') ret ([sphere*]me)!hit(r, rec);
-    if (me!type == 'L') ret ([hittable_list*]me)!hit(r, rec);
-    printf("%c\n", me!type);
+def hittable_list;
+@hit:hittable_list(r: ray, ray_t: interval, rec: hit_record*): bool;
+@bounding_box:hittable_list:aabb;
+
+def bvh_node;
+@hit:bvh_node(r: ray, ray_t: interval, rec: hit_record*): bool;
+@bounding_box:bvh_node:aabb;
+
+@hit:hittable(r: ray, ray_t: interval, rec: hit_record*): bool {
+    if (me!type == 'S') ret ([sphere*]me)!hit(r, ray_t, rec);
+    if (me!type == 'L') ret ([hittable_list*]me)!hit(r, ray_t, rec);
+    if (me!type == 'B') ret ([bvh_node*]me)!hit(r, ray_t, rec);
+    printf("hit:hittable %c\n", me!type);
     ret false;
+}
+
+@bounding_box:hittable:aabb {
+    if (me!type == 'S') ret ([sphere*]me)!bounding_box();
+    if (me!type == 'L') ret ([hittable_list*]me)!bounding_box();
+    if (me!type == 'B') ret ([bvh_node*]me)!bounding_box();
+    printf("bounding_box:hittable %c\n", me!type);
+    ret aabb();
 }

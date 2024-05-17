@@ -11,7 +11,7 @@ namespace csaw
     {
         static Signature Demangle(const llvm::Function& function);
 
-        std::string Mangle() const;
+        std::string Mangle(bool ignore_c = false) const;
         bool IsConstructor() const;
 
         std::string Name;

@@ -285,6 +285,12 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         return std::make_shared<DereferenceExpression>(m_Filename, line, value);
     }
 
+    if (NextIfAt("$"))
+    {
+        const auto type = ParseType();
+        return std::make_shared<SizeOfExpression>(m_Filename, line, type);
+    }
+
     const auto token = Get();
     CSAW_MESSAGE_(false, m_Filename, line, "unhandled token '" + token.Value + "' type " + ToString(token.Type));
 }
