@@ -1,25 +1,24 @@
 #include <istream>
+#include <csaw/CSaw.hpp>
 #include <csaw/lang/Parser.hpp>
-
-#include "csaw/CSaw.hpp"
 
 csaw::Token& csaw::Parser::Next()
 {
-    auto c = m_Stream.get();
+    auto c = m_Data.Stream.get();
 
     while (c != EOF && c <= 0x20)
     {
         if (c == '\n')
             m_Line++;
-        c = m_Stream.get();
+        c = m_Data.Stream.get();
     }
 
     if (c == EOF)
-        return m_Token = Token(m_Line);
+        return m_Token = {TK_EOF, {}, m_Line};
 
     if (c == '#')
     {
-        c = m_Stream.get();
+        c = m_Data.Stream.get();
         char delim;
         if (c == '#')
             delim = '\n';
@@ -30,7 +29,7 @@ csaw::Token& csaw::Parser::Next()
         {
             if (c == '\n')
                 m_Line++;
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
         }
 
         if (c == '\n')
@@ -41,57 +40,57 @@ csaw::Token& csaw::Parser::Next()
 
     if (c == '\\')
     {
-        c = m_Stream.get();
+        c = m_Data.Stream.get();
 
         std::string value;
         do
         {
             value += static_cast<char>(c);
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
         }
         while (isalnum(c) || c == '_');
-        m_Stream.putback(static_cast<char>(c));
+        m_Data.Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(TK_COMPILE_DIRECTIVE, value, m_Line);
+        return m_Token = {TK_COMPILE_DIRECTIVE, value, m_Line};
     }
 
     if (c == '"')
     {
         std::string value;
 
-        c = m_Stream.get();
+        c = m_Data.Stream.get();
         while (c != EOF && c != '"')
         {
             if (c == '\\')
                 c = Escape();
 
             value += static_cast<char>(c);
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
         }
 
-        return m_Token = Token(TK_STRING, value, m_Line);
+        return m_Token = {TK_STRING, value, m_Line};
     }
 
     if (c == '\'')
     {
         std::string value;
 
-        c = m_Stream.get();
+        c = m_Data.Stream.get();
         while (c != EOF && c != '\'')
         {
             if (c == '\\')
                 c = Escape();
 
             value += static_cast<char>(c);
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
         }
 
-        return m_Token = Token(TK_CHAR, value, m_Line);
+        return m_Token = {TK_CHAR, value, m_Line};
     }
 
     if (c == '0')
     {
-        const int p = m_Stream.get();
+        const int p = m_Data.Stream.get();
 
         int mode = 0;
         if (p == 'x' || p == 'X')
@@ -101,64 +100,64 @@ csaw::Token& csaw::Parser::Next()
         else if (isdigit(p))
         {
             mode = 3;
-            m_Stream.putback(static_cast<char>(p));
+            m_Data.Stream.putback(static_cast<char>(p));
         }
-        else m_Stream.putback(static_cast<char>(p));
+        else m_Data.Stream.putback(static_cast<char>(p));
 
         if (mode)
         {
             std::string value;
 
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
             do
             {
                 value += static_cast<char>(c);
-                c = m_Stream.get();
+                c = m_Data.Stream.get();
             }
             while (isxdigit(c));
-            m_Stream.putback(static_cast<char>(c));
+            m_Data.Stream.putback(static_cast<char>(c));
 
-            return m_Token = Token(mode == 1 ? TK_INT_HEX : mode == 2 ? TK_INT_BIN : TK_INT_OCT, value, m_Line);
+            return m_Token = {mode == 1 ? TK_INT_HEX : mode == 2 ? TK_INT_BIN : TK_INT_OCT, value, m_Line};
         }
     }
 
     if (isdigit(c))
     {
         std::string value;
-        bool period = false;
+        bool flt = false;
 
         do
         {
             value += static_cast<char>(c);
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
 
             if (c == '.')
             {
-                if (period)
-                    CSAW_MESSAGE_(false, m_Filename, m_Line, "a floating point number can only have one period");
+                if (flt)
+                    CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Already a floating point number");
 
-                period = true;
+                flt = true;
                 value += static_cast<char>(c);
-                c = m_Stream.get();
+                c = m_Data.Stream.get();
             }
 
             if (c == 'e' || c == 'E')
             {
-                if (period)
-                    CSAW_MESSAGE_(false, m_Filename, m_Line, "a floating point number can only have one period");
+                if (flt)
+                    CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Already a floating point number");
 
-                period = true;
+                flt = true;
                 value += static_cast<char>(c);
-                c = m_Stream.get();
+                c = m_Data.Stream.get();
                 if (c == '-')
                     value += static_cast<char>(c);
-                c = m_Stream.get();
+                c = m_Data.Stream.get();
             }
         }
         while (isdigit(c));
-        m_Stream.putback(static_cast<char>(c));
+        m_Data.Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(period ? TK_FLOAT : TK_INT_DEC, value, m_Line);
+        return m_Token = {flt ? TK_FLOAT : TK_INT_DEC, value, m_Line};
     }
 
     if (isalpha(c) || c == '_')
@@ -168,13 +167,13 @@ csaw::Token& csaw::Parser::Next()
         do
         {
             value += static_cast<char>(c);
-            c = m_Stream.get();
+            c = m_Data.Stream.get();
         }
         while (isalnum(c) || c == '_');
-        m_Stream.putback(static_cast<char>(c));
+        m_Data.Stream.putback(static_cast<char>(c));
 
-        return m_Token = Token(TK_IDENTIFIER, value, m_Line);
+        return m_Token = {TK_IDENTIFIER, value, m_Line};
     }
 
-    return m_Token = Token(TK_OPERATOR, c, m_Line);
+    return m_Token = {TK_OPERATOR, std::string(1, static_cast<char>(c)), m_Line};
 }

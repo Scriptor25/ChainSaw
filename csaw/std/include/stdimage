@@ -1,0 +1,14 @@
+## STDIMG ##
+
+def image {
+    width: int32,
+    height: int32,
+    buffer: int32*
+}
+
+@image(width: int32, height: int32);
+
+@pixel:image(x: int32, y: int32, color: int32): void;
+@pixels:image(pixels: int32*, offset: int32, stride: int32, x: int32, y: int32, width: int32, height: int32): void;
+@toppm:image(filename: int8*): void;
+@destroy:image:void;

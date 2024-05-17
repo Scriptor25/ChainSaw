@@ -1,7 +1,7 @@
 ## INCLUDES
-\inc "std/stdio.csaw"
-\inc "std/stdlib.csaw"
-\inc "std/stdbool.csaw"
+\inc "stdbool"
+\inc "stdio"
+\inc "stdlib"
 
 ## RANDOM
 @random::flt64 = rand() / (RAND_MAX + 1.0);

@@ -1,12 +1,13 @@
-def sphere {
-    type: int8,
-    center1: point3,
-    radius: flt64,
-    mat: material*,
-    is_moving: bool,
-    center_vec: vec3,
-    bbox: aabb
-}
+\inc "math"
+\inc "stdbool"
+
+\inc "aabb"
+\inc "hittable"
+\inc "interval"
+\inc "material"
+\inc "ray"
+\inc "sphere"
+\inc "vec3"
 
 @sphere(center: point3, radius: flt64, mat: material*) {
     me!type = 'S';

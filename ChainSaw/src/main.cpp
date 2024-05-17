@@ -1,138 +1,204 @@
-﻿#include <filesystem>
-#include <fstream>
+﻿#include <fstream>
 #include <iostream>
-#include <map>
+#include <string>
+#include <vector>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/lang/Parser.hpp>
 
-int main(int argc, const char** argv)
+static const std::string EXE_NAME = "csaw";
+static const std::string DESC_SHORT = "ChainSaw CLI";
+static const std::string VERSION_STR = "1.0";
+
+static int exit_cli(const bool pause_on_exit, const int code)
 {
-    std::string exec = argv[0];
-    std::map<std::string, std::string> options;
-    std::vector<std::string> flags;
-    std::string file;
-    bool to_args = false;
-    std::vector<const char*> args;
-
-    for (int i = 1; i < argc; ++i)
-    {
-        if (to_args)
-        {
-            args.push_back(argv[i]);
-            continue;
-        }
-
-        std::string arg = argv[i];
-        if (arg == "--")
-        {
-            if (file.empty())
-            {
-                std::cerr
-                        << "Failed to parse args because program args are entered before a file name is set. Use '"
-                        << exec
-                        << " --help' for more information."
-                        << std::endl;
-                return 1;
-            }
-
-            to_args = true;
-            continue;
-        }
-
-        if (arg.find_first_of("--") == 0)
-        {
-            const auto opt = arg.substr(2);
-            if (const auto pos = opt.find_first_of('='); pos != std::string::npos)
-                options[opt.substr(0, pos)] = opt.substr(pos + 1);
-            else flags.push_back(opt);
-
-            continue;
-        }
-
-        if (!file.empty())
-        {
-            std::cerr
-                    << "Failed to parse args because file name already is set. Use '"
-                    << exec
-                    << " --help' for more information."
-                    << std::endl;
-            return 1;
-        }
-
-        file = arg;
-    }
-
-    if (std::ranges::find(flags, "help") != flags.end())
-    {
-        std::cout
-                << "Usage: " << exec << " [<flag|option>...] <file> [-- ...]" << std::endl
-                << "Flags:" << std::endl
-                << "\t--help: show this text" << std::endl
-                << "Options:" << std::endl
-                << "\t--include=<path>...: set include paths as comma seperated list" << std::endl
-                << "File: filename" << std::endl
-                << "Everything after '--' after setting the filename is used as additional args for the compiled program" << std::endl;
-        return 0;
-    }
-
-    if (file.empty())
-    {
-        std::cerr << "No input file. Use '" << exec << " --help' for more information." << std::endl;
-        return 1;
-    }
-
-    std::filesystem::path filepath(file);
-    std::ifstream stream(filepath);
-    if (!stream.is_open())
-    {
-        std::cerr << "Failed to open stream from '" << filepath << "'" << std::endl;
-        return 1;
-    }
-
-    std::vector<std::string> includePaths;
-    includePaths.push_back(std::filesystem::absolute(exec).parent_path().string());
-    includePaths.push_back(absolute(filepath).parent_path().string());
-    auto include = options["include"];
-    while (!include.empty())
-    {
-        const auto pos = include.find_first_of(',');
-        if (pos == std::string::npos)
-            break;
-
-        includePaths.push_back(include.substr(0, pos));
-        include = include.substr(pos + 1);
-    }
-    if (!include.empty())
-        includePaths.push_back(include);
-
-    csaw::Builder builder(filepath.filename().string());
-    csaw::Parser::Parse(file, stream, [&builder](const csaw::StatementPtr& ptr)
-    {
-        // std::cout << ptr << std::endl;
-        builder.Gen(ptr);
-    }, includePaths);
-    stream.close();
-    builder.Build();
-
-    std::error_code err;
-    auto outstream = llvm::raw_fd_ostream("output.ll", err);
-    if (err)
-    {
-        std::cerr << err.message() << std::endl;
-        return 1;
-    }
-
-    builder.GetModule().print(outstream, nullptr);
-
-    args.insert(args.begin(), file.c_str());
-    const auto code = builder.Main(static_cast<int>(args.size()), args.data());
-    std::cout << "Exit Code " << code << std::endl;
-
-    if (std::ranges::find(flags, "hold") != flags.end())
+    if (pause_on_exit)
     {
         std::cout << "Press enter to exit" << std::endl;
         std::cin.get();
     }
 
+    return code;
+}
+
+static int help()
+{
+    std::cout << EXE_NAME << " - " << DESC_SHORT << " [version " << VERSION_STR << "]" << std::endl;
+    std::cout << std::endl;
+    std::cout << "USAGE" << std::endl;
+    std::cout << '\t' << EXE_NAME << " [options] file... [-- jit args]" << std::endl;
+    std::cout << std::endl;
+    std::cout << "OPTIONS" << std::endl;
+    std::cout << '\t' << "-c, --code:            emit the parsed code to the standard output" << std::endl;
+    std::cout << '\t' << "-e, --entry:           specify the jit entry function name; defaults to main" << std::endl;
+    std::cout << '\t' << "-h, --help:            show this help message" << std::endl;
+    std::cout << '\t' << "-i, --include:         add a directory to the include search paths" << std::endl;
+    std::cout << '\t' << "-j, --jit, -r, --run:  run the compiled program through a jit using the provided program args" << std::endl;
+    std::cout << '\t' << "-o, --output:          specify the output file; no output file by default" << std::endl;
+    std::cout << '\t' << "-p, --pause:           wait for enter after execution" << std::endl;
+    std::cout << '\t' << "-q, --quiet:           do not output any compiler messages like errors and warnings (TODO)" << std::endl;
+    std::cout << '\t' << "-s, --skip:            skip code generation, only parse files" << std::endl;
+    std::cout << '\t' << "-t, --type:            specify the output file type; requires an output file to be set" << std::endl;
+    std::cout << '\t' << "-v, --version, --info: show the program version info" << std::endl;
+    std::cout << std::endl;
+    std::cout << "To ship a value with an option, e.g for '-o', you just append the value, e.g '-ofilename.ext'. For '--output', use '--output=filename.ext'." << std::endl;
+    std::cout << std::endl;
+
     return 0;
+}
+
+static void version()
+{
+    std::cout << EXE_NAME << " - " << DESC_SHORT << " [version " << VERSION_STR << "]" << std::endl;
+}
+
+static bool eat_flag(std::vector<std::string>& args, const std::vector<std::string>& flags)
+{
+    for (const auto& flag : flags)
+        if (auto pos = std::ranges::find(args, flag); pos != args.end())
+        {
+            args.erase(pos);
+            return true;
+        }
+    return false;
+}
+
+static bool eat_option(std::vector<std::string>& args, const std::vector<std::string>& flags, std::string& option)
+{
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        const auto& arg = args[i];
+        for (const auto& flag : flags)
+        {
+            if (arg.starts_with(flag))
+            {
+                option = arg.substr(flag.length());
+                args.erase(args.begin() + i);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int main(const int argc, const char** argv)
+{
+    std::string executable = argv[0];
+
+    bool emit_code;
+    bool run_jit;
+    bool pause_on_exit;
+    bool quiet;
+    bool skip_codegen;
+
+    std::vector<std::string> include_paths;
+    std::string output_file;
+    std::string output_file_type;
+    std::string entry = "main";
+
+    std::vector<std::string> files;
+    std::vector<const char*> jit_args;
+
+    std::vector<std::string> args;
+    size_t i;
+    for (i = 1; i < argc; ++i)
+    {
+        std::string arg = argv[i];
+        if (arg == "--")
+        {
+            ++i;
+            break;
+        }
+        args.emplace_back(arg);
+    }
+    for (; i < argc; ++i)
+        jit_args.push_back(argv[i]);
+
+    if (args.empty() || eat_flag(args, {"-h", "--help"}))
+        return help();
+
+    emit_code = eat_flag(args, {"-c", "--code"});
+    eat_option(args, {"-e", "--entry="}, entry);
+    for (std::string name; eat_option(args, {"-i", "--include="}, name);) include_paths.push_back(name);
+    run_jit = eat_flag(args, {"-j", "--jit", "-r", "--run"});
+    eat_option(args, {"-o", "--output="}, output_file);
+    pause_on_exit = eat_flag(args, {"-p", "--pause"});
+    quiet = eat_flag(args, {"-q", "--quiet"});
+    skip_codegen = eat_flag(args, {"-s", "--skip"});
+    eat_option(args, {"-t", "--type="}, output_file_type);
+    if (eat_flag(args, {"-v", "--version", "--info"})) version();
+
+    for (const auto& arg : args)
+        files.push_back(arg);
+    args.clear();
+
+    if (output_file.empty() && !output_file_type.empty())
+    {
+        std::cout << "Cannot use '--type' without providing an output file via '--output'. See help for more information." << std::endl;
+        return exit_cli(pause_on_exit, -1);
+    }
+
+    if (files.empty())
+    {
+        std::cout << "Please provide at least one file to compile. See help for more information." << std::endl;
+        return exit_cli(pause_on_exit, -1);
+    }
+
+    if (skip_codegen && run_jit)
+    {
+        std::cout << "Option '--skip' is not compatible with '--jit'. See help for more information." << std::endl;
+        return exit_cli(pause_on_exit, -1);
+    }
+
+    csaw::Builder* builder = nullptr;
+    if (!skip_codegen)
+    {
+        builder = csaw::Builder::Create();
+        if (!builder)
+            return exit_cli(pause_on_exit, -1);
+    }
+
+    auto callback = [emit_code, builder](const csaw::StatementPtr& ptr)
+    {
+        if (emit_code) std::cout << ptr << std::endl;
+        if (builder) builder->Gen(ptr);
+    };
+
+    for (const auto& file : files)
+    {
+        std::ifstream stream(file);
+        if (!stream)
+        {
+            std::cout << "Failed to open file '" << file << "'" << std::endl;
+            continue;
+        }
+
+        auto name = std::filesystem::path(file).filename().string();
+        name = name.substr(0, name.find_last_of('.'));
+        if (builder && builder->BeginModule(name, file))
+        {
+            std::cout << "Failed to begin new module '" << name << "'" << std::endl;
+            continue;
+        }
+
+        std::vector<std::filesystem::path> processed;
+        csaw::ParseData data(file, stream, callback, include_paths, processed);
+        csaw::Parser::Parse(data);
+
+        if (builder && builder->EndModule())
+        {
+            std::cout << "Failed to end module '" << name << "'" << std::endl;
+            continue;
+        }
+    }
+
+    if (builder && run_jit)
+    {
+        jit_args.insert(jit_args.begin(), executable.c_str());
+        auto code = builder->RunJIT(entry, static_cast<int>(jit_args.size()), jit_args.data());
+        std::cout << "Exit Code " << code << std::endl;
+        return exit_cli(pause_on_exit, code);
+    }
+
+    return exit_cli(pause_on_exit, 0);
 }

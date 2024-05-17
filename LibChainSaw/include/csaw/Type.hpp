@@ -95,14 +95,14 @@ namespace csaw
 
     struct FunctionType : Type
     {
-        static FunctionTypePtr Get(const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+        static FunctionTypePtr Get(const TypePtr& result, const std::vector<TypePtr>& args, bool is_vararg);
 
-        FunctionType(const std::string& name, const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+        FunctionType(const std::string& name, const TypePtr& result, const std::vector<TypePtr>& args, bool is_vararg);
 
         bool IsFunction() const override;
 
+        TypePtr Result;
         std::vector<TypePtr> Args;
         bool IsVararg;
-        TypePtr Result;
     };
 }

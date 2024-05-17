@@ -27,10 +27,8 @@ csaw::CharExpression::CharExpression(const std::string& filename, const size_t l
 }
 
 csaw::CharExpression::CharExpression(const std::string& filename, const size_t line, const std::string& value)
-    : Expression(filename, line)
+    : Expression(filename, line), Value(value[0])
 {
-    // TODO: multichar for unicode etc.
-    Value = value[0];
 }
 
 csaw::DereferenceExpression::DereferenceExpression(const std::string& filename, const size_t line, const ExpressionPtr& value)

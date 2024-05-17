@@ -19,27 +19,31 @@ namespace csaw
     class Builder
     {
     public:
-        explicit Builder(const std::string& moduleName);
+        static Builder* Create();
+        static TypePtr FromLLVM(const llvm::Type* type);
 
         llvm::LLVMContext& GetContext() const;
         llvm::IRBuilder<>& GetBuilder() const;
         llvm::Module& GetModule() const;
 
-        void Build() const;
-        int Main(int argc, const char** argv);
+        int BeginModule(const std::string& name, const std::string& source_file);
+        int EndModule();
+        int RunJIT(const std::string& entry_name, int argc, const char** argv) const;
 
-        llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* arraySize = nullptr) const;
+        llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* array_size = nullptr) const;
 
         void Gen(const StatementPtr& ptr);
         llvm::Type* Gen(const TypePtr& type) const;
 
-        static TypePtr FromLLVM(const llvm::Type* type);
-
     private:
-        RValuePtr Cast(const ValuePtr& value, const TypePtr& type) const;
-        std::pair<RValuePtr, RValuePtr> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
+        Builder();
 
         std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, bool testing = true) const;
+        void PushScopeStack();
+        void PopScopeStack();
+
+        RValuePtr Cast(const ValuePtr& value, const TypePtr& type) const;
+        std::pair<RValuePtr, RValuePtr> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
 
         void Gen(const ScopeStatement& statement);
         void Gen(const ForStatement& statement);
@@ -92,12 +96,14 @@ namespace csaw
         RValuePtr GenInc(const RValuePtr& value) const;
         RValuePtr GenDec(const RValuePtr& value) const;
 
-        llvm::ExitOnError m_Error;
         std::unique_ptr<llvm::orc::LLJIT> m_JIT;
 
         std::unique_ptr<llvm::LLVMContext> m_Context;
         std::unique_ptr<llvm::IRBuilder<>> m_Builder;
+
+        std::vector<std::string> m_ModuleNames;
         std::unique_ptr<llvm::Module> m_Module;
+        llvm::Function* m_GlobalParent = nullptr;
 
         std::unique_ptr<llvm::FunctionPassManager> m_FPM;
         std::unique_ptr<llvm::LoopAnalysisManager> m_LAM;
@@ -107,9 +113,7 @@ namespace csaw
         std::unique_ptr<llvm::PassInstrumentationCallbacks> m_PIC;
         std::unique_ptr<llvm::StandardInstrumentations> m_SI;
 
-        std::map<std::string, LValuePtr> m_GlobalValues;
+        std::vector<std::map<std::string, LValuePtr>> m_ScopeStack;
         std::map<std::string, LValuePtr> m_Values;
-
-        llvm::Function* m_GlobalParent;
     };
 }

@@ -1,7 +1,7 @@
-def interval {
-    min: flt64,
-    max: flt64
-}
+\inc "stdbool"
+
+\inc "common"
+\inc "interval"
 
 @interval(a: interval, b: interval) {
     me!min = a.min <= b.min ? a.min : b.min;

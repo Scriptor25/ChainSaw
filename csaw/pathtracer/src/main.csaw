@@ -1,4 +1,15 @@
-\inc "defines.csaw"
+\inc "stdio"
+\inc "stdlib"
+\inc "stdvector"
+
+\inc "bvh"
+\inc "camera"
+\inc "common"
+\inc "hittable"
+\inc "hittable_list"
+\inc "material"
+\inc "sphere"
+\inc "vec3"
 
 @simple(filename: int8*): void {
     world: hittable_list;
@@ -21,23 +32,21 @@
     world.add([hittable*]&s4);
     world.add([hittable*]&s5);
 
-    bvh: bvh_node = bvh_node(world);
-
     cam: camera;
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 400;
+    cam.aspect_ratio      = 16.0 / 9.0;
+    cam.image_width       = 400;
     cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
+    cam.max_depth         = 50;
 
-    cam.vfov = 20;
+    cam.vfov     = 20;
     cam.lookfrom = vec3(-2, 2, 1);
-    cam.lookat = vec3(0, 0, -1);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookat   = vec3(0, 0, -1);
+    cam.vup      = vec3(0, 1, 0);
 
     cam.defocus_angle = 10;
-    cam.focus_dist = 3.4;
+    cam.focus_dist    = 3.4;
 
-    cam.render(filename, [hittable*]&bvh);
+    cam.render(filename, [hittable*]&world);
 
     world.destroy();
 }
@@ -53,13 +62,13 @@
 
             dc: vec3 = center - vec3(4, 0.2, 0);
             if (dc.length() > 0.9) {
-                sp: sphere* = malloc($sphere);
+                sp: sphere* = malloc($(sphere));
                 mp: material*;
 
                 if (choose_mat < 0.8) {
                     ## diffuse
                     albedo: color = random_vec3() * random_vec3();
-                    mp = malloc($lambertian);
+                    mp = malloc($(lambertian));
                     *[lambertian*]mp = lambertian(albedo);
                     center2: point3 = center + vec3(0, random(0, 0.5), 0);
                     *sp = sphere(center, center2, 0.2, mp);
@@ -67,12 +76,12 @@
                     ## metal
                     albedo: color = random_vec3(0.5, 1.0);
                     fuzz: flt64 = random(0.0, 0.5);
-                    mp = malloc($metal);
+                    mp = malloc($(metal));
                     *[metal*]mp = metal(albedo, fuzz);
                     *sp = sphere(center, 0.2, mp);
                 } else {
                     ## glass
-                    mp = malloc($dielectric);
+                    mp = malloc($(dielectric));
                     *[dielectric*]mp = dielectric(1.5);
                     *sp = sphere(center, 0.2, mp);
                 }
@@ -85,25 +94,23 @@
     }
 
     ground_material: lambertian = lambertian(vec3(0.5, 0.5, 0.5));
+    material1: dielectric       = dielectric(1.5);
+    material2: lambertian       = lambertian(vec3(0.4, 0.2, 0.1));
+    material3: metal            = metal(vec3(0.7, 0.6, 0.5), 0);
+
     s1: sphere = sphere(vec3(0, -1000, 0), 1000, [material*]&ground_material);
+    s2: sphere = sphere(    vec3(0, 1, 0),    1, [material*]&material1);
+    s3: sphere = sphere(   vec3(-4, 1, 0),    1, [material*]&material2);
+    s4: sphere = sphere(    vec3(4, 1, 0),    1, [material*]&material3);
+
     world.add([hittable*]&s1);
-
-    material1: dielectric = dielectric(1.5);
-    s2: sphere = sphere(vec3(0, 1, 0), 1, [material*]&material1);
     world.add([hittable*]&s2);
-
-    material2: lambertian = lambertian(vec3(0.4, 0.2, 0.1));
-    s3: sphere = sphere(vec3(-4, 1, 0), 1, [material*]&material2);
     world.add([hittable*]&s3);
-
-    material3: metal = metal(vec3(0.7, 0.6, 0.5), 0);
-    s4: sphere = sphere(vec3(4, 1, 0), 1, [material*]&material3);
     world.add([hittable*]&s4);
 
     bvh: bvh_node = bvh_node(world);
 
     cam: camera;
-
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
     cam.samples_per_pixel = 500;
@@ -129,8 +136,6 @@
     pointers.destroy();
 }
 
-@[c]cmp_int32(a: void*, b: void*): int32 = *[int32*]a - *[int32*]b;
-
 ## MAIN
 @main(argc: int32, argv: int8**): int32 {
 
@@ -140,7 +145,6 @@
     if (argc != 2)
         ret 1;
 
-    final(argv[1]);
-
+    simple(argv[1]);
     ret 0;
 }

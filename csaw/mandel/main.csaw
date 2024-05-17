@@ -1,7 +1,7 @@
-\inc "std/stdio.csaw"
-\inc "std/stdlib.csaw"
-\inc "std/stdimg.csaw"
-\inc "std/math.csaw"
+\inc "math"
+\inc "stdimage"
+\inc "stdio"
+\inc "stdlib"
 
 \inc "complex.csaw"
 

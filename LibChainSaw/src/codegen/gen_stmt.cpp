@@ -7,6 +7,12 @@
 #include <csaw/lang/Stmt.hpp>
 #include <llvm/IR/Verifier.h>
 
+static bool error(const csaw::ChainSawMessage& message, const csaw::StatementPtr& ptr)
+{
+    std::cerr << (message.Filename.empty() ? (ptr ? ptr->Filename : "<none>") : message.Filename) << "(" << (message.Line == 0 ? (ptr ? ptr->Line : 0) : message.Line) << "): " << message.Message << std::endl;
+    return !message.CanRecover;
+}
+
 void csaw::Builder::Gen(const StatementPtr& ptr)
 {
     try
@@ -39,19 +45,19 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
 
         CSAW_MESSAGE_STMT(true, *ptr, "code generation for statement is not implemented");
     }
-    catch (const ChainSawMessage& error)
+    catch (const ChainSawMessage& message)
     {
-        const auto file = error.SourceFile.empty() ? (ptr ? ptr->Filename : "<none>") : error.SourceFile;
-        const auto line = error.SourceLine == 0 ? (ptr ? ptr->Line : 0) : error.SourceLine;
-        std::cerr << file << "(" << line << "): " << error.Message << std::endl;
-        if (!error.CanRecover) throw;
+        if (error(message, ptr))
+            return;
     }
 }
 
 void csaw::Builder::Gen(const ScopeStatement& statement)
 {
+    PushScopeStack();
     for (const auto& ptr : statement.Body)
         Gen(ptr);
+    PopScopeStack();
 }
 
 void csaw::Builder::Gen(const ForStatement& statement)
@@ -91,7 +97,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     {
         signature.Result = statement.Result;
         signature.IsVarargs = statement.IsVarArgs;
-        signature.IsC = statement.Name == "main" || std::ranges::find(statement.Mods, "c") != statement.Mods.end();
+        signature.IsC = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
 
         const auto result_type = signature.IsConstructor() ? Gen(Type::GetVoid()) : Gen(statement.Result);
         const auto function_type = llvm::FunctionType::get(result_type, arg_types, statement.IsVarArgs);
@@ -107,8 +113,8 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", function);
     const auto backup_block = m_Builder->GetInsertBlock();
     m_Builder->SetInsertPoint(entry_block);
+    PushScopeStack();
 
-    m_Values.clear();
     int i = has_ptr ? -1 : 0;
     for (auto& arg : function->args())
     {
@@ -154,6 +160,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         m_Builder->CreateRetVoid();
     }
 
+    PopScopeStack();
     m_Builder->SetInsertPoint(backup_block);
 
     if (verifyFunction(*function, &llvm::errs()))
@@ -266,7 +273,7 @@ void csaw::Builder::Gen(const VariableStatement& statement)
     if (initializer)
         initializer = Cast(initializer, statement.Type);
 
-    if (m_Builder->GetInsertBlock() == &m_GlobalParent->getEntryBlock())
+    if (m_ScopeStack.empty())
     {
         llvm::Constant* global_initializer = nullptr;
         if (initializer)
@@ -282,7 +289,7 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         if (!is_initialized && initializer)
             ref->StoreValue(initializer->GetValue());
 
-        m_GlobalValues[statement.Name] = ref;
+        m_Values[statement.Name] = ref;
         return;
     }
 

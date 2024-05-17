@@ -14,26 +14,6 @@ namespace csaw
     struct VariableStatement;
     struct WhileStatement;
 
-    typedef std::shared_ptr<Statement> StatementPtr;
-    typedef std::shared_ptr<ScopeStatement> ScopeStatementPtr;
-    typedef std::shared_ptr<ForStatement> ForStatementPtr;
-    typedef std::shared_ptr<FunctionStatement> FunctionStatementPtr;
-    typedef std::shared_ptr<IfStatement> IfStatementPtr;
-    typedef std::shared_ptr<RetStatement> RetStatementPtr;
-    typedef std::shared_ptr<DefStatement> DefStatementPtr;
-    typedef std::shared_ptr<VariableStatement> VariableStatementPtr;
-    typedef std::shared_ptr<WhileStatement> WhileStatementPtr;
-
-    std::ostream& operator<<(std::ostream& out, const StatementPtr& ptr);
-    std::ostream& operator<<(std::ostream& out, const ScopeStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const ForStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const FunctionStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const IfStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const RetStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const DefStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const VariableStatement& statement);
-    std::ostream& operator<<(std::ostream& out, const WhileStatement& statement);
-
     struct Expression;
     struct BinaryExpression;
     struct CallExpression;
@@ -52,22 +32,27 @@ namespace csaw
     struct UnaryExpression;
     struct VarArgExpression;
 
+    typedef std::shared_ptr<Statement> StatementPtr;
+    typedef std::shared_ptr<ScopeStatement> ScopeStatementPtr;
+    typedef std::shared_ptr<ForStatement> ForStatementPtr;
+    typedef std::shared_ptr<FunctionStatement> FunctionStatementPtr;
+    typedef std::shared_ptr<IfStatement> IfStatementPtr;
+    typedef std::shared_ptr<RetStatement> RetStatementPtr;
+    typedef std::shared_ptr<DefStatement> DefStatementPtr;
+    typedef std::shared_ptr<VariableStatement> VariableStatementPtr;
+    typedef std::shared_ptr<WhileStatement> WhileStatementPtr;
+
     typedef std::shared_ptr<Expression> ExpressionPtr;
-    typedef std::shared_ptr<BinaryExpression> BinaryExpressionPtr;
-    typedef std::shared_ptr<CallExpression> CallExpressionPtr;
-    typedef std::shared_ptr<CastExpression> CastExpressionPtr;
-    typedef std::shared_ptr<CharExpression> CharExpressionPtr;
-    typedef std::shared_ptr<DereferenceExpression> DereferenceExpressionPtr;
-    typedef std::shared_ptr<FloatExpression> FloatExpressionPtr;
-    typedef std::shared_ptr<IdentifierExpression> IdentifierExpressionPtr;
-    typedef std::shared_ptr<IndexExpression> IndexExpressionPtr;
-    typedef std::shared_ptr<MemberExpression> MemberExpressionPtr;
-    typedef std::shared_ptr<ReferenceExpression> ReferenceExpressionPtr;
-    typedef std::shared_ptr<SelectExpression> SelectExpressionPtr;
-    typedef std::shared_ptr<SizeOfExpression> SizeOfExpressionPtr;
-    typedef std::shared_ptr<StringExpression> StringExpressionPtr;
-    typedef std::shared_ptr<UnaryExpression> UnaryExpressionPtr;
-    typedef std::shared_ptr<VarArgExpression> VarArgExpressionPtr;
+
+    std::ostream& operator<<(std::ostream& out, const StatementPtr& ptr);
+    std::ostream& operator<<(std::ostream& out, const ScopeStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const ForStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const FunctionStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const IfStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const RetStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const DefStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const VariableStatement& statement);
+    std::ostream& operator<<(std::ostream& out, const WhileStatement& statement);
 
     std::ostream& operator<<(std::ostream& out, const ExpressionPtr& ptr);
     std::ostream& operator<<(std::ostream& out, const BinaryExpression& expression);

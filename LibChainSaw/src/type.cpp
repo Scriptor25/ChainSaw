@@ -228,24 +228,24 @@ std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& na
     return {-1, {}};
 }
 
-csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
+csaw::FunctionTypePtr csaw::FunctionType::Get(const TypePtr& result, const std::vector<TypePtr>& args, const bool is_vararg)
 {
-    std::string name = "(";
+    std::string name = '%' + result->Name + '(';
     for (size_t i = 0; i < args.size(); ++i)
     {
         if (i > 0) name += ", ";
         name += args[i]->Name;
     }
-    name += ')' + result->Name;
+    name += ')';
 
     auto& type = Types[name];
     if (!type)
-        type = std::make_shared<FunctionType>(name, args, is_vararg, result);
+        type = std::make_shared<FunctionType>(name, result, args, is_vararg);
     return std::dynamic_pointer_cast<FunctionType>(type);
 }
 
-csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
-    : Type(name, false, 0), Args(args), IsVararg(is_vararg), Result(result)
+csaw::FunctionType::FunctionType(const std::string& name, const TypePtr& result, const std::vector<TypePtr>& args, const bool is_vararg)
+    : Type(name, false, 0), Result(result), Args(args), IsVararg(is_vararg)
 {
 }
 

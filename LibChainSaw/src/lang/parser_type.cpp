@@ -2,10 +2,14 @@
 
 csaw::TypePtr csaw::Parser::ParseType()
 {
-    if (NextIfAt("("))
+    if (NextIfAt("%"))
     {
+        const auto result = ParseType();
+
         std::vector<TypePtr> args;
         bool is_vararg = false;
+
+        Expect("(");
         while (!At(")") && !AtEOF())
         {
             if (NextIfAt("?"))
@@ -19,15 +23,7 @@ csaw::TypePtr csaw::Parser::ParseType()
         }
         Expect(")");
 
-        const auto result = ParseType();
-        return ParseType(FunctionType::Get(args, is_vararg, result));
-    }
-
-    if (NextIfAt("["))
-    {
-        const auto base = ParseType();
-        Expect("]");
-        return ParseType(base);
+        return ParseType(FunctionType::Get(result, args, is_vararg));
     }
 
     const auto name = Expect(TK_IDENTIFIER).Value;

@@ -1,12 +1,14 @@
-def material;
+\inc "stdbool"
+\inc "stdio"
 
-def hit_record {
-    p: point3,
-    normal: vec3,
-    mat: material*,
-    t: flt64,
-    front_face: bool
-}
+\inc "aabb"
+\inc "bvh"
+\inc "hittable"
+\inc "hittable_list"
+\inc "interval"
+\inc "ray"
+\inc "sphere"
+\inc "vec3"
 
 @set_face_normal:hit_record(r: ray, outward_normal: vec3): void {
     ## Sets the hit record normal vector.
@@ -15,22 +17,6 @@ def hit_record {
     me!front_face = dot(r.direction, outward_normal) < 0;
     me!normal = me!front_face ? outward_normal : -outward_normal;
 }
-
-def hittable {
-    type: int8
-}
-
-def sphere;
-@hit:sphere(r: ray, ray_t: interval, rec: hit_record*): bool;
-@bounding_box:sphere:aabb;
-
-def hittable_list;
-@hit:hittable_list(r: ray, ray_t: interval, rec: hit_record*): bool;
-@bounding_box:hittable_list:aabb;
-
-def bvh_node;
-@hit:bvh_node(r: ray, ray_t: interval, rec: hit_record*): bool;
-@bounding_box:bvh_node:aabb;
 
 @hit:hittable(r: ray, ray_t: interval, rec: hit_record*): bool {
     if (me!type == 'S') ret ([sphere*]me)!hit(r, ray_t, rec);
