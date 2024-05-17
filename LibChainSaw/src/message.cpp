@@ -5,7 +5,7 @@ csaw::ChainSawMessage::ChainSawMessage(const std::string& source_file, const siz
 {
 }
 
-char const* csaw::ChainSawMessage::what() const
+char const* csaw::ChainSawMessage::what() const noexcept
 {
     return Message.c_str();
 }

@@ -222,7 +222,7 @@ std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& na
     {
         const auto& [ename, etype] = Elements[i];
         if (ename == name)
-            return {i, etype};
+            return {static_cast<int>(i), etype};
     }
 
     return {-1, {}};
