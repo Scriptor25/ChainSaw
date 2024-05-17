@@ -1,10 +1,7 @@
-def vec3 {
-    x: flt64,
-    y: flt64,
-    z: flt64
-}
+\inc "math"
 
-def point3 = vec3;
+\inc "common"
+\inc "vec3"
 
 @vec3(x: flt64, y: flt64, z: flt64) {
     me!x = x;

@@ -1,4 +1,7 @@
-def color = vec3;
+\inc "math"
+
+\inc "color"
+\inc "interval"
 
 @linear_to_gamma(linear_component: flt64): flt64 {
     if (linear_component > 0)

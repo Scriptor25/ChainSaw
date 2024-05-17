@@ -1,27 +1,22 @@
-## STDVECTOR ##
-
-def vector {
-    size: int64,
-    reserved: int64,
-    ptr: void**,
-}
+\inc "stdlib"
+\inc "stdvector"
 
 @vector {
     me!size = 0;
     me!reserved = 10;
-    me!ptr = malloc(me!reserved * $void*);
+    me!ptr = malloc($(void*) * me!reserved);
 }
 
 @vector(reserved: int64) {
     me!size = 0;
     me!reserved = reserved;
-    me!ptr = malloc(me!reserved * $void*);
+    me!ptr = malloc($(void*) * me!reserved);
 }
 
 @push_back:vector(ptr: void*): void {
     if (me!size == me!reserved) {
         me!reserved *= 2;
-        me!ptr = realloc(me!ptr, me!reserved * $void*);
+        me!ptr = realloc(me!ptr, $(void*) * me!reserved);
     }
     me!ptr[me!size++] = ptr;
 }
@@ -29,6 +24,6 @@ def vector {
 @at:vector(i: int64): void* = me!ptr[i];
 @"[]":vector(i: int64): void** = &me!ptr[i];
 
-@sort:vector(start: int64, num: int64, comparator: [(void*, void*)int32]*): void = qsort(&me!ptr[start], num, $void*, comparator);
+@sort:vector(start: int64, num: int64, comparator: %int32(void*, void*)*): void = qsort(&me!ptr[start], num, $(void*), comparator);
 
 @destroy:vector:void = free(me!ptr);

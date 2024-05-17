@@ -1,3 +1,14 @@
+\inc "stdbool"
+\inc "stdlib"
+\inc "stdvector"
+
+\inc "aabb"
+\inc "bvh"
+\inc "hittable"
+\inc "hittable_list"
+\inc "interval"
+\inc "ray"
+
 @box_compare(a: hittable*, b: hittable*, axis_index: int32): int32 {
     a_axis_interval: interval = a!bounding_box().axis_interval(axis_index);
     b_axis_interval: interval = b!bounding_box().axis_interval(axis_index);
@@ -8,12 +19,7 @@
 @[c]box_y_compare(a: hittable**, b: hittable**): int32 = box_compare(*a, *b, 1);
 @[c]box_z_compare(a: hittable**, b: hittable**): int32 = box_compare(*a, *b, 2);
 
-def bvh_node {
-    type: int8,
-    left: hittable*,
-    right: hittable*,
-    bbox: aabb
-}
+@bvh_node(list: hittable_list) = *me = bvh_node(list.objects, 0, list.objects.size);
 
 @bvh_node(objects: vector, start: int64, end: int64) {
     me!type = 'B';
@@ -24,9 +30,9 @@ def bvh_node {
 
     axis: int32 = me!bbox.longest_axis();
 
-    comparator: [(void*, void*)int32]* = (axis == 0) ? &box_x_compare
-                                       : (axis == 1) ? &box_y_compare
-                                                     : &box_z_compare;
+    comparator: %int32(void*, void*)* = (axis == 0) ? &box_x_compare
+                                      : (axis == 1) ? &box_y_compare
+                                                    : &box_z_compare;
 
     object_span: int64 = end - start;
 
@@ -39,14 +45,12 @@ def bvh_node {
         objects.sort(start, object_span, comparator);
 
         mid: int64 = start + object_span / 2;
-        me!left = malloc($bvh_node);
+        me!left = malloc($(bvh_node));
         *[bvh_node*]me!left = bvh_node(objects, start, mid);
-        me!right = malloc($bvh_node);
+        me!right = malloc($(bvh_node));
         *[bvh_node*]me!right = bvh_node(objects, mid, end);
     }
 }
-
-@bvh_node(list: hittable_list) = *me = bvh_node(list.objects, 0, list.objects.size);
 
 @hit:bvh_node(r: ray, ray_t: interval, rec: hit_record*): bool {
     if (!me!bbox.hit(r, ray_t))

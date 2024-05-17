@@ -23,7 +23,7 @@ static std::string pop_front(std::vector<std::string>& vec)
 
 csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
 {
-    auto v = split(function.getName().str(), '&');
+    auto v = split(function.getName().str(), '$');
 
     Signature s;
     s.Name = pop_front(v);
@@ -37,7 +37,7 @@ csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
         return s;
     }
 
-    if (v[0][0] == '$')
+    if (v[0][0] == 'C')
     {
         pop_front(v);
         s.Parent = Type::Get(pop_front(v));
@@ -46,7 +46,7 @@ csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
     s.Args.resize(std::stoull(pop_front(v)));
     for (size_t i = 0; i < s.Args.size(); ++i)
         s.Args[i] = Type::Get(pop_front(v));
-    if (!v.empty() && v[0][0] == '?')
+    if (!v.empty() && v[0][0] == 'V')
     {
         pop_front(v);
         s.IsVarargs = true;
@@ -64,12 +64,12 @@ std::string csaw::Signature::Mangle(const bool ignore_c) const
 
     name += Name;
     if (!ignore_c && IsC) return name;
-    if (Parent) name += "&$&" + Parent->Name;
-    name += '&' + std::to_string(Args.size());
+    if (Parent) name += "$C$" + Parent->Name;
+    name += '$' + std::to_string(Args.size());
     for (const auto& arg : Args)
-        name += '&' + arg->Name;
-    if (IsVarargs) name += "&?";
-    if (Result) name += '&' + Result->Name;
+        name += '$' + arg->Name;
+    if (IsVarargs) name += "$V";
+    if (Result) name += '$' + Result->Name;
 
     return name;
 }

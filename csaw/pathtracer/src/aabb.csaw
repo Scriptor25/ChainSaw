@@ -1,8 +1,11 @@
-def aabb {
-    x: interval,
-    y: interval,
-    z: interval
-}
+\inc "stdbool"
+
+\inc "aabb"
+\inc "interval"
+\inc "ray"
+\inc "vec3"
+
+@aabb = *me = aabb(interval(), interval(), interval());
 
 @aabb(x: interval, y: interval, z: interval) {
     me!x = x;
@@ -22,7 +25,7 @@ def aabb {
     me!z = interval(box1.z, box2.z);
 }
 
-@aabb = *me = aabb(interval(), interval(), interval());
+@longest_axis:aabb:int32 = (me!x.size() > me!y.size()) ? ((me!x.size() > me!z.size()) ? 0 : 2) : ((me!y.size() > me!z.size()) ? 1 : 2);
 
 @axis_interval:aabb(n: int32): interval = (n == 0) ? me!x : (n == 1) ? me!y : (n == 2) ? me!z : interval();
 
@@ -51,5 +54,3 @@ def aabb {
 
     ret true;
 }
-
-@longest_axis:aabb:int32 = (me!x.size() > me!y.size()) ? ((me!x.size() > me!z.size()) ? 0 : 2) : ((me!y.size() > me!z.size()) ? 1 : 2);

@@ -1,10 +1,11 @@
-def hittable_list {
-    type: int8,
-    objects: vector,
-    bbox: aabb
-}
+\inc "stdbool"
+\inc "stdvector"
 
-@add:hittable_list(object: hittable*): void;
+\inc "aabb"
+\inc "hittable"
+\inc "hittable_list"
+\inc "interval"
+\inc "ray"
 
 @hittable_list {
     me!type = 'L';

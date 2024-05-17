@@ -1,15 +1,11 @@
-## STDIMG ##
-
-def image {
-    width: int32,
-    height: int32,
-    buffer: int32*
-}
+\inc "stdimage"
+\inc "stdio"
+\inc "stdlib"
 
 @image(width: int32, height: int32) {
     me!width = width;
     me!height = height;
-    me!buffer = malloc([int64]4 * width * height);
+    me!buffer = malloc($(int32) * width * height);
 }
 
 @pixel:image(x: int32, y: int32, color: int32): void = me!buffer[x + y * me!width] = color;
@@ -35,4 +31,4 @@ def image {
     fclose(stream);
 }
 
-@destroy:image:void = free([void*]me!buffer);
+@destroy:image:void = free(me!buffer);

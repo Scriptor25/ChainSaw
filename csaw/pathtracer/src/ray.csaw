@@ -1,8 +1,5 @@
-def ray {
-    origin: point3,
-    direction: vec3,
-    time: flt64
-}
+\inc "ray"
+\inc "vec3"
 
 @ray(origin: point3, direction: vec3, time: flt64) {
     me!origin = origin;

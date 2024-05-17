@@ -6,16 +6,15 @@ namespace csaw
 {
     struct ChainSawMessage : std::exception
     {
-        ChainSawMessage(const std::string& file, size_t line, const std::string& sourceFile, size_t sourceLine, bool canRecover, const std::string& message);
+        ChainSawMessage(const std::string& source_file, size_t source_line, const std::string& file, size_t line, bool can_recover, const std::string& message);
 
-        char const* what() const override;
-
-        std::string File;
-        size_t Line;
+        [[nodiscard]] char const* what() const override;
 
         std::string SourceFile;
         size_t SourceLine;
 
+        std::string Filename;
+        size_t Line;
         bool CanRecover;
         std::string Message;
     };

@@ -1,11 +1,13 @@
-def material {
-    type: int8
-}
+\inc "math"
+\inc "stdbool"
+\inc "stdio"
 
-def lambertian {
-    type: int8,
-    albedo: color
-} ## size: 1 + 3 * 8 = 25
+\inc "color"
+\inc "common"
+\inc "hittable"
+\inc "material"
+\inc "ray"
+\inc "vec3"
 
 @lambertian(albedo: color) {
     me!type = 'L';
@@ -24,12 +26,6 @@ def lambertian {
     ret true;
 }
 
-def metal {
-    type: int8,
-    albedo: color,
-    fuzz: flt64
-} ## size: 1 + 3 * 8 + 8 = 33
-
 @metal(albedo: color, fuzz: flt64) {
     me!type = 'M';
     me!albedo = albedo;
@@ -43,13 +39,6 @@ def metal {
     *attenuation = me!albedo;
     ret dot(scattered!direction, rec.normal) > 0;
 }
-
-def dielectric {
-    type: int8,
-    ## Refractive index in vacuum or air, or the ratio of the material's refractive index over
-    ## the refractive index of the enclosing media
-    refraction_index: flt64
-} ## size: 1 + 8 = 9
 
 @dielectric(refraction_index: flt64) {
     me!type = 'D';

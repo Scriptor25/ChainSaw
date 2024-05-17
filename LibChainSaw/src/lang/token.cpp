@@ -1,26 +1,6 @@
-#include <iostream>
+#include <ostream>
 #include <string>
 #include <csaw/lang/Parser.hpp>
-
-csaw::Token::Token(const TokenType type, const std::string& value, const size_t line)
-    : Type(type), Value(value), Line(line)
-{
-}
-
-csaw::Token::Token(const TokenType type, const int value, const size_t line)
-    : Token(type, std::string(1, static_cast<char>(value)), line)
-{
-}
-
-csaw::Token::Token(const size_t line)
-    : Token(TK_EOF, std::string(), line)
-{
-}
-
-csaw::Token::Token()
-    : Token(TK_EOF, std::string(), 0)
-{
-}
 
 uint32_t csaw::Token::IntValue() const
 {
@@ -34,29 +14,40 @@ uint32_t csaw::Token::IntValue() const
     }
 }
 
-const char* csaw::ToString(const int type)
+std::string csaw::TkToString(const int type)
 {
-    switch (type)
+    if (type == TK_EOF) return "EOF";
+
+    std::vector<std::string> strs;
+    if (type & TK_IDENTIFIER) strs.emplace_back("IDENTIFIER");
+    if (type & TK_INT_BIN) strs.emplace_back("INT_BIN");
+    if (type & TK_INT_OCT) strs.emplace_back("INT_OCT");
+    if (type & TK_INT_DEC) strs.emplace_back("INT_DEC");
+    if (type & TK_INT_HEX) strs.emplace_back("INT_HEX");
+    if (type & TK_FLOAT) strs.emplace_back("FLOAT");
+    if (type & TK_STRING) strs.emplace_back("STRING");
+    if (type & TK_CHAR) strs.emplace_back("CHAR");
+    if (type & TK_OPERATOR) strs.emplace_back("OPERATOR");
+    if (type & TK_COMPILE_DIRECTIVE) strs.emplace_back("COMPILE_DIRECTIVE");
+
+    if (strs.empty())
+        return "UNKNOWN";
+
+    std::string str;
+    for (size_t i = 0; i < strs.size(); ++i)
     {
-    case TK_EOF: return "EOF";
-    case TK_IDENTIFIER: return "IDENTIFIER";
-    case TK_INT_DEC: return "DEC";
-    case TK_INT_HEX: return "HEX";
-    case TK_INT_BIN: return "BIN";
-    case TK_STRING: return "STRING";
-    case TK_CHAR: return "CHAR";
-    case TK_OPERATOR: return "OPERATOR";
-    case TK_COMPILE_DIRECTIVE: return "COMP DIR";
-    default: return "UNDEFINED";
+        if (i > 0) str += '|';
+        str += strs[i];
     }
+    return str;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const TokenType& type)
 {
-    return out << ToString(type);
+    return out << TkToString(type);
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const Token& token)
 {
-    return out << token.Value << "[" << token.Type << "](" << token.Line << ")";
+    return out << token.Line << ": " << token.Value << " (" << token.Type << ')';
 }

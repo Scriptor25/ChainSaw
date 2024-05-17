@@ -222,8 +222,6 @@ csaw::LValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
 {
     if (const auto& value = m_Values[expression.Id])
         return value;
-    if (const auto& value = m_GlobalValues[expression.Id])
-        return value;
     if (const auto value = m_Module->getFunction(expression.Id))
         return LValue::Direct(this, PointerType::Get(FromLLVM(value->getFunctionType())), value);
     CSAW_MESSAGE_STMT(true, expression, "undefined identifier '" + expression.Id + "'");

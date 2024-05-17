@@ -26,12 +26,12 @@ csaw::FunctionStatement::FunctionStatement(const std::string& filename, const si
     : Statement(filename, line), Name(name), Parent(parent), Result(result), Mods(mods), Args(args), IsVarArgs(is_varargs), Body(body)
 {
     if (Name.empty())
-        CSAW_MESSAGE_STMT(true, *this, "function name must not be empty");
-    if (Name.find('.') != std::string::npos)
-        CSAW_MESSAGE_STMT(true, *this, "function name must not contain '.'");
+        CSAW_MESSAGE_STMT(true, *this, "Function name must not be empty");
+    if (Name.find('$') != std::string::npos)
+        CSAW_MESSAGE_STMT(true, *this, "Function name must not contain '$'");
 
     if (Parent && !Result)
-        CSAW_MESSAGE_STMT(true, *this, "member function must have return type for consistency reasons");
+        CSAW_MESSAGE_STMT(true, *this, "Member function must have return type for consistency reasons");
 }
 
 bool csaw::FunctionStatement::IsConstructor() const
