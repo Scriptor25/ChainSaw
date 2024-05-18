@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Def.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Parser.hpp>
@@ -295,4 +295,5 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
 
     const auto token = Get();
     CSAW_MESSAGE_(false, m_Data.Filename, line, "Unhandled token '" + token.Value + "' type " + TkToString(token.Type));
+    return nullptr;
 }

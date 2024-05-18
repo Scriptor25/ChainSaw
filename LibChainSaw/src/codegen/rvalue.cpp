@@ -1,4 +1,3 @@
-#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Value.hpp>
 
@@ -10,7 +9,7 @@ csaw::RValuePtr csaw::RValue::Create(const TypePtr& type, llvm::Value* value)
 csaw::LValuePtr csaw::RValue::Dereference(Builder* builder) const
 {
     if (!m_Type->IsPointer())
-        CSAW_MESSAGE_NONE(true, "cannot dereference non-pointer rvalue");
+        return nullptr;
 
     const auto type = m_Type->AsPointer()->Base;
     const auto pointer = m_Value;

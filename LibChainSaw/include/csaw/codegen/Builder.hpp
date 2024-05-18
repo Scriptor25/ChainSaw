@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <csaw/Type.hpp>
@@ -16,19 +17,28 @@
 
 namespace csaw
 {
+    struct ModulePair
+    {
+        std::unique_ptr<llvm::LLVMContext> Context;
+        std::unique_ptr<llvm::Module> Module;
+    };
+
     class Builder
     {
     public:
-        static Builder* Create();
         static TypePtr FromLLVM(const llvm::Type* type);
+
+        Builder();
 
         llvm::LLVMContext& GetContext() const;
         llvm::IRBuilder<>& GetBuilder() const;
         llvm::Module& GetModule() const;
 
-        int BeginModule(const std::string& name, const std::string& source_file);
-        int EndModule();
-        int RunJIT(const std::string& entry_name, int argc, const char** argv) const;
+        void BeginModule(const std::string& name, const std::string& source_file);
+        void EndModule();
+
+        int Output(const std::filesystem::path& dest_dir, const std::string& type);
+        int RunJIT(const std::string& entry_name, int argc, const char** argv);
 
         llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* array_size = nullptr) const;
 
@@ -36,9 +46,7 @@ namespace csaw
         llvm::Type* Gen(const TypePtr& type) const;
 
     private:
-        Builder();
-
-        std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, bool testing = true) const;
+        std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
         void PushScopeStack();
         void PopScopeStack();
 
@@ -96,14 +104,12 @@ namespace csaw
         RValuePtr GenInc(const RValuePtr& value) const;
         RValuePtr GenDec(const RValuePtr& value) const;
 
-        std::unique_ptr<llvm::orc::LLJIT> m_JIT;
-
         std::unique_ptr<llvm::LLVMContext> m_Context;
         std::unique_ptr<llvm::IRBuilder<>> m_Builder;
-
-        std::vector<std::string> m_ModuleNames;
         std::unique_ptr<llvm::Module> m_Module;
-        llvm::Function* m_GlobalParent = nullptr;
+        llvm::Function* m_Global = nullptr;
+
+        std::map<std::string, ModulePair> m_Modules;
 
         std::unique_ptr<llvm::FunctionPassManager> m_FPM;
         std::unique_ptr<llvm::LoopAnalysisManager> m_LAM;

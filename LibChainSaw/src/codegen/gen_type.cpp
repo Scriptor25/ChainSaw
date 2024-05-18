@@ -1,12 +1,11 @@
-#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 
 llvm::Type* csaw::Builder::Gen(const TypePtr& type) const
 {
     if (!type)
-        CSAW_MESSAGE_NONE(true, "type must not be null");
+        return nullptr;
 
-    if (type->IsPointer() || type->IsFunction())
+    if (type->IsPointer())
         return m_Builder->getPtrTy();
 
     if (type->IsArray())
@@ -16,10 +15,16 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& type) const
     }
 
     if (type->IsStruct())
+        return llvm::StructType::getTypeByName(*m_Context, type->Name);
+
+    if (type->IsFunction())
     {
-        if (const auto structty = llvm::StructType::getTypeByName(*m_Context, type->Name))
-            return structty;
-        CSAW_MESSAGE_NONE(true, type->Name + " is a struct type, but there is no llvm struct type defined with this name");
+        const auto fty = type->AsFunction();
+        const auto result = Gen(fty->Result);
+        std::vector<llvm::Type*> args;
+        for (const auto& arg : fty->Args)
+            args.push_back(Gen(arg));
+        return llvm::FunctionType::get(result, args, fty->IsVararg);
     }
 
     if (type->Name == "void") return m_Builder->getVoidTy();
@@ -33,5 +38,5 @@ llvm::Type* csaw::Builder::Gen(const TypePtr& type) const
     if (type->Name == "flt32") return m_Builder->getFloatTy();
     if (type->Name == "flt64") return m_Builder->getDoubleTy();
 
-    CSAW_MESSAGE_NONE(true, "no type with name '" + type->Name + "' defined");
+    return nullptr;
 }

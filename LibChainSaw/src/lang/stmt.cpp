@@ -1,4 +1,4 @@
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/lang/Stmt.hpp>
 
@@ -26,12 +26,15 @@ csaw::FunctionStatement::FunctionStatement(const std::string& filename, const si
     : Statement(filename, line), Name(name), Parent(parent), Result(result), Mods(mods), Args(args), IsVarArgs(is_varargs), Body(body)
 {
     if (Name.empty())
-        CSAW_MESSAGE_STMT(true, *this, "Function name must not be empty");
+        CSAW_MESSAGE_STMT(false, *this, "Function name must not be empty");
     if (Name.find('$') != std::string::npos)
-        CSAW_MESSAGE_STMT(true, *this, "Function name must not contain '$'");
+        CSAW_MESSAGE_STMT(false, *this, "Function name must not contain '$'");
 
     if (Parent && !Result)
+    {
         CSAW_MESSAGE_STMT(true, *this, "Member function must have return type for consistency reasons");
+        Result = Type::GetVoid();
+    }
 }
 
 bool csaw::FunctionStatement::IsConstructor() const

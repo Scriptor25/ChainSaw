@@ -20,7 +20,7 @@ SAMPLES:  int32 = 100;
     ret t;
 }
 
-@main::int32 {
+@[c]main::int32 {
 
     xc:     flt64;
     yc:     flt64;

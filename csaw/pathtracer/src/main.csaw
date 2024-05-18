@@ -137,7 +137,7 @@
 }
 
 ## MAIN
-@main(argc: int32, argv: int8**): int32 {
+@[c]main(argc: int32, argv: int8**): int32 {
 
     for (a: int32; a < argc; ++a)
         printf("#%-3d: %s\n", a, argv[a]);

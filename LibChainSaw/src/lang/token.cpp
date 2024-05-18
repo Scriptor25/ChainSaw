@@ -6,10 +6,10 @@ uint32_t csaw::Token::IntValue() const
 {
     switch (Type)
     {
-    case TK_INT_BIN: return std::stoi(Value, nullptr, 2);
-    case TK_INT_OCT: return std::stoi(Value, nullptr, 8);
-    case TK_INT_DEC: return std::stoi(Value, nullptr, 10);
-    case TK_INT_HEX: return std::stoi(Value, nullptr, 16);
+    case TK_INT_BIN: return std::stoul(Value, nullptr, 2);
+    case TK_INT_OCT: return std::stoul(Value, nullptr, 8);
+    case TK_INT_DEC: return std::stoul(Value, nullptr, 10);
+    case TK_INT_HEX: return std::stoul(Value, nullptr, 16);
     default: return 0;
     }
 }

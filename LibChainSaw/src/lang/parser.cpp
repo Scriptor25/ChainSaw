@@ -1,12 +1,6 @@
 #include <iostream>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Parser.hpp>
-
-static bool error(const csaw::ParseData& data, const csaw::ChainSawMessage& message, const size_t line)
-{
-    std::cerr << (message.Filename.empty() ? data.Filename : message.Filename) << "(" << (message.Line == 0 ? line : message.Line) << "): " << message.Message << std::endl;
-    return !message.CanRecover;
-}
 
 void csaw::Parser::Parse(const ParseData& data)
 {
@@ -26,8 +20,8 @@ void csaw::Parser::Parse(const ParseData& data)
         }
         catch (const ChainSawMessage& message)
         {
-            if (error(data, message, parser.m_Line))
-                break;
+            std::cout << (message.Filename.empty() ? data.Filename : message.Filename) << "(" << (message.Line == 0 ? parser.m_Line : message.Line) << "): " << message.Message << std::endl;
+            break;
         }
     }
     while (!parser.AtEOF());

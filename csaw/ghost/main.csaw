@@ -8,7 +8,7 @@
 @randomInt(minc: int32, mexc: int32): int32 = minc + [int32]((mexc - minc) * random());
 
 ## Main - Ghost Game
-@main::int32 {
+@[c]main::int32 {
 
     printf("Ghost Game\n\n");
 

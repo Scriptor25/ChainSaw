@@ -31,8 +31,13 @@ csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
     {
         s.IsC = true;
         s.Result = Builder::FromLLVM(function.getFunctionType()->getReturnType());
+        if (!s.Result) return {};
         for (const auto arg : function.getFunctionType()->params())
-            s.Args.push_back(Builder::FromLLVM(arg));
+        {
+            const auto argty = Builder::FromLLVM(arg);
+            if (!argty) return {};
+            s.Args.push_back(argty);
+        }
         s.IsVarargs = function.getFunctionType()->isVarArg();
         return s;
     }
@@ -41,18 +46,25 @@ csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
     {
         pop_front(v);
         s.Parent = Type::Get(pop_front(v));
+        if (!s.Parent) return {};
     }
 
     s.Args.resize(std::stoull(pop_front(v)));
     for (size_t i = 0; i < s.Args.size(); ++i)
+    {
         s.Args[i] = Type::Get(pop_front(v));
+        if (!s.Args[i]) return {};
+    }
     if (!v.empty() && v[0][0] == 'V')
     {
         pop_front(v);
         s.IsVarargs = true;
     }
     if (!v.empty())
+    {
         s.Result = Type::Get(pop_front(v));
+        if (!s.Result) return {};
+    }
 
     return s;
 }

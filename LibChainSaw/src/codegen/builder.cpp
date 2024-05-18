@@ -1,24 +1,19 @@
+#include <filesystem>
 #include <iostream>
-#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Signature.hpp>
+#include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/TargetParser/Host.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
-
-csaw::Builder* csaw::Builder::Create()
-{
-    try { return new Builder(); }
-    catch (const ChainSawMessage& message)
-    {
-        std::cout << "Failed to create builder: " << message.Message << std::endl;
-        return nullptr;
-    }
-}
+#include <llvm/Transforms/Utils/ModuleUtils.h>
 
 csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
 {
@@ -29,9 +24,14 @@ csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
     {
         std::vector<TypePtr> args;
         for (size_t i = 0; i < type->getFunctionNumParams(); ++i)
-            args.push_back(FromLLVM(type->getFunctionParamType(i)));
+        {
+            const auto arg = FromLLVM(type->getFunctionParamType(i));
+            if (!arg) return nullptr;
+            args.push_back(arg);
+        }
         const bool is_vararg = type->isFunctionVarArg();
         const auto result = FromLLVM(llvm::dyn_cast<llvm::FunctionType>(type)->getReturnType());
+        if (!result) return nullptr;
         return FunctionType::Get(result, args, is_vararg);
     }
     if (type->isIntegerTy(1)) return Type::GetInt1();
@@ -43,164 +43,12 @@ csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
     if (type->isHalfTy()) return Type::GetFlt16();
     if (type->isFloatTy()) return Type::GetFlt32();
     if (type->isDoubleTy()) return Type::GetFlt64();
-    CSAW_MESSAGE_NONE(true, "cannot get csaw type for llvm type");
-}
 
-llvm::LLVMContext& csaw::Builder::GetContext() const
-{
-    return *m_Context;
-}
-
-llvm::IRBuilder<>& csaw::Builder::GetBuilder() const
-{
-    return *m_Builder;
-}
-
-llvm::Module& csaw::Builder::GetModule() const
-{
-    return *m_Module;
-}
-
-int csaw::Builder::BeginModule(const std::string& name, const std::string& source_file)
-{
-    m_ModuleNames.push_back(name);
-
-    m_Context = std::make_unique<llvm::LLVMContext>();
-    m_Builder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
-    m_Module = std::make_unique<llvm::Module>(name, *m_Context);
-
-    m_Module->setSourceFileName(source_file);
-    m_Module->setDataLayout(m_JIT->getDataLayout());
-    m_Module->setTargetTriple(m_JIT->getTargetTriple().str());
-
-    m_SI = std::make_unique<llvm::StandardInstrumentations>(*m_Context, true);
-    m_SI->registerCallbacks(*m_PIC, m_MAM.get());
-
-    const auto function_type = llvm::FunctionType::get(m_Builder->getVoidTy(), false);
-    m_GlobalParent = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, name + ".global", *m_Module);
-    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", m_GlobalParent);
-    m_Builder->SetInsertPoint(entry_block);
-
-    m_ScopeStack.clear();
-    m_Values.clear();
-
-    return 0;
-}
-
-int csaw::Builder::EndModule()
-{
-    const std::string name = m_Module->getName().str();
-
-    m_Builder->CreateRetVoid();
-    if (verifyFunction(*m_GlobalParent, &llvm::errs()))
-    {
-        std::cout << "Failed to verify global function from module '" << name << "'" << std::endl;
-        m_GlobalParent->viewCFG();
-        m_GlobalParent->eraseFromParent();
-        m_Module.reset();
-        return -1;
-    }
-    m_FPM->run(*m_GlobalParent, *m_FAM);
-
-    if (verifyModule(*m_Module))
-    {
-        std::cout << "Failed to verify module '" << name << "'" << std::endl;
-        m_Module.reset();
-        return -1;
-    }
-
-    if (auto err = m_JIT->addIRModule(llvm::orc::ThreadSafeModule(std::move(m_Module), std::move(m_Context))))
-    {
-        std::cout << "Failed to add module '" << name << "' to JIT: " << std::endl;
-        logAllUnhandledErrors(std::move(err), llvm::errs());
-        m_Module.reset();
-        return -1;
-    }
-
-    m_Module.reset();
-    return 0;
-}
-
-int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const char** argv) const
-{
-    for (const auto& name : m_ModuleNames)
-    {
-        auto global = m_JIT->lookup(name + ".global");
-        if (auto err = global.takeError())
-        {
-            std::cout << "Failed to find global function in module '" << name << "'" << std::endl;
-            logAllUnhandledErrors(std::move(err), llvm::errs());
-            return -1;
-        }
-
-        const auto global_fn = global->toPtr<void(*)()>();
-        global_fn();
-    }
-
-    auto entry = m_JIT->lookup(entry_name);
-    if (auto err = entry.takeError())
-    {
-        Signature signature;
-        signature.IsC = false;
-        signature.Name = entry_name;
-        signature.Result = Type::GetInt32();
-        auto entry_sig = signature.Mangle();
-
-        entry = m_JIT->lookup(entry_sig);
-        if (auto err1 = entry.takeError())
-        {
-            signature.Args = {Type::GetInt32(), PointerType::Get(PointerType::Get(Type::GetInt8()))};
-            entry_sig = signature.Mangle();
-
-            entry = m_JIT->lookup(entry_sig);
-            if (auto err2 = entry.takeError())
-            {
-                std::cout << "Failed to find entry function '" << entry_name << "'" << std::endl;
-                return -1;
-            }
-        }
-    }
-
-    const auto entry_fn = entry->toPtr<int(*)(int, const char**)>();
-    return entry_fn(argc, argv);
-}
-
-llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* array_size) const
-{
-    const auto block = m_Builder->GetInsertBlock();
-    m_Builder->SetInsertPointPastAllocas(block->getParent());
-    const auto inst = m_Builder->CreateAlloca(type, array_size);
-    m_Builder->SetInsertPoint(block);
-    return inst;
+    return nullptr;
 }
 
 csaw::Builder::Builder()
 {
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
-
-    llvm::orc::LLJITBuilder builder;
-    builder.setLinkProcessSymbolsByDefault(true);
-    auto jit = builder.create();
-    if (auto err = jit.takeError())
-    {
-        logAllUnhandledErrors(std::move(err), llvm::errs());
-        CSAW_MESSAGE_NONE(false, "Failed to create the JIT");
-    }
-    m_JIT = std::move(*jit);
-
-    llvm::orc::SymbolMap symbols;
-    symbols[m_JIT->mangleAndIntern("fprintf")] = {
-        llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(&fprintf)),
-        llvm::JITSymbolFlags()
-    };
-    if (auto err = m_JIT->getMainJITDylib().define(absoluteSymbols(symbols)))
-    {
-        logAllUnhandledErrors(std::move(err), llvm::errs());
-        CSAW_MESSAGE_NONE(false, "Failed to define symbol map in the JITs main dylib");
-    }
-
     m_FPM = std::make_unique<llvm::FunctionPassManager>();
     m_LAM = std::make_unique<llvm::LoopAnalysisManager>();
     m_FAM = std::make_unique<llvm::FunctionAnalysisManager>();
@@ -219,14 +67,222 @@ csaw::Builder::Builder()
     pb.crossRegisterProxies(*m_LAM, *m_FAM, *m_CGAM, *m_MAM);
 }
 
-std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, const bool testing) const
+llvm::LLVMContext& csaw::Builder::GetContext() const
 {
-    std::vector<Signature> alt;
+    return *m_Context;
+}
+
+llvm::IRBuilder<>& csaw::Builder::GetBuilder() const
+{
+    return *m_Builder;
+}
+
+llvm::Module& csaw::Builder::GetModule() const
+{
+    return *m_Module;
+}
+
+void csaw::Builder::BeginModule(const std::string& name, const std::string& source_file)
+{
+    m_Context = std::make_unique<llvm::LLVMContext>();
+    m_Builder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
+    m_Module = std::make_unique<llvm::Module>(name, *m_Context);
+    m_Module->setSourceFileName(source_file);
+
+    m_SI = std::make_unique<llvm::StandardInstrumentations>(*m_Context, true);
+    m_SI->registerCallbacks(*m_PIC, m_MAM.get());
+
+    const auto function_type = llvm::FunctionType::get(m_Builder->getVoidTy(), false);
+    m_Global = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, name + ".global", *m_Module);
+    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", m_Global);
+    m_Builder->SetInsertPoint(entry_block);
+
+    m_ScopeStack.clear();
+    m_Values.clear();
+}
+
+void csaw::Builder::EndModule()
+{
+    m_Builder->CreateRetVoid();
+    if (verifyFunction(*m_Global, &llvm::errs()))
+    {
+        std::cout << "Failed to verify global function" << std::endl;
+        m_Global->viewCFG();
+        m_Global->eraseFromParent();
+        return;
+    }
+
+    // Optimize Global
+    m_FPM->run(*m_Global, *m_FAM);
+
+    // Append Global to CTORs
+    appendToGlobalCtors(*m_Module, m_Global, 0);
+
+    if (verifyModule(*m_Module))
+    {
+        std::cout << "Failed to verify module" << std::endl;
+        return;
+    }
+
+    const auto name = m_Module->getName().str();
+    m_Modules[name] = {std::move(m_Context), std::move(m_Module)};
+}
+
+int csaw::Builder::Output(const std::filesystem::path& dest_dir, const std::string& type)
+{
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    const auto triple = llvm::sys::getDefaultTargetTriple();
+
+    std::string err;
+    const auto target = llvm::TargetRegistry::lookupTarget(triple, err);
+    if (!target)
+    {
+        std::cout << "Failed to get target for triple: " << err << std::endl;
+        return -1;
+    }
+
+    const auto cpu = "generic";
+    const auto features = "";
+
+    llvm::TargetOptions options;
+    const auto machine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
+    const auto data_layout = machine->createDataLayout();
+
+    llvm::CodeGenFileType filetype = llvm::CodeGenFileType::CGFT_Null;
+    std::string fileext;
+
+    if (type == "obj")
+    {
+        filetype = llvm::CodeGenFileType::CGFT_ObjectFile;
+        fileext = ".o";
+    }
+    else if (type == "asm")
+    {
+        filetype = llvm::CodeGenFileType::CGFT_AssemblyFile;
+        fileext = ".s";
+    }
+
+    for (const auto& [name, pair] : m_Modules)
+    {
+        const auto filename = absolute(dest_dir / (name + fileext)).string();
+
+        std::error_code error_code;
+        llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
+
+        if (error_code)
+        {
+            std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
+            return -1;
+        }
+
+        llvm::legacy::PassManager pass;
+        if (machine->addPassesToEmitFile(pass, dest, nullptr, filetype))
+        {
+            std::cout << "Failed to output to file '" << filename << "'" << std::endl;
+            return -1;
+        }
+
+        pair.Module->setTargetTriple(triple);
+        pair.Module->setDataLayout(data_layout);
+        pass.run(*pair.Module);
+
+        dest.flush();
+    }
+
+    return 0;
+}
+
+int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const char** argv)
+{
+    // Initialize Target
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTargetAsmParser();
+
+    // Create LLJIT
+    llvm::orc::LLJITBuilder builder;
+    builder.setLinkProcessSymbolsByDefault(true);
+    auto jit_err = builder.create();
+    if (auto err = jit_err.takeError())
+    {
+        logAllUnhandledErrors(std::move(err), llvm::errs());
+        return -1;
+    }
+
+    const std::unique_ptr<llvm::orc::LLJIT> jit = std::move(*jit_err);
+
+    // Link symbols into main dylib
+    llvm::orc::SymbolMap symbols;
+    symbols[jit->mangleAndIntern("fprintf")] = {
+        llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(&fprintf)),
+        llvm::JITSymbolFlags()
+    };
+
+    if (auto err = jit->getMainJITDylib().define(absoluteSymbols(symbols)))
+    {
+        logAllUnhandledErrors(std::move(err), llvm::errs());
+        return -1;
+    }
+
+    // Add all modules to jit
+    for (auto& [name, pair] : m_Modules)
+    {
+        pair.Module->setDataLayout(jit->getDataLayout());
+        pair.Module->setTargetTriple(jit->getTargetTriple().getTriple());
+
+        if (auto err = jit->addIRModule(llvm::orc::ThreadSafeModule(std::move(pair.Module), std::move(pair.Context))))
+        {
+            std::cout << "Failed to add module '" << name << "': " << std::endl;
+            logAllUnhandledErrors(std::move(err), llvm::errs());
+        }
+    }
+
+    for (auto& [name, pair] : m_Modules)
+    {
+        auto global = jit->lookup(name + ".global");
+        if (auto err = global.takeError())
+        {
+            std::cout << "Failed to find global function for module '" << name << "'" << std::endl;
+            continue;
+        }
+
+        const auto global_fn = global->toPtr<void()>();
+        global_fn();
+    }
+
+    // Find entry function
+    auto entry_err = jit->lookup(entry_name);
+    if (auto err = entry_err.takeError())
+    {
+        std::cout << "Failed to find entry function '" << entry_name << "'" << std::endl;
+        return -1;
+    }
+
+    // Call entry function
+    const auto entry_fn = entry_err->toPtr<int(*)(int, const char**)>();
+    return entry_fn(argc, argv);
+}
+
+llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* array_size) const
+{
+    const auto block = m_Builder->GetInsertBlock();
+    m_Builder->SetInsertPointPastAllocas(block->getParent());
+    const auto inst = m_Builder->CreateAlloca(type, array_size);
+    m_Builder->SetInsertPoint(block);
+    return inst;
+}
+
+std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const
+{
     for (auto& function : m_Module->functions())
     {
         const auto s = Signature::Demangle(function);
         if (s.Name != name) continue;
-        alt.push_back(s);
         if (s.Parent != parent) continue;
         if (s.Args.size() > args.size() || (!s.IsVarargs && s.Args.size() != args.size())) continue;
         size_t i = 0;
@@ -237,14 +293,7 @@ std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const st
         return {s, &function};
     }
 
-    if (!testing && !alt.empty())
-    {
-        std::cout << "Alternative signatures: " << std::endl;
-        for (const auto& s : alt)
-            std::cout << s.Mangle(true) << std::endl;
-    }
-
-    return {Signature(name, parent, nullptr, args, false), nullptr};
+    return {{name, parent, nullptr, args, false}, nullptr};
 }
 
 void csaw::Builder::PushScopeStack()

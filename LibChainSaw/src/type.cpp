@@ -1,6 +1,6 @@
 #include <iostream>
 #include <map>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/Type.hpp>
 
 static std::map<std::string, csaw::TypePtr> Types = {
@@ -25,7 +25,7 @@ csaw::TypePtr csaw::Type::Get(const std::string& name)
 {
     if (const auto& type = Types[name])
         return type;
-    CSAW_MESSAGE_NONE(true, "cannot resolve type with name '" + name + "'");
+    return nullptr;
 }
 
 csaw::TypePtr csaw::Type::GetVoid()

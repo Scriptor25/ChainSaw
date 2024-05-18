@@ -1,6 +1,11 @@
-#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Value.hpp>
+
+llvm::Value* csaw::Value::GetBoolValue(const Builder* builder) const
+{
+    const auto value = GetValue();
+    return builder->GetBuilder().CreateIsNotNull(value);
+}
 
 csaw::LValuePtr csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
 {
@@ -33,7 +38,7 @@ csaw::RValuePtr csaw::LValue::GetReference() const
 csaw::LValuePtr csaw::LValue::Dereference() const
 {
     if (!m_Type->IsPointer())
-        CSAW_MESSAGE_NONE(true, "cannot dereference non-pointer lvalue");
+        return nullptr;
 
     const auto type = m_Type->AsPointer()->Base;
     const auto pointer = GetValue();
@@ -52,7 +57,9 @@ csaw::TypePtr csaw::LValue::GetType() const
 
 llvm::Value* csaw::LValue::GetValue() const
 {
-    return m_Builder->GetBuilder().CreateLoad(m_Builder->Gen(m_Type), m_Pointer);
+    const auto type = m_Builder->Gen(m_Type);
+    if (!type) return nullptr;
+    return m_Builder->GetBuilder().CreateLoad(type, m_Pointer);
 }
 
 bool csaw::LValue::IsLValue() const

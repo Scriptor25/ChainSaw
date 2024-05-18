@@ -1,5 +1,5 @@
 #include <istream>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Parser.hpp>
 
 csaw::Token& csaw::Parser::Next()

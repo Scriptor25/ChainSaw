@@ -32,6 +32,9 @@ csaw::TypePtr csaw::Parser::ParseType()
 
 csaw::TypePtr csaw::Parser::ParseType(const TypePtr& base)
 {
+    if (!base)
+        return nullptr;
+
     if (NextIfAt("*"))
         return ParseType(PointerType::Get(base));
     if (NextIfAt("["))

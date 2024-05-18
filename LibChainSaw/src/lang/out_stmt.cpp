@@ -1,6 +1,6 @@
 #include <ostream>
 #include <string>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Stmt.hpp>
 
@@ -42,6 +42,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const StatementPtr& ptr)
     }
 
     CSAW_MESSAGE_STMT(true, *ptr, "Printing is not implemented for this statement");
+    return out;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const ScopeStatement& statement)

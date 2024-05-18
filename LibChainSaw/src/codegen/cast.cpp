@@ -1,15 +1,18 @@
 #include <utility>
-#include <csaw/CSaw.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type) const
 {
+    if (!value || !type)
+        return nullptr;
+
     if (value->GetType() == type)
         return value->GetRValue();
 
     const auto tty = Gen(type);
     const auto vty = Gen(value->GetType());
+    if (!tty || !vty) return nullptr;
 
     if (vty->isPointerTy())
     {
@@ -62,11 +65,14 @@ csaw::RValuePtr csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type) 
         }
     }
 
-    CSAW_MESSAGE_NONE(true, "cast from " + value->GetType()->Name + " to " + type->Name + " is not implemented");
+    return nullptr;
 }
 
 std::pair<csaw::RValuePtr, csaw::RValuePtr> csaw::Builder::CastToBestOf(const RValuePtr& left, const RValuePtr& right) const
 {
+    if (!left || !right)
+        return {};
+
     if (left->GetType() == right->GetType())
         return {left, right};
 
@@ -103,5 +109,5 @@ std::pair<csaw::RValuePtr, csaw::RValuePtr> csaw::Builder::CastToBestOf(const RV
         }
     }
 
-    CSAW_MESSAGE_NONE(true, "superior cast between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
+    return {};
 }

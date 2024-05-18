@@ -16,6 +16,8 @@ namespace csaw
 
         virtual bool IsLValue() const = 0;
         virtual RValuePtr GetRValue() const = 0;
+
+        virtual llvm::Value* GetBoolValue(const Builder* builder) const;
     };
 
     class LValue : public Value

@@ -1,5 +1,5 @@
 #include <ostream>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Expr.hpp>
 
 std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
@@ -36,6 +36,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
         return out << *expr;
 
     CSAW_MESSAGE_STMT(true, *ptr, "Printing is not implemented for this expression");
+    return out;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const BinaryExpression& expression)

@@ -1,6 +1,6 @@
 #include <filesystem>
 #include <fstream>
-#include <csaw/CSaw.hpp>
+#include <csaw/Message.hpp>
 #include <csaw/lang/Parser.hpp>
 
 void csaw::Parser::ParseCompileDirective()
@@ -28,7 +28,7 @@ void csaw::Parser::ParseCompileDirective()
         }
 
         if (!stream.is_open())
-            CSAW_MESSAGE_(true, m_Data.Filename, line, "Failed to open include file '" + filename + "', please check your include paths");
+            return CSAW_MESSAGE_(true, m_Data.Filename, line, "Failed to open include file '" + filename + "', please check your include paths");
 
         Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
         stream.close();
