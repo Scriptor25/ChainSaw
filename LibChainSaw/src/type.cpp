@@ -141,16 +141,13 @@ bool csaw::Type::ParentOf(const TypePtr& type) const
     if (this == type.get() || this == GetVoid().get())
         return true;
 
-    if (IsStruct() || type->IsStruct() || IsFunction())
+    if (IsStruct() || type->IsStruct() || IsFunction() || type->IsFunction())
         return false;
 
-    if (IsPointer())
-        return type->IsPointer() ? AsPointer()->Base->ParentOf(type->AsPointer()->Base) : type->IsFunction() ? AsPointer()->Base->ParentOf(type) : false;
+    if (IsPointer() && type->IsPointer())
+        return AsPointer()->Base->ParentOf(type->AsPointer()->Base);
 
-    if (Bits >= type->Bits && (IsFlt || !type->IsFlt))
-        return true;
-
-    return false;
+    return IsFlt || !type->IsFlt;
 }
 
 csaw::PointerTypePtr csaw::PointerType::Get(const TypePtr& base)
