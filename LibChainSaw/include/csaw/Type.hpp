@@ -52,8 +52,8 @@ namespace csaw
         bool ParentOf(const TypePtr& type) const;
 
         std::string Name;
-        bool IsFlt;
-        size_t Bits;
+        bool IsFlt = false;
+        size_t Bits = 0;
     };
 
     struct PointerType : Type

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/codegen/Builder.hpp>
 #include <csaw/codegen/Signature.hpp>
 #include <csaw/codegen/Value.hpp>
@@ -35,7 +35,7 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
         return;
     }
 
-    CSAW_MESSAGE_STMT(true, *ptr, "Code generation for statement is not implemented");
+    ThrowErrorStmt(*ptr, false, "Code generation is not implemented for this statement");
 }
 
 void csaw::Builder::Gen(const ScopeStatement& statement)
@@ -55,9 +55,12 @@ void csaw::Builder::Gen(const ForStatement& statement)
     const auto loop_block = llvm::BasicBlock::Create(*m_Context, "loop");
     const auto end_block = llvm::BasicBlock::Create(*m_Context, "end");
 
-    if (statement.Pre) Gen(statement.Pre);
+    if (statement.Pre)
+        Gen(statement.Pre);
+
     const auto br_inst = m_Builder->CreateBr(hdr_block);
     m_Builder->SetInsertPoint(hdr_block);
+
     const auto condition = statement.Condition ? Gen(statement.Condition) : RValue::Create(Type::GetInt1(), m_Builder->getInt1(true));
     if (!condition)
     {
@@ -66,130 +69,22 @@ void csaw::Builder::Gen(const ForStatement& statement)
         m_Builder->SetInsertPoint(bkp_block);
         return;
     }
+
     m_Builder->CreateCondBr(condition->GetBoolValue(this), loop_block, end_block);
 
     loop_block->insertInto(parent);
     m_Builder->SetInsertPoint(loop_block);
-    if (statement.Body) Gen(statement.Body);
-    if (statement.Loop) Gen(statement.Loop);
+
+    if (statement.Body)
+        Gen(statement.Body);
+
+    if (statement.Loop)
+        Gen(statement.Loop);
+
     m_Builder->CreateBr(hdr_block);
 
     end_block->insertInto(parent);
     m_Builder->SetInsertPoint(end_block);
-}
-
-void csaw::Builder::Gen(const FunctionStatement& statement)
-{
-    const bool has_ptr = statement.IsConstructor() || statement.Parent;
-
-    if (statement.IsConstructor())
-        if (const auto type = Type::Get(statement.Name); !type)
-            return CSAW_MESSAGE_STMT(true, statement, "Cannot create constructor for unresolved type");
-
-    std::vector<TypePtr> args(statement.Args.size());
-    std::vector<llvm::Type*> arg_types(statement.Args.size());
-    for (size_t i = 0; i < args.size(); ++i)
-    {
-        arg_types[i] = Gen(args[i] = statement.Args[i].second);
-        if (!arg_types[i])
-            return CSAW_MESSAGE_STMT(true, statement, "Cannot create function with unresolved arg type");
-    }
-    if (has_ptr) arg_types.insert(arg_types.begin(), m_Builder->getPtrTy());
-
-    auto [signature, function] = FindFunction(statement.Name, statement.Parent, args);
-
-    if (!function)
-    {
-        signature.Result = statement.Result;
-        signature.IsVarargs = statement.IsVarArgs;
-        signature.IsC = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
-
-        const auto result_type = signature.IsConstructor() ? Gen(Type::GetVoid()) : Gen(statement.Result);
-        const auto function_type = llvm::FunctionType::get(result_type, arg_types, statement.IsVarArgs);
-        function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, signature.Mangle(), *m_Module);
-    }
-
-    if (!statement.Body)
-        return;
-
-    if (!function->empty())
-        return CSAW_MESSAGE_STMT(true, statement, "Function is already implemented");
-
-    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", function);
-    const auto bkp_block = m_Builder->GetInsertBlock();
-    m_Builder->SetInsertPoint(entry_block);
-    PushScopeStack();
-
-    int i = has_ptr ? -1 : 0;
-    for (auto& arg : function->args())
-    {
-        const auto name = i < 0 ? "me" : statement.Args[i].first;
-        arg.setName(name);
-
-        if (i < 0)
-        {
-            const auto type = signature.IsConstructor() ? Type::Get(statement.Name) : statement.Parent;
-            m_Values["me"] = LValue::AllocateAndStore(this, PointerType::Get(type), &arg);
-        }
-        else m_Values[name] = LValue::AllocateAndStore(this, statement.Args[i].second, &arg);
-
-        ++i;
-    }
-
-    if (const auto scope_statement = std::dynamic_pointer_cast<ScopeStatement>(statement.Body))
-    {
-        Gen(scope_statement);
-
-        if (function->getFunctionType()->getReturnType()->isVoidTy())
-            for (const auto& block : *function)
-                if (!block.getTerminator())
-                    m_Builder->CreateRetVoid();
-    }
-    else if (const auto expression = std::dynamic_pointer_cast<Expression>(statement.Body))
-    {
-        const auto result = Gen(expression);
-        if (!result)
-        {
-            PopScopeStack();
-            m_Builder->SetInsertPoint(bkp_block);
-            function->eraseFromParent();
-            return;
-        }
-
-        if (function->getFunctionType()->getReturnType()->isVoidTy())
-            m_Builder->CreateRetVoid();
-        else
-        {
-            const auto rresult = Cast(result, signature.Result);
-            if (!rresult)
-            {
-                PopScopeStack();
-                m_Builder->SetInsertPoint(bkp_block);
-                function->eraseFromParent();
-                CSAW_MESSAGE_STMT(this, statement, "Failed to cast result");
-                return;
-            }
-            m_Builder->CreateRet(rresult->GetValue());
-        }
-    }
-    else
-    {
-        Gen(statement.Body);
-        m_Builder->CreateRetVoid();
-    }
-
-    PopScopeStack();
-    m_Builder->SetInsertPoint(bkp_block);
-
-    if (verifyFunction(*function, &llvm::errs()))
-    {
-        function->viewCFG();
-        function->eraseFromParent();
-        CSAW_MESSAGE_STMT(true, statement, "Failed to verify function");
-        return;
-    }
-
-    m_FPM->run(*function, *m_FAM);
 }
 
 void csaw::Builder::Gen(const IfStatement& statement)
@@ -249,13 +144,17 @@ void csaw::Builder::Gen(const RetStatement& statement)
 
     const auto type = FromLLVM(m_Builder->getCurrentFunctionReturnType());
     if (!type)
-        return CSAW_MESSAGE_STMT(true, statement, "Failed to reparse current function return type");
+        return ThrowErrorStmt(statement, false, "Failed to determine type from llvm type: %s", type.Msg().c_str());
+
     const auto value = Gen(statement.Value);
-    if (!value) return;
-    const auto casted = Cast(value, type);
-    if (!casted)
-        return CSAW_MESSAGE_STMT(true, statement, "Failed to cast result");
-    m_Builder->CreateRet(casted->GetValue());
+    if (!value)
+        return;
+
+    const auto cast = Cast(value, type.Get());
+    if (!cast)
+        return ThrowErrorStmt(statement, false, "Failed to cast: %s", cast.Msg().c_str());
+
+    m_Builder->CreateRet(cast.Get()->GetValue());
 }
 
 void csaw::Builder::Gen(const DefStatement& statement) const
@@ -275,14 +174,16 @@ void csaw::Builder::Gen(const DefStatement& statement) const
 
     const auto type = llvm::StructType::getTypeByName(*m_Context, statement.Name);
     if (type && !type->isEmptyTy())
-        return CSAW_MESSAGE_STMT(true, statement, "Struct is already implemented");
+        return ThrowErrorStmt(statement, false, "Struct type is already implemented");
 
     std::vector<llvm::Type*> elements(statement.Elements.size());
     for (size_t i = 0; i < elements.size(); ++i)
     {
-        elements[i] = Gen(statement.Elements[i].second);
-        if (!elements[i])
-            return CSAW_MESSAGE_STMT(true, statement, "Failed to generate struct element type");
+        const auto ety = Gen(statement.Elements[i].second);
+        if (!ety)
+            return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Elements[i].second->Name.c_str(), ety.Msg().c_str());
+
+        elements[i] = ety.Get();
     }
 
     if (!type)
@@ -295,25 +196,27 @@ void csaw::Builder::Gen(const VariableStatement& statement)
 {
     const auto type = Gen(statement.Type);
     if (!type)
-        return CSAW_MESSAGE_STMT(true, statement, "Failed to generate variable type");
+        return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Type->Name.c_str(), type.Msg().c_str());
 
     ValuePtr initializer;
     if (statement.Value) initializer = Gen(statement.Value);
     else if (const auto [signature, function] = FindFunction(statement.Type->Name, nullptr, {}); function && signature.IsConstructor())
     {
-        const auto initty = Type::Get(signature.Name);
-        if (!initty)
-            return CSAW_MESSAGE_STMT(true, statement, "Cannot call constructor with unresolved type");
-        const auto linitializer = LValue::Allocate(this, initty);
-        initializer = linitializer;
-        m_Builder->CreateCall(function->getFunctionType(), function, {linitializer->GetPointer()});
+        const auto alloc = LValue::Allocate(this, Type::Get(signature.Name));
+        if (!alloc)
+            return ThrowErrorStmt(statement, false, "Failed to allocate: %s", alloc.Msg().c_str());
+
+        initializer = alloc.Get();
+        m_Builder->CreateCall(function->getFunctionType(), function, {alloc.Get()->GetPointer()});
     }
 
     if (initializer)
     {
-        initializer = Cast(initializer, statement.Type);
-        if (!initializer)
-            return CSAW_MESSAGE_STMT(true, statement, "Failed to cast initializer");
+        const auto cast = Cast(initializer, statement.Type);
+        if (!cast)
+            return ThrowErrorStmt(statement, false, "Failed to cast: %s", cast.Msg().c_str());
+
+        initializer = cast.Get();
     }
 
     if (m_ScopeStack.empty())
@@ -324,9 +227,9 @@ void csaw::Builder::Gen(const VariableStatement& statement)
 
         const bool is_initialized = global_initializer;
         if (!is_initialized)
-            global_initializer = llvm::Constant::getNullValue(type);
+            global_initializer = llvm::Constant::getNullValue(type.Get());
 
-        const auto pointer = new llvm::GlobalVariable(*m_Module, type, false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
+        const auto pointer = new llvm::GlobalVariable(*m_Module, type.Get(), false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
         const auto ref = LValue::Direct(this, statement.Type, pointer);
 
         if (!is_initialized && initializer)
@@ -336,7 +239,11 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         return;
     }
 
-    m_Values[statement.Name] = LValue::AllocateAndStore(this, statement.Type, initializer ? initializer->GetValue() : llvm::Constant::getNullValue(type));
+    const auto alloc = LValue::AllocateAndStore(this, statement.Type, initializer ? initializer->GetValue() : llvm::Constant::getNullValue(type.Get()));
+    if (!alloc)
+        return ThrowErrorStmt(statement, false, "Failed to allocate: %s", alloc.Msg().c_str());
+
+    m_Values[statement.Name] = alloc.Get();
 }
 
 void csaw::Builder::Gen(const WhileStatement& statement)

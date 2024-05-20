@@ -6,10 +6,10 @@ csaw::RValuePtr csaw::RValue::Create(const TypePtr& type, llvm::Value* value)
     return std::shared_ptr<RValue>(new RValue(type, value));
 }
 
-csaw::LValuePtr csaw::RValue::Dereference(Builder* builder) const
+csaw::Expect<csaw::LValuePtr> csaw::RValue::Dereference(Builder* builder) const
 {
     if (!m_Type->IsPointer())
-        return nullptr;
+        return Expect<LValuePtr>("Value type is non-pointer");
 
     const auto type = m_Type->AsPointer()->Base;
     const auto pointer = m_Value;

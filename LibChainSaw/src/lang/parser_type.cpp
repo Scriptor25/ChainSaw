@@ -1,10 +1,15 @@
 #include <csaw/lang/Parser.hpp>
 
+#include "csaw/Error.hpp"
+
 csaw::TypePtr csaw::Parser::ParseType()
 {
     if (NextIfAt("%"))
     {
-        const auto result = ParseType();
+        TypePtr result;
+
+        if (!At("("))
+            result = ParseType();
 
         std::vector<TypePtr> args;
         bool is_vararg = false;
@@ -17,7 +22,24 @@ csaw::TypePtr csaw::Parser::ParseType()
                 is_vararg = true;
                 break;
             }
-            args.push_back(ParseType());
+
+            TypePtr arg_type;
+            if (At(TK_IDENTIFIER))
+            {
+                std::string arg_name = Get().Value;
+                if (NextIfAt(":"))
+                    arg_type = ParseType();
+                else
+                {
+                    const auto type = Type::Get(arg_name);
+                    if (!type)
+                        ThrowError(m_Data.Filename, m_Line, true, "Failed to get type %s", arg_name.c_str());
+                    arg_type = ParseType(type);
+                }
+            }
+            else arg_type = ParseType();
+
+            args.push_back(arg_type);
             if (!At(")"))
                 Expect(",");
         }
@@ -27,14 +49,14 @@ csaw::TypePtr csaw::Parser::ParseType()
     }
 
     const auto name = Expect(TK_IDENTIFIER).Value;
-    return ParseType(Type::Get(name));
+    const auto type = Type::Get(name);
+    if (!type)
+        ThrowError(m_Data.Filename, m_Line, true, "Failed to get type %s", name.c_str());
+    return ParseType(type);
 }
 
 csaw::TypePtr csaw::Parser::ParseType(const TypePtr& base)
 {
-    if (!base)
-        return nullptr;
-
     if (NextIfAt("*"))
         return ParseType(PointerType::Get(base));
     if (NextIfAt("["))

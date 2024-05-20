@@ -31,7 +31,7 @@ namespace csaw
 
     struct Token
     {
-        [[nodiscard]] uint32_t IntValue() const;
+        [[nodiscard]] uint64_t IntValue() const;
 
         TokenType Type;
         std::string Value;

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <map>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/Type.hpp>
 
 static std::map<std::string, csaw::TypePtr> Types = {
@@ -23,9 +23,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const TypePtr& ptr)
 
 csaw::TypePtr csaw::Type::Get(const std::string& name)
 {
-    if (const auto& type = Types[name])
-        return type;
-    return nullptr;
+    return Types[name];
 }
 
 csaw::TypePtr csaw::Type::GetVoid()

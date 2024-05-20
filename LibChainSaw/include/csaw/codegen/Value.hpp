@@ -23,13 +23,13 @@ namespace csaw
     class LValue : public Value
     {
     public:
-        static LValuePtr Allocate(Builder* builder, const TypePtr& type);
-        static LValuePtr AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value);
+        static Expect<LValuePtr> Allocate(Builder* builder, const TypePtr& type);
+        static Expect<LValuePtr> AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value);
         static LValuePtr Direct(Builder* builder, const TypePtr& type, llvm::Value* pointer);
 
         void StoreValue(llvm::Value* value) const;
         RValuePtr GetReference() const;
-        LValuePtr Dereference() const;
+        Expect<LValuePtr> Dereference() const;
         llvm::Value* GetPointer() const;
 
         TypePtr GetType() const override;
@@ -41,9 +41,9 @@ namespace csaw
     private:
         LValue(Builder* builder, const TypePtr& type, llvm::Value* pointer);
 
-        Builder* m_Builder;
+        Builder* m_Builder = nullptr;
         TypePtr m_Type; // Type of value stored in pointer
-        llvm::Value* m_Pointer;
+        llvm::Value* m_Pointer = nullptr;
     };
 
     class RValue : public Value
@@ -51,7 +51,7 @@ namespace csaw
     public:
         static RValuePtr Create(const TypePtr& type, llvm::Value* value);
 
-        LValuePtr Dereference(Builder* builder) const;
+        Expect<LValuePtr> Dereference(Builder* builder) const;
 
         TypePtr GetType() const override;
         llvm::Value* GetValue() const override;

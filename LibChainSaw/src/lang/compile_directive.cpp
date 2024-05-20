@@ -1,6 +1,6 @@
 #include <filesystem>
 #include <fstream>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/lang/Parser.hpp>
 
 void csaw::Parser::ParseCompileDirective()
@@ -28,12 +28,12 @@ void csaw::Parser::ParseCompileDirective()
         }
 
         if (!stream.is_open())
-            return CSAW_MESSAGE_(true, m_Data.Filename, line, "Failed to open include file '" + filename + "', please check your include paths");
+            return ThrowError(m_Data.Filename, line, true, "Failed to open include file '%s'", filename.c_str());
 
         Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
         stream.close();
         return;
     }
 
-    CSAW_MESSAGE_(true, m_Data.Filename, line, "Unhandled compile directive '" + directive + "'");
+    ThrowError(m_Data.Filename, line, false, "Undefined compile directive '%s'", directive.c_str());
 }

@@ -3,10 +3,7 @@
 
 csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value) const
 {
-    if (!value)
-        return nullptr;
-
-    const auto vty = Gen(value->GetType());
+    const auto vty = Gen(value->GetType()).Get();
 
     if (vty->isIntegerTy())
     {
@@ -25,27 +22,18 @@ csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value) const
 
 csaw::RValuePtr csaw::Builder::GenNot(const RValuePtr& value) const
 {
-    if (!value)
-        return nullptr;
-
     const auto result = m_Builder->CreateNot(value->GetBoolValue(this));
     return RValue::Create(value->GetType(), result);
 }
 
 csaw::RValuePtr csaw::Builder::GenInv(const RValuePtr& value) const
 {
-    if (!value)
-        return nullptr;
-
     return nullptr;
 }
 
 csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value) const
 {
-    if (!value)
-        return nullptr;
-
-    const auto vty = Gen(value->GetType());
+    const auto vty = Gen(value->GetType()).Get();
 
     if (vty->isIntegerTy())
     {
@@ -58,10 +46,7 @@ csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value) const
 
 csaw::RValuePtr csaw::Builder::GenDec(const RValuePtr& value) const
 {
-    if (!value)
-        return nullptr;
-
-    const auto vty = Gen(value->GetType());
+    const auto vty = Gen(value->GetType()).Get();
 
     if (vty->isIntegerTy())
     {

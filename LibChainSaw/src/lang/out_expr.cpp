@@ -1,5 +1,5 @@
 #include <ostream>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/lang/Expr.hpp>
 
 std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
@@ -35,7 +35,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
     if (const auto expr = std::dynamic_pointer_cast<VarArgExpression>(ptr))
         return out << *expr;
 
-    CSAW_MESSAGE_STMT(true, *ptr, "Printing is not implemented for this expression");
+    ThrowErrorStmt(*ptr, false, "Outstream is not implemented for this expression");
     return out;
 }
 

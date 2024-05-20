@@ -30,13 +30,15 @@ csaw::Signature csaw::Signature::Demangle(const llvm::Function& function)
     if (v.empty())
     {
         s.IsC = true;
-        s.Result = Builder::FromLLVM(function.getFunctionType()->getReturnType());
+        const auto result = Builder::FromLLVM(function.getFunctionType()->getReturnType());
+        if (!result) return {};
+        s.Result = result.Get();
         if (!s.Result) return {};
         for (const auto arg : function.getFunctionType()->params())
         {
             const auto argty = Builder::FromLLVM(arg);
             if (!argty) return {};
-            s.Args.push_back(argty);
+            s.Args.push_back(argty.Get());
         }
         s.IsVarargs = function.getFunctionType()->isVarArg();
         return s;

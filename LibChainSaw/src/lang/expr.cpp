@@ -51,7 +51,7 @@ csaw::IndexExpression::IndexExpression(const std::string& filename, const size_t
 {
 }
 
-csaw::IntExpression::IntExpression(const std::string& filename, const size_t line, const uint32_t value)
+csaw::IntExpression::IntExpression(const std::string& filename, const size_t line, const uint64_t value)
     : Expression(filename, line), Value(value)
 {
 }

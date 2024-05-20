@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/lang/Def.hpp>
 #include <csaw/lang/Expr.hpp>
 #include <csaw/lang/Parser.hpp>
@@ -234,7 +234,7 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
     auto line = m_Line;
 
     if (AtEOF())
-        CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Reached end of file");
+        ThrowError(m_Data.Filename, line, true, "Reached end of file");
 
     if (At(TK_IDENTIFIER)) return std::make_shared<IdentifierExpression>(m_Data.Filename, line, Get().Value);
     if (At(TK_INT_BIN | TK_INT_OCT | TK_INT_DEC | TK_INT_HEX)) return std::make_shared<IntExpression>(m_Data.Filename, line, Get().IntValue());
@@ -293,7 +293,7 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         return std::make_shared<SizeOfExpression>(m_Data.Filename, line, type);
     }
 
-    const auto token = Get();
-    CSAW_MESSAGE_(false, m_Data.Filename, line, "Unhandled token '" + token.Value + "' type " + TkToString(token.Type));
+    const auto [Type, Value, Line] = Get();
+    ThrowError(m_Data.Filename, line, true, "Unhandled token type %s value '%s'", TkToString(Type).c_str(), Value.c_str());
     return nullptr;
 }

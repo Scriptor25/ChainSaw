@@ -45,10 +45,10 @@ csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
     std::vector<std::pair<std::string, TypePtr>> elements;
     while (!AtEOF() && !At("}"))
     {
-        auto eName = Expect(TK_IDENTIFIER).Value;
+        auto e_name = Expect(TK_IDENTIFIER).Value;
         Expect(":");
-        const auto eType = ParseType();
-        elements.emplace_back(eName, eType);
+        const auto e_type = ParseType();
+        elements.emplace_back(e_name, e_type);
 
         if (!At("}"))
             Expect(",");
@@ -124,10 +124,10 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
                 break;
             }
 
-            auto aName = Expect(TK_IDENTIFIER).Value;
+            auto a_name = Expect(TK_IDENTIFIER).Value;
             Expect(":");
-            auto aType = ParseType();
-            args.emplace_back(aName, aType);
+            auto a_type = ParseType();
+            args.emplace_back(a_name, a_type);
             if (!At(")"))
                 Expect(",");
         }
@@ -211,7 +211,7 @@ csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const Expression
         if (!NextIfAt(":"))
             return nullptr;
 
-        auto type = ParseType();
+        const auto type = ParseType();
 
         if (!At("="))
         {

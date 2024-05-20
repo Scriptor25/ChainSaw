@@ -75,9 +75,9 @@ namespace csaw
 
     struct IntExpression : Expression
     {
-        IntExpression(const std::string& filename, size_t line, uint32_t value);
+        IntExpression(const std::string& filename, size_t line, uint64_t value);
 
-        uint32_t Value;
+        uint64_t Value;
     };
 
     struct MemberExpression : Expression

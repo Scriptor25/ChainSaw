@@ -4,7 +4,6 @@
 #include <csaw/codegen/Signature.hpp>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
-#include <llvm/Linker/Linker.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
@@ -15,24 +14,32 @@
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 
-csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
+csaw::Expect<csaw::TypePtr> csaw::Builder::FromLLVM(const llvm::Type* type)
 {
     if (type->isVoidTy()) return Type::GetVoid();
-    if (type->isPointerTy()) return PointerType::Get(Type::GetVoid());
-    if (type->isStructTy()) return Type::Get(type->getStructName().str());
+    if (type->isPointerTy()) return {PointerType::Get(Type::GetVoid())};
+    if (type->isStructTy())
+    {
+        const auto ty = Type::Get(type->getStructName().str());
+        if (!ty)
+            return Expect<TypePtr>("Undefined struct type " + type->getStructName().str());
+        return ty;
+    }
     if (type->isFunctionTy())
     {
         std::vector<TypePtr> args;
         for (size_t i = 0; i < type->getFunctionNumParams(); ++i)
         {
             const auto arg = FromLLVM(type->getFunctionParamType(i));
-            if (!arg) return nullptr;
-            args.push_back(arg);
+            if (!arg)
+                return Expect<TypePtr>("Function arg type is null: " + arg.Msg());
+            args.push_back(arg.Get());
         }
         const bool is_vararg = type->isFunctionVarArg();
         const auto result = FromLLVM(llvm::dyn_cast<llvm::FunctionType>(type)->getReturnType());
-        if (!result) return nullptr;
-        return FunctionType::Get(result, args, is_vararg);
+        if (!result)
+            return Expect<TypePtr>("Function result type is null: " + result.Msg());
+        return {FunctionType::Get(result.Get(), args, is_vararg)};
     }
     if (type->isIntegerTy(1)) return Type::GetInt1();
     if (type->isIntegerTy(8)) return Type::GetInt8();
@@ -44,7 +51,7 @@ csaw::TypePtr csaw::Builder::FromLLVM(const llvm::Type* type)
     if (type->isFloatTy()) return Type::GetFlt32();
     if (type->isDoubleTy()) return Type::GetFlt64();
 
-    return nullptr;
+    return Expect<TypePtr>("Unhandled llvm type");
 }
 
 csaw::Builder::Builder()

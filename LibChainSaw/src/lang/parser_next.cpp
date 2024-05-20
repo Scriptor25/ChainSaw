@@ -1,5 +1,5 @@
 #include <istream>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/lang/Parser.hpp>
 
 csaw::Token& csaw::Parser::Next()
@@ -134,7 +134,7 @@ csaw::Token& csaw::Parser::Next()
             if (c == '.')
             {
                 if (flt)
-                    CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Already a floating point number");
+                    ThrowError(m_Data.Filename, m_Line, true, "Value already has a floating point");
 
                 flt = true;
                 value += static_cast<char>(c);
@@ -144,7 +144,7 @@ csaw::Token& csaw::Parser::Next()
             if (c == 'e' || c == 'E')
             {
                 if (flt)
-                    CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Already a floating point number");
+                    ThrowError(m_Data.Filename, m_Line, true, "Value already has a floating point");
 
                 flt = true;
                 value += static_cast<char>(c);

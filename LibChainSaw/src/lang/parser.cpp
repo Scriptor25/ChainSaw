@@ -1,5 +1,5 @@
 #include <iostream>
-#include <csaw/Message.hpp>
+#include <csaw/Error.hpp>
 #include <csaw/lang/Parser.hpp>
 
 void csaw::Parser::Parse(const ParseData& data)
@@ -10,21 +10,20 @@ void csaw::Parser::Parse(const ParseData& data)
     data.Processed.emplace_back(data.Filename);
     Parser parser(data);
 
-    do
+    try
     {
-        try
+        do
         {
             while (parser.At(TK_COMPILE_DIRECTIVE)) parser.ParseCompileDirective();
             if (!parser.AtEOF())
                 data.Callback(parser.ParseStatement());
         }
-        catch (const ChainSawMessage& message)
-        {
-            std::cout << (message.Filename.empty() ? data.Filename : message.Filename) << "(" << (message.Line == 0 ? parser.m_Line : message.Line) << "): " << message.Message << std::endl;
-            break;
-        }
+        while (!parser.AtEOF());
     }
-    while (!parser.AtEOF());
+    catch (const std::runtime_error& error)
+    {
+        std::cout << data.Filename << ": " << error.what() << std::endl;
+    }
 }
 
 csaw::Parser::Parser(const ParseData& data)
@@ -97,7 +96,7 @@ csaw::Token csaw::Parser::Get()
 csaw::Token csaw::Parser::Expect(const int type)
 {
     if (!At(type))
-        CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Unexpected type " + TkToString(m_Token.Type) + ", expected " + TkToString(type));
+        ThrowError(m_Data.Filename, m_Line, true, "Expected type %s, found %s", TkToString(type).c_str(), TkToString(m_Token.Type).c_str());
     Token token = m_Token;
     Next();
     return token;
@@ -106,7 +105,7 @@ csaw::Token csaw::Parser::Expect(const int type)
 void csaw::Parser::Expect(const std::string& value)
 {
     if (!At(value))
-        CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Unexpected value '" + m_Token.Value + "', expected '" + value + "'");
+        ThrowError(m_Data.Filename, m_Line, true, "Expected value %s, found %s", value.c_str(), m_Token.Value.c_str());
     Next();
 }
 

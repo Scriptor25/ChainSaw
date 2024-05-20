@@ -2,14 +2,14 @@
 #include <string>
 #include <csaw/lang/Parser.hpp>
 
-uint32_t csaw::Token::IntValue() const
+uint64_t csaw::Token::IntValue() const
 {
     switch (Type)
     {
-    case TK_INT_BIN: return std::stoul(Value, nullptr, 2);
-    case TK_INT_OCT: return std::stoul(Value, nullptr, 8);
-    case TK_INT_DEC: return std::stoul(Value, nullptr, 10);
-    case TK_INT_HEX: return std::stoul(Value, nullptr, 16);
+    case TK_INT_BIN: return std::stoull(Value, nullptr, 2);
+    case TK_INT_OCT: return std::stoull(Value, nullptr, 8);
+    case TK_INT_DEC: return std::stoull(Value, nullptr, 10);
+    case TK_INT_HEX: return std::stoull(Value, nullptr, 16);
     default: return 0;
     }
 }

@@ -3,10 +3,7 @@
 
 csaw::RValuePtr csaw::Builder::GenCmpEQ(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -25,10 +22,7 @@ csaw::RValuePtr csaw::Builder::GenCmpEQ(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenCmpNE(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -47,10 +41,7 @@ csaw::RValuePtr csaw::Builder::GenCmpNE(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenCmpLE(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -69,10 +60,7 @@ csaw::RValuePtr csaw::Builder::GenCmpLE(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenCmpGE(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -91,10 +79,7 @@ csaw::RValuePtr csaw::Builder::GenCmpGE(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenAnd(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -107,19 +92,13 @@ csaw::RValuePtr csaw::Builder::GenAnd(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenLogicalAnd(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
     const auto value = m_Builder->CreateLogicalAnd(left->GetBoolValue(this), right->GetBoolValue(this));
     return RValue::Create(Type::GetInt1(), value);
 }
 
 csaw::RValuePtr csaw::Builder::GenOr(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -132,19 +111,13 @@ csaw::RValuePtr csaw::Builder::GenOr(const RValuePtr& left, const RValuePtr& rig
 
 csaw::RValuePtr csaw::Builder::GenLogicalOr(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
     const auto value = m_Builder->CreateLogicalOr(left->GetBoolValue(this), right->GetBoolValue(this));
     return RValue::Create(Type::GetInt1(), value);
 }
 
 csaw::RValuePtr csaw::Builder::GenXor(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -157,10 +130,7 @@ csaw::RValuePtr csaw::Builder::GenXor(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenCmpLT(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -179,10 +149,7 @@ csaw::RValuePtr csaw::Builder::GenCmpLT(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenCmpGT(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -201,10 +168,7 @@ csaw::RValuePtr csaw::Builder::GenCmpGT(const RValuePtr& left, const RValuePtr& 
 
 csaw::RValuePtr csaw::Builder::GenShl(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -217,10 +181,7 @@ csaw::RValuePtr csaw::Builder::GenShl(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenAShr(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -233,10 +194,7 @@ csaw::RValuePtr csaw::Builder::GenAShr(const RValuePtr& left, const RValuePtr& r
 
 csaw::RValuePtr csaw::Builder::GenLShr(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -249,10 +207,7 @@ csaw::RValuePtr csaw::Builder::GenLShr(const RValuePtr& left, const RValuePtr& r
 
 csaw::RValuePtr csaw::Builder::GenAdd(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -271,10 +226,7 @@ csaw::RValuePtr csaw::Builder::GenAdd(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenSub(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -293,10 +245,7 @@ csaw::RValuePtr csaw::Builder::GenSub(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenMul(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -315,10 +264,7 @@ csaw::RValuePtr csaw::Builder::GenMul(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenDiv(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {
@@ -337,10 +283,7 @@ csaw::RValuePtr csaw::Builder::GenDiv(const RValuePtr& left, const RValuePtr& ri
 
 csaw::RValuePtr csaw::Builder::GenRem(const RValuePtr& left, const RValuePtr& right) const
 {
-    if (!left || !right)
-        return nullptr;
-
-    const auto ty = Gen(left->GetType());
+    const auto ty = Gen(left->GetType()).Get();
 
     if (ty->isIntegerTy())
     {

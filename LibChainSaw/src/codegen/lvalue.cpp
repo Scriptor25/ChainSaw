@@ -7,16 +7,19 @@ llvm::Value* csaw::Value::GetBoolValue(const Builder* builder) const
     return builder->GetBuilder().CreateIsNotNull(value);
 }
 
-csaw::LValuePtr csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
+csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
 {
-    const auto pointer = builder->CreateAlloca(builder->Gen(type));
+    const auto ty = builder->Gen(type);
+    if (!ty)
+        return Expect<LValuePtr>("Type is null: " + ty.Msg());
+    const auto pointer = builder->CreateAlloca(ty.Get());
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 
-csaw::LValuePtr csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value)
+csaw::Expect<csaw::LValuePtr> csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value)
 {
     const auto lvalue = Allocate(builder, type);
-    lvalue->StoreValue(value);
+    if (lvalue) lvalue.Get()->StoreValue(value);
     return lvalue;
 }
 
@@ -35,10 +38,10 @@ csaw::RValuePtr csaw::LValue::GetReference() const
     return RValue::Create(PointerType::Get(m_Type), m_Pointer);
 }
 
-csaw::LValuePtr csaw::LValue::Dereference() const
+csaw::Expect<csaw::LValuePtr> csaw::LValue::Dereference() const
 {
     if (!m_Type->IsPointer())
-        return nullptr;
+        return Expect<LValuePtr>("Value type is non-pointer");
 
     const auto type = m_Type->AsPointer()->Base;
     const auto pointer = GetValue();
@@ -58,8 +61,7 @@ csaw::TypePtr csaw::LValue::GetType() const
 llvm::Value* csaw::LValue::GetValue() const
 {
     const auto type = m_Builder->Gen(m_Type);
-    if (!type) return nullptr;
-    return m_Builder->GetBuilder().CreateLoad(type, m_Pointer);
+    return m_Builder->GetBuilder().CreateLoad(type.Get(), m_Pointer);
 }
 
 bool csaw::LValue::IsLValue() const
