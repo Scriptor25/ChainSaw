@@ -1,5 +1,6 @@
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Value.hpp>
+#include <csaw/Builder.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 llvm::Value* csaw::Value::GetBoolValue(const Builder* builder) const
 {
@@ -12,6 +13,7 @@ csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const Typ
     const auto ty = builder->Gen(type);
     if (!ty)
         return Expect<LValuePtr>("Type is null: " + ty.Msg());
+
     const auto pointer = builder->CreateAlloca(ty.Get());
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }

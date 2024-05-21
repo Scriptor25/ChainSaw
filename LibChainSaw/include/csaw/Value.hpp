@@ -1,7 +1,6 @@
 #pragma once
 
-#include <csaw/Type.hpp>
-#include <csaw/codegen/Def.hpp>
+#include <csaw/Def.hpp>
 #include <llvm/IR/Value.h>
 
 namespace csaw

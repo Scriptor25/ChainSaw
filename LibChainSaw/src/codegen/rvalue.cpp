@@ -1,5 +1,6 @@
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Value.hpp>
+#include <csaw/Builder.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::RValue::Create(const TypePtr& type, llvm::Value* value)
 {

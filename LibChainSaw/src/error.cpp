@@ -2,17 +2,11 @@
 #include <format>
 #include <iostream>
 #include <csaw/Error.hpp>
+#include <csaw/Parser.hpp>
 
-void csaw::ThrowError(const std::string& file, const size_t line, const bool is_error, const char* format, ...)
+void csaw::ThrowError(const SourceLoc& loc, const bool is_error, const char* format, ...)
 {
-    if (!file.empty())
-    {
-        std::cout << file;
-        if (line == 0) std::cout << ": ";
-    }
-    if (line != 0) std::cout << '(' << line << "): ";
-
-    std::cout << (is_error ? "Error" : "Warning") << ": ";
+    std::cout << loc.ToString() << ": " << (is_error ? "Error" : "Warning") << ": ";
 
     va_list args;
     va_start(args, format);

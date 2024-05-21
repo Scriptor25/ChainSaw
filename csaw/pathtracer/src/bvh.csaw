@@ -30,9 +30,9 @@
 
     axis: int32 = me!bbox.longest_axis();
 
-    comparator: %int32(void*, void*)* = (axis == 0) ? &box_x_compare
-                                      : (axis == 1) ? &box_y_compare
-                                                    : &box_z_compare;
+    comparator: (void*, void*)(int32)* = (axis == 0) ? &box_x_compare
+                                       : (axis == 1) ? &box_y_compare
+                                                     : &box_z_compare;
 
     object_span: int64 = end - start;
 

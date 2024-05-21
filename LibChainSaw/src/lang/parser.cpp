@@ -1,6 +1,6 @@
 #include <iostream>
 #include <csaw/Error.hpp>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
 
 void csaw::Parser::Parse(const ParseData& data)
 {
@@ -27,14 +27,16 @@ void csaw::Parser::Parse(const ParseData& data)
 }
 
 csaw::Parser::Parser(const ParseData& data)
-    : m_Data(data)
+    : m_Data(data), m_Loc{data.Filename, 1, 1}
 {
     Next();
 }
 
-int csaw::Parser::Escape() const
+int csaw::Parser::Escape()
 {
     int c = m_Data.Stream.get();
+    ++m_Loc.Column;
+
     switch (c)
     {
     case 'a': return '\a';
@@ -52,8 +54,10 @@ int csaw::Parser::Escape() const
         std::string value;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         return std::stoi(value, nullptr, 8);
     }
@@ -62,8 +66,10 @@ int csaw::Parser::Escape() const
     {
         std::string value;
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         return std::stoi(value, nullptr, 16);
     }
@@ -96,7 +102,7 @@ csaw::Token csaw::Parser::Get()
 csaw::Token csaw::Parser::Expect(const int type)
 {
     if (!At(type))
-        ThrowError(m_Data.Filename, m_Line, true, "Expected type %s, found %s", TkToString(type).c_str(), TkToString(m_Token.Type).c_str());
+        ThrowError(m_Loc, true, "Expected type %s, found type %s, value '%s'", TkToString(type).c_str(), TkToString(m_Token.Type).c_str(), m_Token.Value.c_str());
     Token token = m_Token;
     Next();
     return token;
@@ -105,7 +111,7 @@ csaw::Token csaw::Parser::Expect(const int type)
 void csaw::Parser::Expect(const std::string& value)
 {
     if (!At(value))
-        ThrowError(m_Data.Filename, m_Line, true, "Expected value %s, found %s", value.c_str(), m_Token.Value.c_str());
+        ThrowError(m_Loc, true, "Expected value '%s', found type %s, value '%s'", value.c_str(), TkToString(m_Token.Type).c_str(), m_Token.Value.c_str());
     Next();
 }
 

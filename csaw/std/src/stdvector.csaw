@@ -24,6 +24,6 @@
 @at:vector(i: int64): void* = me!ptr[i];
 @"[]":vector(i: int64): void** = &me!ptr[i];
 
-@sort:vector(start: int64, num: int64, comparator: %int32(void*, void*)*): void = qsort(&me!ptr[start], num, $(void*), comparator);
+@sort:vector(start: int64, num: int64, comparator: (void*, void*)(int32)*): void = qsort(&me!ptr[start], num, $(void*), comparator);
 
 @destroy:vector:void = free(me!ptr);

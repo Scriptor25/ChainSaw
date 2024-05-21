@@ -1,8 +1,9 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Gen(const CallExpression& expression)
 {
@@ -73,10 +74,21 @@ csaw::RValuePtr csaw::Builder::Gen(const CallExpression& expression)
         arg_types.push_back(value->GetType());
     }
 
-    const auto [signature, function] = FindFunction(name, lobject ? lobject->GetType() : nullptr, arg_types);
+    const auto [function, signature] = FindFunction(name, lobject ? lobject->GetType() : nullptr, arg_types);
     if (!function)
     {
-        ThrowErrorStmt(expression, false, "Failed to find function with signature '%s'", signature.Mangle().c_str());
+        std::string sig_name = name;
+        if (lobject)
+            sig_name += ':' + lobject->GetType()->Name;
+
+        std::string args_string;
+        for (size_t i = 0; i < arg_types.size(); ++i)
+        {
+            if (i > 0) args_string += ", ";
+            args_string += arg_types[i]->Name;
+        }
+
+        ThrowErrorStmt(expression, false, "Failed to find function '@%s(%s)'", sig_name.c_str(), args_string.c_str());
         return nullptr;
     }
 
@@ -113,7 +125,7 @@ csaw::RValuePtr csaw::Builder::Gen(const CallExpression& expression)
     for (; i < args.size(); ++i)
         vargs.push_back(args[i]->GetValue());
 
-    const auto result = m_Builder->CreateCall(function->getFunctionType(), function, vargs);
+    const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, vargs);
 
     if (signature.IsConstructor())
         return lresult->GetRValue();

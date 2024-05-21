@@ -1,8 +1,8 @@
 #include <ostream>
 #include <string>
 #include <csaw/Error.hpp>
-#include <csaw/lang/Expr.hpp>
-#include <csaw/lang/Stmt.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Stmt.hpp>
 
 static size_t depth = 0;
 static bool end = true;
@@ -89,7 +89,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
         {
             if (i > 0)
                 out << ", ";
-            out << statement.Args[i].first << ": " << statement.Args[i].second;
+            out << statement.Args[i];
         }
         if (statement.IsVarArgs)
             out << ", ?";

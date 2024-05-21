@@ -1,6 +1,6 @@
 #include <ostream>
 #include <csaw/Error.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
 
 std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
 {

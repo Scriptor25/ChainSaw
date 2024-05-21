@@ -1,8 +1,9 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::ValuePtr csaw::Builder::Gen(const ExpressionPtr& ptr)
 {
@@ -62,7 +63,7 @@ csaw::RValuePtr csaw::Builder::Gen(const CastExpression& expression)
 
 csaw::RValuePtr csaw::Builder::Gen(const CharExpression& expression) const
 {
-    const auto value = m_Builder->getInt8(expression.Value);
+    const auto value = GetBuilder().getInt8(expression.Value);
     return RValue::Create(Type::GetInt8(), value);
 }
 
@@ -96,7 +97,7 @@ csaw::LValuePtr csaw::Builder::Gen(const DereferenceExpression& expression)
 
 csaw::RValuePtr csaw::Builder::Gen(const FloatExpression& expression) const
 {
-    const auto value = llvm::ConstantFP::get(m_Builder->getDoubleTy(), expression.Value);
+    const auto value = llvm::ConstantFP::get(GetBuilder().getDoubleTy(), expression.Value);
     return RValue::Create(Type::GetFlt64(), value);
 }
 
@@ -105,15 +106,10 @@ csaw::LValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
     if (const auto& value = m_Values[expression.Id])
         return value;
 
-    if (const auto value = m_Module->getFunction(expression.Id))
+    if (const auto value = GetModule().getFunction(expression.Id))
     {
-        const auto type = FromLLVM(value->getFunctionType());
-        if (!type)
-        {
-            ThrowErrorStmt(expression, false, "Failed to determine type from llvm type: %s", type.Msg().c_str());
-            return nullptr;
-        }
-        return LValue::Direct(this, type.Get(), value);
+        const auto type = m_Signatures[value].GetFunctionType();
+        return LValue::Direct(this, type, value);
     }
 
     ThrowErrorStmt(expression, false, "Undefined identifier '%s'", expression.Id.c_str());
@@ -122,7 +118,7 @@ csaw::LValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
 
 csaw::RValuePtr csaw::Builder::Gen(const IntExpression& expression) const
 {
-    const auto value = m_Builder->getInt64(expression.Value);
+    const auto value = GetBuilder().getInt64(expression.Value);
     return RValue::Create(Type::GetInt64(), value);
 }
 
@@ -150,12 +146,12 @@ csaw::RValuePtr csaw::Builder::Gen(const SizeOfExpression& expression) const
         return nullptr;
     }
 
-    const auto size = m_Module->getDataLayout().getTypeAllocSize(type.Get());
-    return RValue::Create(Type::GetInt64(), m_Builder->getInt64(size));
+    const auto size = GetModule().getDataLayout().getTypeAllocSize(type.Get());
+    return RValue::Create(Type::GetInt64(), GetBuilder().getInt64(size));
 }
 
 csaw::RValuePtr csaw::Builder::Gen(const StringExpression& expression) const
 {
-    const auto value = m_Builder->CreateGlobalStringPtr(expression.Value);
+    const auto value = GetBuilder().CreateGlobalStringPtr(expression.Value);
     return RValue::Create(PointerType::Get(Type::GetInt8()), value);
 }

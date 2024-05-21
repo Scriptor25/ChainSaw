@@ -1,9 +1,41 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 namespace csaw
 {
+    struct SourceLoc
+    {
+        [[nodiscard]] std::string ToString() const { return Filename + "(" + std::to_string(Line) + "," + std::to_string(Column) + ")"; }
+
+        std::string Filename;
+        size_t Line = 0;
+        size_t Column = 0;
+    };
+
+    struct Type;
+    struct PointerType;
+    struct ArrayType;
+    struct StructType;
+    struct FunctionType;
+
+    typedef std::shared_ptr<Type> TypePtr;
+    typedef std::shared_ptr<PointerType> PointerTypePtr;
+    typedef std::shared_ptr<ArrayType> ArrayTypePtr;
+    typedef std::shared_ptr<StructType> StructTypePtr;
+    typedef std::shared_ptr<FunctionType> FunctionTypePtr;
+
+    std::ostream& operator<<(std::ostream& out, const TypePtr& ptr);
+
+    struct Arg
+    {
+        std::string Name;
+        TypePtr Type;
+    };
+
+    std::ostream& operator<<(std::ostream& out, const Arg& arg);
+
     struct Statement;
     struct ScopeStatement;
     struct ForStatement;
@@ -70,4 +102,15 @@ namespace csaw
     std::ostream& operator<<(std::ostream& out, const StringExpression& expression);
     std::ostream& operator<<(std::ostream& out, const UnaryExpression& expression);
     std::ostream& operator<<(std::ostream& out, const VarArgExpression& expression);
+
+    class Builder;
+    struct Signature;
+
+    class Value;
+    class LValue;
+    class RValue;
+
+    typedef std::shared_ptr<Value> ValuePtr;
+    typedef std::shared_ptr<LValue> LValuePtr;
+    typedef std::shared_ptr<RValue> RValuePtr;
 }

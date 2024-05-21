@@ -1,15 +1,10 @@
 #pragma once
 
 #include <filesystem>
-#include <map>
-#include <memory>
-#include <csaw/Type.hpp>
-#include <csaw/codegen/Def.hpp>
-#include <csaw/codegen/Expect.hpp>
-#include <csaw/lang/Def.hpp>
+#include <csaw/Def.hpp>
+#include <csaw/Expect.hpp>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -18,10 +13,12 @@
 
 namespace csaw
 {
-    struct ModulePair
+    struct ModuleData
     {
-        std::unique_ptr<llvm::LLVMContext> Context;
-        std::unique_ptr<llvm::Module> Module;
+        std::unique_ptr<llvm::LLVMContext> Context = nullptr;
+        std::unique_ptr<llvm::IRBuilder<>> Builder = nullptr;
+        std::unique_ptr<llvm::Module> Module = nullptr;
+        llvm::Function* Global = nullptr;
     };
 
     typedef std::pair<RValuePtr, RValuePtr> RValPair;
@@ -29,18 +26,19 @@ namespace csaw
     class Builder
     {
     public:
-        static Expect<TypePtr> FromLLVM(const llvm::Type* type);
-
         Builder();
 
         [[nodiscard]] llvm::LLVMContext& GetContext() const;
         [[nodiscard]] llvm::IRBuilder<>& GetBuilder() const;
         [[nodiscard]] llvm::Module& GetModule() const;
+        [[nodiscard]] llvm::Function* GetGlobal() const;
 
         void BeginModule(const std::string& name, const std::string& source_file);
-        void EndModule();
+        void EndModule(bool output = false, bool emit_ir = false, const std::string& dest_dir = "", const std::string& output_type = "");
 
-        int Output(const std::filesystem::path& dest_dir, const std::string& type);
+        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::filesystem::path& dest_dir);
+        [[nodiscard]] static int Output(llvm::Module& module, const std::filesystem::path& dest_dir, const std::string& type);
+
         int RunJIT(const std::string& entry_name, int argc, const char** argv);
 
         llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* array_size = nullptr) const;
@@ -49,7 +47,7 @@ namespace csaw
         [[nodiscard]] Expect<llvm::Type*> Gen(const TypePtr& type) const;
 
     private:
-        [[nodiscard]] std::pair<Signature, llvm::Function*> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
+        [[nodiscard]] std::pair<llvm::Function*, Signature> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
         void PushScopeStack();
         void PopScopeStack();
 
@@ -107,12 +105,7 @@ namespace csaw
         [[nodiscard]] RValuePtr GenInc(const RValuePtr& value) const;
         [[nodiscard]] RValuePtr GenDec(const RValuePtr& value) const;
 
-        std::unique_ptr<llvm::LLVMContext> m_Context;
-        std::unique_ptr<llvm::IRBuilder<>> m_Builder;
-        std::unique_ptr<llvm::Module> m_Module;
-        llvm::Function* m_Global = nullptr;
-
-        std::map<std::string, ModulePair> m_Modules;
+        std::map<std::string, ModuleData> m_Modules;
 
         std::unique_ptr<llvm::FunctionPassManager> m_FPM;
         std::unique_ptr<llvm::LoopAnalysisManager> m_LAM;
@@ -122,6 +115,8 @@ namespace csaw
         std::unique_ptr<llvm::PassInstrumentationCallbacks> m_PIC;
         std::unique_ptr<llvm::StandardInstrumentations> m_SI;
 
+        ModuleData m_ModuleData;
+        std::map<llvm::Function*, Signature> m_Signatures;
         std::vector<std::map<std::string, LValuePtr>> m_ScopeStack;
         std::map<std::string, LValuePtr> m_Values;
     };

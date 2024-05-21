@@ -1,7 +1,9 @@
 #include <filesystem>
 #include <iostream>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
+#include <csaw/Builder.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/MC/TargetRegistry.h>
@@ -13,46 +15,6 @@
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
-
-csaw::Expect<csaw::TypePtr> csaw::Builder::FromLLVM(const llvm::Type* type)
-{
-    if (type->isVoidTy()) return Type::GetVoid();
-    if (type->isPointerTy()) return {PointerType::Get(Type::GetVoid())};
-    if (type->isStructTy())
-    {
-        const auto ty = Type::Get(type->getStructName().str());
-        if (!ty)
-            return Expect<TypePtr>("Undefined struct type " + type->getStructName().str());
-        return ty;
-    }
-    if (type->isFunctionTy())
-    {
-        std::vector<TypePtr> args;
-        for (size_t i = 0; i < type->getFunctionNumParams(); ++i)
-        {
-            const auto arg = FromLLVM(type->getFunctionParamType(i));
-            if (!arg)
-                return Expect<TypePtr>("Function arg type is null: " + arg.Msg());
-            args.push_back(arg.Get());
-        }
-        const bool is_vararg = type->isFunctionVarArg();
-        const auto result = FromLLVM(llvm::dyn_cast<llvm::FunctionType>(type)->getReturnType());
-        if (!result)
-            return Expect<TypePtr>("Function result type is null: " + result.Msg());
-        return {FunctionType::Get(result.Get(), args, is_vararg)};
-    }
-    if (type->isIntegerTy(1)) return Type::GetInt1();
-    if (type->isIntegerTy(8)) return Type::GetInt8();
-    if (type->isIntegerTy(16)) return Type::GetInt16();
-    if (type->isIntegerTy(32)) return Type::GetInt32();
-    if (type->isIntegerTy(64)) return Type::GetInt64();
-    if (type->isIntegerTy(128)) return Type::GetInt128();
-    if (type->isHalfTy()) return Type::GetFlt16();
-    if (type->isFloatTy()) return Type::GetFlt32();
-    if (type->isDoubleTy()) return Type::GetFlt64();
-
-    return Expect<TypePtr>("Unhandled llvm type");
-}
 
 csaw::Builder::Builder()
 {
@@ -76,66 +38,101 @@ csaw::Builder::Builder()
 
 llvm::LLVMContext& csaw::Builder::GetContext() const
 {
-    return *m_Context;
+    return *m_ModuleData.Context;
 }
 
 llvm::IRBuilder<>& csaw::Builder::GetBuilder() const
 {
-    return *m_Builder;
+    return *m_ModuleData.Builder;
 }
 
 llvm::Module& csaw::Builder::GetModule() const
 {
-    return *m_Module;
+    return *m_ModuleData.Module;
+}
+
+llvm::Function* csaw::Builder::GetGlobal() const
+{
+    return m_ModuleData.Global;
 }
 
 void csaw::Builder::BeginModule(const std::string& name, const std::string& source_file)
 {
-    m_Context = std::make_unique<llvm::LLVMContext>();
-    m_Builder = std::make_unique<llvm::IRBuilder<>>(*m_Context);
-    m_Module = std::make_unique<llvm::Module>(name, *m_Context);
-    m_Module->setSourceFileName(source_file);
-
-    m_SI = std::make_unique<llvm::StandardInstrumentations>(*m_Context, true);
-    m_SI->registerCallbacks(*m_PIC, m_MAM.get());
-
-    const auto function_type = llvm::FunctionType::get(m_Builder->getVoidTy(), false);
-    m_Global = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, name + ".global", *m_Module);
-    const auto entry_block = llvm::BasicBlock::Create(*m_Context, "entry", m_Global);
-    m_Builder->SetInsertPoint(entry_block);
-
+    m_ModuleData = {};
+    m_Signatures.clear();
     m_ScopeStack.clear();
     m_Values.clear();
+
+    m_ModuleData.Context = std::make_unique<llvm::LLVMContext>();
+    m_ModuleData.Builder = std::make_unique<llvm::IRBuilder<>>(GetContext());
+    m_ModuleData.Module = std::make_unique<llvm::Module>(name, GetContext());
+
+    GetModule().setSourceFileName(source_file);
+
+    m_SI = std::make_unique<llvm::StandardInstrumentations>(GetContext(), true);
+    m_SI->registerCallbacks(*m_PIC, m_MAM.get());
+
+    const auto function_type = llvm::FunctionType::get(GetBuilder().getVoidTy(), false);
+    m_ModuleData.Global = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, name + ".global", GetModule());
+    const auto entry_block = llvm::BasicBlock::Create(GetContext(), "entry", GetGlobal());
+    m_ModuleData.Builder->SetInsertPoint(entry_block);
 }
 
-void csaw::Builder::EndModule()
+void csaw::Builder::EndModule(bool output, const bool emit_ir, const std::string& dest_dir, const std::string& output_type)
 {
-    m_Builder->CreateRetVoid();
-    if (verifyFunction(*m_Global, &llvm::errs()))
+    GetBuilder().CreateRetVoid();
+    if (verifyFunction(*GetGlobal(), &llvm::errs()))
     {
         std::cout << "Failed to verify global function" << std::endl;
-        m_Global->viewCFG();
-        m_Global->eraseFromParent();
+        GetGlobal()->viewCFG();
+        GetGlobal()->eraseFromParent();
         return;
     }
 
     // Optimize Global
-    m_FPM->run(*m_Global, *m_FAM);
+    m_FPM->run(*GetGlobal(), *m_FAM);
 
     // Append Global to CTORs
-    appendToGlobalCtors(*m_Module, m_Global, 0);
+    appendToGlobalCtors(GetModule(), GetGlobal(), 0);
 
-    if (verifyModule(*m_Module))
+    if (verifyModule(GetModule()))
     {
         std::cout << "Failed to verify module" << std::endl;
+        m_ModuleData = {};
         return;
     }
 
-    const auto name = m_Module->getName().str();
-    m_Modules[name] = {std::move(m_Context), std::move(m_Module)};
+    if (emit_ir)
+        (void)EmitIR(GetModule(), dest_dir);
+
+    if (output)
+        (void)Output(GetModule(), dest_dir, output_type);
+
+    const auto name = GetModule().getName().str();
+    m_Modules[name] = std::move(m_ModuleData);
+    m_ModuleData = {};
 }
 
-int csaw::Builder::Output(const std::filesystem::path& dest_dir, const std::string& type)
+int csaw::Builder::EmitIR(const llvm::Module& module, const std::filesystem::path& dest_dir)
+{
+    const auto name = module.getName().str();
+    const auto filename = absolute(dest_dir / (name + ".ll")).string();
+
+    std::error_code error_code;
+    llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
+    if (error_code)
+    {
+        std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
+        return -1;
+    }
+
+    module.print(dest, nullptr, true, true);
+    dest.flush();
+
+    return 0;
+}
+
+int csaw::Builder::Output(llvm::Module& module, const std::filesystem::path& dest_dir, const std::string& type)
 {
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
@@ -174,32 +171,29 @@ int csaw::Builder::Output(const std::filesystem::path& dest_dir, const std::stri
         fileext = ".s";
     }
 
-    for (const auto& [name, pair] : m_Modules)
+    const auto name = module.getName().str();
+    const auto filename = absolute(dest_dir / (name + fileext)).string();
+
+    std::error_code error_code;
+    llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
+    if (error_code)
     {
-        const auto filename = absolute(dest_dir / (name + fileext)).string();
-
-        std::error_code error_code;
-        llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
-
-        if (error_code)
-        {
-            std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
-            return -1;
-        }
-
-        llvm::legacy::PassManager pass;
-        if (machine->addPassesToEmitFile(pass, dest, nullptr, filetype))
-        {
-            std::cout << "Failed to output to file '" << filename << "'" << std::endl;
-            return -1;
-        }
-
-        pair.Module->setTargetTriple(triple);
-        pair.Module->setDataLayout(data_layout);
-        pass.run(*pair.Module);
-
-        dest.flush();
+        std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
+        return -1;
     }
+
+    llvm::legacy::PassManager pass;
+    if (machine->addPassesToEmitFile(pass, dest, nullptr, filetype))
+    {
+        std::cout << "Failed to output to file '" << filename << "'" << std::endl;
+        return -1;
+    }
+
+    module.setTargetTriple(triple);
+    module.setDataLayout(data_layout);
+
+    pass.run(module);
+    dest.flush();
 
     return 0;
 }
@@ -225,6 +219,7 @@ int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const c
 
     // Link symbols into main dylib
     llvm::orc::SymbolMap symbols;
+    // for some reason fprintf does not work correctly if you dont specify it here
     symbols[jit->mangleAndIntern("fprintf")] = {
         llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(&fprintf)),
         llvm::JITSymbolFlags()
@@ -277,18 +272,17 @@ int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const c
 
 llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* array_size) const
 {
-    const auto block = m_Builder->GetInsertBlock();
-    m_Builder->SetInsertPointPastAllocas(block->getParent());
-    const auto inst = m_Builder->CreateAlloca(type, array_size);
-    m_Builder->SetInsertPoint(block);
+    const auto block = GetBuilder().GetInsertBlock();
+    GetBuilder().SetInsertPointPastAllocas(block->getParent());
+    const auto inst = GetBuilder().CreateAlloca(type, array_size);
+    GetBuilder().SetInsertPoint(block);
     return inst;
 }
 
-std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const
+std::pair<llvm::Function*, csaw::Signature> csaw::Builder::FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const
 {
-    for (auto& function : m_Module->functions())
+    for (const auto& [f, s] : m_Signatures)
     {
-        const auto s = Signature::Demangle(function);
         if (s.Name != name) continue;
         if (s.Parent != parent) continue;
         if (s.Args.size() > args.size() || (!s.IsVarargs && s.Args.size() != args.size())) continue;
@@ -297,10 +291,10 @@ std::pair<csaw::Signature, llvm::Function*> csaw::Builder::FindFunction(const st
             if (!s.Args[i]->ParentOf(args[i]))
                 break;
         if (i < s.Args.size()) continue;
-        return {s, &function};
+        return {f, s};
     }
 
-    return {{name, parent, nullptr, args, false}, nullptr};
+    return {nullptr, {name, parent, nullptr, args, false}};
 }
 
 void csaw::Builder::PushScopeStack()

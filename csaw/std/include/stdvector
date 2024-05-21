@@ -12,5 +12,5 @@ def vector {
 @push_back:vector(ptr: void*): void;
 @at:vector(i: int64): void*;
 @"[]":vector(i: int64): void**;
-@sort:vector(start: int64, num: int64, comparator: %int32(void*, void*)*): void;
+@sort:vector(start: int64, num: int64, comparator: (void*, void*)(int32)*): void;
 @destroy:vector:void;

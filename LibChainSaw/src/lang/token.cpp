@@ -1,6 +1,6 @@
 #include <ostream>
 #include <string>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
 
 uint64_t csaw::Token::IntValue() const
 {
@@ -49,5 +49,5 @@ std::ostream& csaw::operator<<(std::ostream& out, const TokenType& type)
 
 std::ostream& csaw::operator<<(std::ostream& out, const Token& token)
 {
-    return out << token.Line << ": " << token.Value << " (" << token.Type << ')';
+    return out << token.Loc.ToString() << ": " << token.Value << " (" << token.Type << ')';
 }

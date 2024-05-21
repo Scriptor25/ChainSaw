@@ -1,8 +1,9 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 {
@@ -16,7 +17,7 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 
     auto op = expression.Operator;
 
-    if (const auto [signature, function] = FindFunction(op, nullptr, {left->GetType(), right->GetType()}); function)
+    if (const auto [function, signature] = FindFunction(op, nullptr, {left->GetType(), right->GetType()}); function)
     {
         const auto cast_left = Cast(left, signature.Args[0]);
         if (!cast_left)
@@ -32,7 +33,7 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
             return nullptr;
         }
 
-        const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {cast_left.Get()->GetValue(), cast_right.Get()->GetValue()});
+        const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {cast_left.Get()->GetValue(), cast_right.Get()->GetValue()});
         return RValue::Create(signature.Result, value);
     }
 
@@ -40,7 +41,7 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 
     if (left->IsLValue())
     {
-        if (const auto [signature, function] = FindFunction(op, left->GetType(), {right->GetType()}); function)
+        if (const auto [function, signature] = FindFunction(op, left->GetType(), {right->GetType()}); function)
         {
             const auto cast_right = Cast(right, signature.Args[0]);
             if (!cast_right)
@@ -49,7 +50,7 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
                 return nullptr;
             }
 
-            const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {lleft->GetPointer(), cast_right.Get()->GetValue()});
+            const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {lleft->GetPointer(), cast_right.Get()->GetValue()});
             return RValue::Create(signature.Result, value);
         }
     }

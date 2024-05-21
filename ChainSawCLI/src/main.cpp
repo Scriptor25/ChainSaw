@@ -1,10 +1,11 @@
-﻿#include <fstream>
+﻿#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <csaw/Builder.hpp>
 #include <csaw/ChainSaw.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
 
 static const std::string NAME = "csaw";
 static const std::string DESCRIPTION = "ChainSaw CLI";
@@ -38,12 +39,13 @@ static int show_help()
     std::cout << '\t' << "-b, --build:           specify the directoy for the build/output files" << std::endl;
     std::cout << '\t' << "-c, --code:            emit the parsed code to the standard output" << std::endl;
     std::cout << '\t' << "-e, --entry:           specify the jit entry function name; defaults to main" << std::endl;
+    std::cout << '\t' << "    --emit-ir:         emit the generate intermediate representation to a file in the build/output directory" << std::endl;
     std::cout << '\t' << "-h, --help:            show this help message" << std::endl;
     std::cout << '\t' << "-i, --include:         add a directory to the include search paths" << std::endl;
     std::cout << '\t' << "-j, --jit:             run the compiled program through a jit using the provided program args" << std::endl;
     std::cout << '\t' << "-l, --link:            if the binary output files should be linked into a executable, specify the filename" << std::endl;
     std::cout << '\t' << "-L, --lib:             add libraries to be linked against" << std::endl;
-    std::cout << '\t' << "-o, --output:          specify the type of the output files; possible values are 'll' (llvm ir), 'obj' (binary) and 'asm' (assembly), default is 'obj'" << std::endl;
+    std::cout << '\t' << "-o, --output:          specify the type of the output files; possible values are 'obj' (binary) and 'asm' (assembly), defaults to 'obj'" << std::endl;
     std::cout << '\t' << "-p, --pause:           wait for enter after execution" << std::endl;
     std::cout << '\t' << "-r, --run:             alias for -j, --jit" << std::endl;
     std::cout << '\t' << "-v, --version:         show the program version info" << std::endl;
@@ -117,6 +119,7 @@ int main(const int argc, const char** argv)
     eat_option(args, {"-b", "--build="}, build); // -b, --build
     bool code = eat_flag(args, {"-c", "--code"}); // -c, --code
     eat_option(args, {"-e", "--entry="}, entry); // -e, --entry
+    bool emit_ir = eat_flag(args, {"--emit-ir"}); // --emit-ir
     bool help = eat_flag(args, {"-h", "--help"}); // -h, --help
     for (std::string include; eat_option(args, {"-i", "--include="}, include);) // -i, --include
         includes.push_back(include);
@@ -171,12 +174,7 @@ int main(const int argc, const char** argv)
         csaw::ParseData data(file, stream, callback, includes, processed);
         csaw::Parser::Parse(data);
 
-        builder->EndModule();
-    }
-
-    if (!build.empty())
-    {
-        builder->Output(build, output);
+        builder->EndModule(!build.empty(), emit_ir, build, output);
     }
 
     if (jit)

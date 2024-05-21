@@ -1,8 +1,9 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
 {
@@ -14,7 +15,7 @@ csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
     if (!index)
         return nullptr;
 
-    if (const auto [signature, function] = FindFunction("[]", array->GetType(), {index->GetType()}); function)
+    if (const auto [function, signature] = FindFunction("[]", array->GetType(), {index->GetType()}); function)
     {
         if (!signature.Result->IsPointer())
         {
@@ -43,24 +44,39 @@ csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
             larray = alloc.Get();
         }
 
-        const auto value = m_Builder->CreateCall(function->getFunctionType(), function, {larray->GetPointer(), cast_index.Get()->GetValue()});
+        const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {larray->GetPointer(), cast_index.Get()->GetValue()});
         return LValue::Direct(this, signature.Result->AsPointer()->Base, value);
     }
 
-    if (!array->GetType()->IsPointer())
+    if (array->GetType()->IsPointer())
     {
-        ThrowErrorStmt(expression, false, "Cannot index into value with non-pointer type %s", array->GetType()->Name.c_str());
-        return nullptr;
+        const auto base = array->GetType()->AsPointer()->Base;
+        const auto ty = Gen(base);
+        if (!ty)
+        {
+            ThrowErrorStmt(expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str());
+            return nullptr;
+        }
+
+        const auto pointer = GetBuilder().CreateGEP(ty.Get(), array->GetValue(), {index->GetValue()});
+        return LValue::Direct(this, base, pointer);
     }
 
-    const auto type = array->GetType()->AsPointer()->Base;
-    const auto vty = Gen(type);
-    if (!vty)
+    if (array->GetType()->IsArray())
     {
-        ThrowErrorStmt(expression, false, "Failed to generate type %s: %s", type->Name.c_str(), vty.Msg().c_str());
-        return nullptr;
+        const auto base = array->GetType()->AsArray()->Base;
+        const auto ty = Gen(array->GetType());
+        if (!ty)
+        {
+            ThrowErrorStmt(expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str());
+            return nullptr;
+        }
+
+        const auto larray = std::dynamic_pointer_cast<LValue>(array);
+        const auto pointer = GetBuilder().CreateGEP(ty.Get(), larray->GetPointer(), {GetBuilder().getInt64(0), index->GetValue()});
+        return LValue::Direct(this, base, pointer);
     }
 
-    const auto pointer = m_Builder->CreateGEP(vty.Get(), array->GetValue(), {index->GetValue()});
-    return LValue::Direct(this, type, pointer);
+    ThrowErrorStmt(expression, false, "Cannot index into value with non-pointer type %s", array->GetType()->Name.c_str());
+    return nullptr;
 }

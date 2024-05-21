@@ -1,8 +1,9 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Signature.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Signature.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
 {
@@ -17,17 +18,17 @@ csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
     {
         if (expression.OpRight) // get and op (@(++):vec3(t: int1): vec3 ...)
         {
-            if (const auto [signature, function] = FindFunction(op, value->GetType(), {Type::GetInt1()}); function)
+            if (const auto [function, signature] = FindFunction(op, value->GetType(), {Type::GetInt1()}); function)
             {
-                const auto result = m_Builder->CreateCall(function->getFunctionType(), function, {lvalue->GetPointer(), m_Builder->getInt1(true)});
+                const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, {lvalue->GetPointer(), GetBuilder().getInt1(true)});
                 return RValue::Create(signature.Result, result);
             }
         }
         else // op and get (@(++):vec3:vec3 ...)
         {
-            if (const auto [signature, function] = FindFunction(op, value->GetType(), {}); function)
+            if (const auto [function, signature] = FindFunction(op, value->GetType(), {}); function)
             {
-                const auto result = m_Builder->CreateCall(function->getFunctionType(), function, {lvalue->GetPointer()});
+                const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, {lvalue->GetPointer()});
                 return RValue::Create(signature.Result, result);
             }
         }

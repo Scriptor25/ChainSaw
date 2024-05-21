@@ -1,7 +1,8 @@
+#include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Value.hpp>
-#include <csaw/lang/Expr.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::LValuePtr csaw::Builder::Gen(const MemberExpression& expression)
 {
@@ -69,6 +70,6 @@ csaw::LValuePtr csaw::Builder::Gen(const MemberExpression& expression)
         return nullptr;
     }
 
-    const auto pointer = m_Builder->CreateStructGEP(type.Get(), lobject->GetPointer(), eindex);
+    const auto pointer = GetBuilder().CreateStructGEP(type.Get(), lobject->GetPointer(), eindex);
     return LValue::Direct(this, etype, pointer);
 }

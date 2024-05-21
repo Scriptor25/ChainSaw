@@ -1,11 +1,11 @@
 #include <filesystem>
 #include <fstream>
 #include <csaw/Error.hpp>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
 
 void csaw::Parser::ParseCompileDirective()
 {
-    const auto line = m_Line;
+    const auto loc = m_Loc;
 
     const auto directive = Expect(TK_COMPILE_DIRECTIVE).Value;
     if (directive == "inc")
@@ -28,12 +28,12 @@ void csaw::Parser::ParseCompileDirective()
         }
 
         if (!stream.is_open())
-            return ThrowError(m_Data.Filename, line, true, "Failed to open include file '%s'", filename.c_str());
+            return ThrowError(loc, true, "Failed to open include file '%s'", filename.c_str());
 
         Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
         stream.close();
         return;
     }
 
-    ThrowError(m_Data.Filename, line, false, "Undefined compile directive '%s'", directive.c_str());
+    ThrowError(loc, false, "Undefined compile directive '%s'", directive.c_str());
 }

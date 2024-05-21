@@ -2,10 +2,8 @@
 
 #include <filesystem>
 #include <functional>
-#include <string>
 #include <vector>
-#include <csaw/Type.hpp>
-#include <csaw/lang/Def.hpp>
+#include <csaw/Def.hpp>
 
 namespace csaw
 {
@@ -33,9 +31,9 @@ namespace csaw
     {
         [[nodiscard]] uint64_t IntValue() const;
 
+        SourceLoc Loc;
         TokenType Type;
         std::string Value;
-        size_t Line;
     };
 
     std::string TkToString(int type);
@@ -48,8 +46,8 @@ namespace csaw
     {
         std::string Filename;
         std::istream& Stream;
-        ParseCallback Callback;
 
+        ParseCallback Callback;
         const std::vector<std::string>& IncludePaths;
         std::vector<std::filesystem::path>& Processed;
     };
@@ -62,7 +60,9 @@ namespace csaw
     private:
         explicit Parser(const ParseData& data);
 
-        [[nodiscard]] int Escape() const;
+        int Read();
+        void PutBack(int c);
+        int Escape();
         Token& Next();
 
         [[nodiscard]] bool AtEOF() const, At(int type) const, At(const std::string& value) const;
@@ -74,6 +74,7 @@ namespace csaw
 
         void ParseCompileDirective();
 
+        Arg ParseArg();
         TypePtr ParseType(), ParseType(const TypePtr& base);
 
         StatementPtr ParseStatement(bool end = true);
@@ -102,7 +103,9 @@ namespace csaw
 
         ParseData m_Data;
 
-        size_t m_Line = 1;
+        size_t m_Col = 1;
+
+        SourceLoc m_Loc;
         Token m_Token;
     };
 }

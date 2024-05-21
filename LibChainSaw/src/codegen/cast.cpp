@@ -1,7 +1,8 @@
 #include <utility>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Expect.hpp>
-#include <csaw/codegen/Value.hpp>
+#include <csaw/Builder.hpp>
+#include <csaw/Expect.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
 csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type) const
 {
@@ -26,13 +27,23 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
     {
         if (tty.Get()->isPointerTy())
         {
-            const auto result = m_Builder->CreatePointerCast(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreatePointerCast(value->GetValue(), tty.Get());
             return RValue::Create(type, result);
         }
 
         if (tty.Get()->isIntegerTy())
         {
-            const auto result = m_Builder->CreatePtrToInt(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreatePtrToInt(value->GetValue(), tty.Get());
+            return RValue::Create(type, result);
+        }
+    }
+
+    if (vty.Get()->isArrayTy())
+    {
+        if (tty.Get()->isPointerTy())
+        {
+            const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
+            const auto result = GetBuilder().CreateGEP(vty.Get(), lvalue->GetPointer(), {GetBuilder().getInt64(0), GetBuilder().getInt64(0)});
             return RValue::Create(type, result);
         }
     }
@@ -41,19 +52,19 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
     {
         if (tty.Get()->isPointerTy())
         {
-            const auto result = m_Builder->CreateIntToPtr(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreateIntToPtr(value->GetValue(), tty.Get());
             return RValue::Create(type, result);
         }
 
         if (tty.Get()->isIntegerTy())
         {
-            const auto result = m_Builder->CreateIntCast(value->GetValue(), tty.Get(), true);
+            const auto result = GetBuilder().CreateIntCast(value->GetValue(), tty.Get(), true);
             return RValue::Create(type, result);
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
-            const auto result = m_Builder->CreateSIToFP(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreateSIToFP(value->GetValue(), tty.Get());
             return RValue::Create(type, result);
         }
     }
@@ -62,13 +73,13 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
     {
         if (tty.Get()->isIntegerTy())
         {
-            const auto result = m_Builder->CreateFPToSI(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreateFPToSI(value->GetValue(), tty.Get());
             return RValue::Create(type, result);
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
-            const auto result = m_Builder->CreateFPCast(value->GetValue(), tty.Get());
+            const auto result = GetBuilder().CreateFPCast(value->GetValue(), tty.Get());
             return RValue::Create(type, result);
         }
     }
@@ -100,17 +111,17 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
         {
             if (lty.Get()->getIntegerBitWidth() > rty.Get()->getIntegerBitWidth())
             {
-                const auto value = m_Builder->CreateIntCast(right->GetValue(), lty.Get(), true);
+                const auto value = GetBuilder().CreateIntCast(right->GetValue(), lty.Get(), true);
                 return {{left, RValue::Create(left->GetType(), value)}};
             }
 
-            const auto value = m_Builder->CreateIntCast(left->GetValue(), rty.Get(), true);
+            const auto value = GetBuilder().CreateIntCast(left->GetValue(), rty.Get(), true);
             return {{RValue::Create(right->GetType(), value), right}};
         }
 
         if (rty.Get()->isFloatingPointTy())
         {
-            const auto value = m_Builder->CreateSIToFP(left->GetValue(), rty.Get());
+            const auto value = GetBuilder().CreateSIToFP(left->GetValue(), rty.Get());
             return {{RValue::Create(right->GetType(), value), right}};
         }
     }
@@ -119,7 +130,7 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
     {
         if (rty.Get()->isIntegerTy())
         {
-            const auto value = m_Builder->CreateSIToFP(right->GetValue(), lty.Get());
+            const auto value = GetBuilder().CreateSIToFP(right->GetValue(), lty.Get());
             return {{left, RValue::Create(left->GetType(), value)}};
         }
     }

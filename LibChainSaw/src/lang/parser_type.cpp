@@ -1,20 +1,28 @@
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
+#include <csaw/Type.hpp>
 
-#include "csaw/Error.hpp"
+csaw::Arg csaw::Parser::ParseArg()
+{
+    std::string name = Expect(TK_IDENTIFIER).Value;
+
+    TypePtr type;
+    if (!NextIfAt(":"))
+    {
+        type = ParseType(Type::Get(name));
+        name = "";
+    }
+    else type = ParseType();
+
+    return {name, type};
+}
 
 csaw::TypePtr csaw::Parser::ParseType()
 {
-    if (NextIfAt("%"))
+    if (NextIfAt("("))
     {
-        TypePtr result;
-
-        if (!At("("))
-            result = ParseType();
-
         std::vector<TypePtr> args;
         bool is_vararg = false;
 
-        Expect("(");
         while (!At(")") && !AtEOF())
         {
             if (NextIfAt("?"))
@@ -23,35 +31,23 @@ csaw::TypePtr csaw::Parser::ParseType()
                 break;
             }
 
-            TypePtr arg_type;
-            if (At(TK_IDENTIFIER))
-            {
-                std::string arg_name = Get().Value;
-                if (NextIfAt(":"))
-                    arg_type = ParseType();
-                else
-                {
-                    const auto type = Type::Get(arg_name);
-                    if (!type)
-                        ThrowError(m_Data.Filename, m_Line, true, "Failed to get type %s", arg_name.c_str());
-                    arg_type = ParseType(type);
-                }
-            }
-            else arg_type = ParseType();
+            args.push_back(ParseArg().Type);
 
-            args.push_back(arg_type);
             if (!At(")"))
                 Expect(",");
         }
         Expect(")");
 
-        return ParseType(FunctionType::Get(result, args, is_vararg));
+        Expect("(");
+        const auto result = ParseType();
+        Expect(")");
+
+        return ParseType(FunctionType::Get(args, is_vararg, result));
     }
 
     const auto name = Expect(TK_IDENTIFIER).Value;
     const auto type = Type::Get(name);
-    if (!type)
-        ThrowError(m_Data.Filename, m_Line, true, "Failed to get type %s", name.c_str());
+
     return ParseType(type);
 }
 
@@ -59,6 +55,7 @@ csaw::TypePtr csaw::Parser::ParseType(const TypePtr& base)
 {
     if (NextIfAt("*"))
         return ParseType(PointerType::Get(base));
+
     if (NextIfAt("["))
     {
         const auto size = Expect(TK_INT_BIN | TK_INT_OCT | TK_INT_DEC | TK_INT_HEX).IntValue();
