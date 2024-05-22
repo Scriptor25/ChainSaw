@@ -19,12 +19,14 @@ namespace csaw
     struct ArrayType;
     struct StructType;
     struct FunctionType;
+    struct TemplateType;
 
     typedef std::shared_ptr<Type> TypePtr;
     typedef std::shared_ptr<PointerType> PointerTypePtr;
     typedef std::shared_ptr<ArrayType> ArrayTypePtr;
     typedef std::shared_ptr<StructType> StructTypePtr;
     typedef std::shared_ptr<FunctionType> FunctionTypePtr;
+    typedef std::shared_ptr<TemplateType> TemplateTypePtr;
 
     std::ostream& operator<<(std::ostream& out, const TypePtr& ptr);
 

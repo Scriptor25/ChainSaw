@@ -16,7 +16,7 @@ csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
     const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
     if (value->IsLValue())
     {
-        if (expression.OpRight) // get and op (@(++):vec3(t: int1): vec3 ...)
+        if (expression.OpRight) // get and op (@(++):vec3(unused: int1): vec3 ...)
         {
             if (const auto [function, signature] = FindFunction(op, value->GetType(), {Type::GetInt1()}); function)
             {

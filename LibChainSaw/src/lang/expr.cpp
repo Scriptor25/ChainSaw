@@ -12,8 +12,8 @@ csaw::BinaryExpression::BinaryExpression(const SourceLoc& loc, const std::string
 {
 }
 
-csaw::CallExpression::CallExpression(const SourceLoc& loc, const ExpressionPtr& callee, const std::vector<ExpressionPtr>& args)
-    : Expression(loc), Callee(callee), Args(args)
+csaw::CallExpression::CallExpression(const SourceLoc& loc, const ExpressionPtr& callee, const std::vector<TypePtr>& temp_args, const std::vector<ExpressionPtr>& args)
+    : Expression(loc), Callee(callee), TempArgs(temp_args), Args(args)
 {
 }
 

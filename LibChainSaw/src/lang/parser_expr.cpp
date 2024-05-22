@@ -162,7 +162,7 @@ csaw::ExpressionPtr csaw::Parser::ParseIndexExpression()
 
         expr = std::make_shared<IndexExpression>(loc, expr, index);
 
-        if (At("."))
+        if (At(".") || At("!"))
             expr = ParseMemberExpression(expr);
     }
 
@@ -174,8 +174,25 @@ csaw::ExpressionPtr csaw::Parser::ParseCallExpression()
     auto loc = m_Token.Loc;
     auto expr = ParseMemberExpression();
 
-    while (NextIfAt("("))
+    while (At("(") || At("$"))
     {
+        std::vector<TypePtr> temp_args;
+        if (NextIfAt("$"))
+        {
+            Expect("<");
+            while (!AtEOF() && !At(">"))
+            {
+                const auto type = ParseType();
+                temp_args.push_back(type);
+
+                if (!At(">"))
+                    Expect(",");
+            }
+            Expect(">");
+        }
+
+        Expect("(");
+
         std::vector<ExpressionPtr> args;
         while (!AtEOF() && !At(")"))
         {
@@ -185,9 +202,9 @@ csaw::ExpressionPtr csaw::Parser::ParseCallExpression()
         }
         Expect(")");
 
-        expr = std::make_shared<CallExpression>(loc, expr, args);
+        expr = std::make_shared<CallExpression>(loc, expr, temp_args, args);
 
-        if (At("."))
+        if (At(".") || At("!"))
             expr = ParseMemberExpression(expr);
     }
 

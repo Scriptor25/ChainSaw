@@ -10,6 +10,7 @@
 #define INFO_IS_ARR  0b00010000
 #define INFO_IS_STR  0b00100000
 #define INFO_IS_FUN  0b01000000
+#define INFO_IS_TEMP 0b10000000
 
 static std::map<std::string, csaw::TypePtr> Types = {
     {"void", std::make_shared<csaw::Type>("void", INFO_IS_VOID)},
@@ -138,6 +139,11 @@ bool csaw::Type::IsFunction() const
     return Info & INFO_IS_FUN;
 }
 
+bool csaw::Type::IsTemplate() const
+{
+    return Info & INFO_IS_TEMP;
+}
+
 const csaw::PointerType* csaw::Type::AsPointer() const
 {
     return dynamic_cast<const PointerType*>(this);
@@ -158,6 +164,11 @@ const csaw::FunctionType* csaw::Type::AsFunction() const
     return dynamic_cast<const FunctionType*>(this);
 }
 
+const csaw::TemplateType* csaw::Type::AsTemplate() const
+{
+    return dynamic_cast<const TemplateType*>(this);
+}
+
 bool csaw::Type::ParentOf(const TypePtr& type) const
 {
     if (this == type.get())
@@ -166,8 +177,29 @@ bool csaw::Type::ParentOf(const TypePtr& type) const
     if (IsVoid())
         return true;
 
-    if (IsPointer() && type->IsPointer())
-        return AsPointer()->Base->ParentOf(type->AsPointer()->Base);
+    if (IsPointer())
+    {
+        const auto ptr = AsPointer();
+
+        if (type->IsPointer())
+            return ptr->Base->ParentOf(type->AsPointer()->Base);
+
+        if (type->IsArray())
+            return ptr->Base->ParentOf(type->AsArray()->Base);
+
+        return false;
+    }
+
+    if (IsArray() && type->IsArray())
+    {
+        const auto aarr = AsArray();
+        const auto barr = type->AsArray();
+
+        if (aarr->Size != barr->Size)
+            return false;
+
+        return aarr->Base->ParentOf(barr->Base);
+    }
 
     if (IsFunction() && type->IsFunction())
     {
@@ -190,10 +222,10 @@ bool csaw::Type::ParentOf(const TypePtr& type) const
         return true;
     }
 
-    if (IsStruct() || type->IsStruct())
-        return false;
+    if ((IsInt() || IsFlt()) && (type->IsInt() || type->IsFlt()))
+        return IsFlt() || !type->IsFlt();
 
-    return IsFlt() || !type->IsFlt();
+    return false;
 }
 
 csaw::PointerTypePtr csaw::PointerType::Get(const TypePtr& base)
@@ -274,5 +306,26 @@ csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, 
 
 csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
     : Type(name, INFO_IS_FUN), Args(args), IsVararg(is_vararg), Result(result)
+{
+}
+
+csaw::TemplateTypePtr csaw::TemplateType::Get(const TypePtr& base, const std::vector<TypePtr>& args)
+{
+    std::string name = base->Name + '<';
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        if (i > 0) name += ", ";
+        name += args[i]->Name;
+    }
+    name += '>';
+
+    auto& type = Types[name];
+    if (!type)
+        type = std::make_shared<TemplateType>(name, base, args);
+    return std::dynamic_pointer_cast<TemplateType>(type);
+}
+
+csaw::TemplateType::TemplateType(const std::string& name, const TypePtr& base, const std::vector<TypePtr>& args)
+    : Type(name, INFO_IS_TEMP), Base(base), Args(args)
 {
 }

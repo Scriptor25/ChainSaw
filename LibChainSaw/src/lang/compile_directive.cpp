@@ -6,8 +6,8 @@
 void csaw::Parser::ParseCompileDirective()
 {
     const auto loc = m_Loc;
-
     const auto directive = Expect(TK_COMPILE_DIRECTIVE).Value;
+
     if (directive == "inc")
     {
         const auto filename = Expect(TK_STRING).Value;
@@ -32,6 +32,27 @@ void csaw::Parser::ParseCompileDirective()
 
         Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
         stream.close();
+        return;
+    }
+
+    if (directive == "temp")
+    {
+        std::vector<TypePtr> args;
+
+        Expect("<");
+        while (!AtEOF() && !At(">"))
+        {
+            const auto type = ParseType();
+            args.push_back(type);
+
+            if (!At(">"))
+                Expect(",");
+        }
+        Expect(">");
+
+        const auto temp = ParseStatement();
+
+        ThrowError(loc, false, "Templates are still work in progress");
         return;
     }
 

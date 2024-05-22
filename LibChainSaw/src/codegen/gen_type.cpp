@@ -55,5 +55,5 @@ csaw::Expect<llvm::Type*> csaw::Builder::Gen(const TypePtr& type) const
     if (type->Name == "flt32") return GetBuilder().getFloatTy();
     if (type->Name == "flt64") return GetBuilder().getDoubleTy();
 
-    return Expect<llvm::Type*>("Type " + type->Name + " has no llvm equivalent");
+    return Expect<llvm::Type*>("Type " + type->Name + " does not exist");
 }

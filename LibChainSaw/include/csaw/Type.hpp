@@ -32,11 +32,13 @@ namespace csaw
         [[nodiscard]] bool IsArray() const;
         [[nodiscard]] bool IsStruct() const;
         [[nodiscard]] bool IsFunction() const;
+        [[nodiscard]] bool IsTemplate() const;
 
         [[nodiscard]] const PointerType* AsPointer() const;
         [[nodiscard]] const ArrayType* AsArray() const;
         [[nodiscard]] const StructType* AsStruct() const;
         [[nodiscard]] const FunctionType* AsFunction() const;
+        [[nodiscard]] const TemplateType* AsTemplate() const;
 
         [[nodiscard]] bool ParentOf(const TypePtr& type) const;
 
@@ -84,5 +86,15 @@ namespace csaw
         std::vector<TypePtr> Args;
         bool IsVararg;
         TypePtr Result;
+    };
+
+    struct TemplateType : Type
+    {
+        static TemplateTypePtr Get(const TypePtr& base, const std::vector<TypePtr>& args);
+
+        TemplateType(const std::string& name, const TypePtr& base, const std::vector<TypePtr>& args);
+
+        TypePtr Base;
+        std::vector<TypePtr> Args;
     };
 }

@@ -22,9 +22,10 @@ namespace csaw
 
     struct CallExpression : Expression
     {
-        CallExpression(const SourceLoc& loc, const ExpressionPtr& callee, const std::vector<ExpressionPtr>& args);
+        CallExpression(const SourceLoc& loc, const ExpressionPtr& callee, const std::vector<TypePtr>& temp_args, const std::vector<ExpressionPtr>& args);
 
         ExpressionPtr Callee;
+        std::vector<TypePtr> TempArgs;
         std::vector<ExpressionPtr> Args;
     };
 

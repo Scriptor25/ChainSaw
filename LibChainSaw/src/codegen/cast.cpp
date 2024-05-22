@@ -38,16 +38,6 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         }
     }
 
-    if (vty.Get()->isArrayTy())
-    {
-        if (tty.Get()->isPointerTy())
-        {
-            const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
-            const auto result = GetBuilder().CreateGEP(vty.Get(), lvalue->GetPointer(), {GetBuilder().getInt64(0), GetBuilder().getInt64(0)});
-            return RValue::Create(type, result);
-        }
-    }
-
     if (vty.Get()->isIntegerTy())
     {
         if (tty.Get()->isPointerTy())
@@ -104,6 +94,15 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
     const auto rty = Gen(right->GetType());
     if (!rty)
         return Expect<RValPair>("Right type is null: " + rty.Msg());
+
+    if (lty.Get()->isPointerTy())
+    {
+        if (rty.Get()->isIntegerTy())
+        {
+            const auto value = GetBuilder().CreatePtrToInt(left->GetValue(), rty.Get());
+            return {{RValue::Create(right->GetType(), value), right}};
+        }
+    }
 
     if (lty.Get()->isIntegerTy())
     {

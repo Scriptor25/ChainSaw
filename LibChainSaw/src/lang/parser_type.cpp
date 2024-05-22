@@ -63,5 +63,21 @@ csaw::TypePtr csaw::Parser::ParseType(const TypePtr& base)
         return ParseType(ArrayType::Get(base, size));
     }
 
+    if (NextIfAt("<"))
+    {
+        std::vector<TypePtr> types;
+        while (!AtEOF() && !At(">"))
+        {
+            const auto type = ParseType();
+            types.push_back(type);
+
+            if (!At(">"))
+                Expect(",");
+        }
+        Expect(">");
+
+        return ParseType(TemplateType::Get(base, types));
+    }
+
     return base;
 }
