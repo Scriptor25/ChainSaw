@@ -211,19 +211,32 @@ csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const Expression
         if (!NextIfAt(":"))
             return nullptr;
 
+        std::vector<std::string> mods;
+        if (NextIfAt("["))
+        {
+            while (!At("]") && !AtEOF())
+            {
+                const auto mod = Expect(TK_IDENTIFIER).Value;
+                mods.push_back(mod);
+                if (!At("]"))
+                    Expect(",");
+            }
+            Expect("]");
+        }
+
         const auto type = ParseType();
 
         if (!At("="))
         {
             if (end) Expect(";");
-            return std::make_shared<VariableStatement>(loc, name->Id, type, nullptr);
+            return std::make_shared<VariableStatement>(loc, name->Id, mods, type, nullptr);
         }
 
         Expect("=");
         auto value = ParseExpression();
 
         if (end) Expect(";");
-        return std::make_shared<VariableStatement>(loc, name->Id, type, value);
+        return std::make_shared<VariableStatement>(loc, name->Id, mods, type, value);
     }
 
     return nullptr;

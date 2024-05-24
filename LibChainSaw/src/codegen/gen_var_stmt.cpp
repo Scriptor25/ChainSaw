@@ -7,6 +7,8 @@
 
 void csaw::Builder::Gen(const VariableStatement& statement)
 {
+    const auto is_c = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
+
     const auto type = Gen(statement.Type);
     if (!type)
         return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Type->Name.c_str(), type.Msg().c_str());
@@ -61,7 +63,9 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         if (!is_initialized)
             global_initializer = llvm::Constant::getNullValue(type.Get());
 
-        const auto pointer = new llvm::GlobalVariable(GetModule(), type.Get(), false, llvm::GlobalValue::InternalLinkage, global_initializer, statement.Name);
+        const auto linkage = is_c ? llvm::GlobalValue::ExternalLinkage : llvm::GlobalValue::InternalLinkage;
+
+        const auto pointer = new llvm::GlobalVariable(GetModule(), type.Get(), false, linkage, global_initializer, statement.Name);
         const auto ref = LValue::Direct(this, statement.Type, pointer);
 
         if (!is_initialized && initializer)

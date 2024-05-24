@@ -1,4 +1,5 @@
 #include <csaw/Builder.hpp>
+#include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value) const
@@ -41,6 +42,18 @@ csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value) const
         return RValue::Create(value->GetType(), result);
     }
 
+    if (vty->isFloatingPointTy())
+    {
+        const auto result = GetBuilder().CreateAdd(value->GetValue(), llvm::ConstantFP::get(vty, 1));
+        return RValue::Create(value->GetType(), result);
+    }
+
+    if (vty->isPointerTy())
+    {
+        const auto result = GetBuilder().CreateGEP(Gen(value->GetType()->AsPointer()->Base).Get(), value->GetValue(), {llvm::ConstantInt::get(GetBuilder().getInt64Ty(), 1, true)});
+        return RValue::Create(value->GetType(), result);
+    }
+
     return nullptr;
 }
 
@@ -51,6 +64,18 @@ csaw::RValuePtr csaw::Builder::GenDec(const RValuePtr& value) const
     if (vty->isIntegerTy())
     {
         const auto result = GetBuilder().CreateSub(value->GetValue(), llvm::ConstantInt::get(vty, 1, true));
+        return RValue::Create(value->GetType(), result);
+    }
+
+    if (vty->isFloatingPointTy())
+    {
+        const auto result = GetBuilder().CreateSub(value->GetValue(), llvm::ConstantFP::get(vty, 1));
+        return RValue::Create(value->GetType(), result);
+    }
+
+    if (vty->isPointerTy())
+    {
+        const auto result = GetBuilder().CreateGEP(Gen(value->GetType()->AsPointer()->Base).Get(), value->GetValue(), {llvm::ConstantInt::get(GetBuilder().getInt64Ty(), -1, true)});
         return RValue::Create(value->GetType(), result);
     }
 

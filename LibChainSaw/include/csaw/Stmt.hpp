@@ -82,9 +82,10 @@ namespace csaw
 
     struct VariableStatement : Statement
     {
-        VariableStatement(const SourceLoc& loc, const std::string& name, const TypePtr& type, const ExpressionPtr& value);
+        VariableStatement(const SourceLoc& loc, const std::string& name, const std::vector<std::string>& mods, const TypePtr& type, const ExpressionPtr& value);
 
         std::string Name;
+        std::vector<std::string> Mods;
         TypePtr Type;
         ExpressionPtr Value;
     };

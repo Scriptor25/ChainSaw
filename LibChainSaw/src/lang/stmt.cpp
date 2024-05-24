@@ -68,8 +68,8 @@ csaw::DefStatement::DefStatement(const SourceLoc& loc, const std::string& name, 
 {
 }
 
-csaw::VariableStatement::VariableStatement(const SourceLoc& loc, const std::string& name, const TypePtr& type, const ExpressionPtr& value)
-    : Statement(loc), Name(name), Type(type), Value(value)
+csaw::VariableStatement::VariableStatement(const SourceLoc& loc, const std::string& name, const std::vector<std::string>& mods, const TypePtr& type, const ExpressionPtr& value)
+    : Statement(loc), Name(name), Mods(mods), Type(type), Value(value)
 {
 }
 

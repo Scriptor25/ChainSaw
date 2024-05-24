@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <csaw/Def.hpp>
 #include <csaw/Expect.hpp>
+#include <csaw/Signature.hpp>
 #include <llvm/Analysis/CGSCCPassManager.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/IR/IRBuilder.h>
@@ -34,12 +35,12 @@ namespace csaw
         [[nodiscard]] llvm::Function* GetGlobal() const;
 
         void BeginModule(const std::string& name, const std::string& source_file);
-        void EndModule(bool output = false, bool emit_ir = false, const std::string& dest_dir = "", const std::string& output_type = "");
+        void EndModule(const std::string& output_file, llvm::CodeGenFileType output_type, const std::string& emit_ir_file);
 
-        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::filesystem::path& dest_dir);
-        [[nodiscard]] static int Output(llvm::Module& module, const std::filesystem::path& dest_dir, const std::string& type);
+        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::string& output_file);
+        [[nodiscard]] static int Output(llvm::Module& module, const std::string& output_file, llvm::CodeGenFileType output_type);
 
-        int RunJIT(const std::string& entry_name, int argc, const char** argv);
+        int RunJIT(int argc, const char** argv, const char** env);
 
         llvm::AllocaInst* CreateAlloca(llvm::Type* type, llvm::Value* array_size = nullptr) const;
 

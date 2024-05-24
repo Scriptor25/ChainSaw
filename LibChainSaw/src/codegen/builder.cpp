@@ -78,7 +78,7 @@ void csaw::Builder::BeginModule(const std::string& name, const std::string& sour
     m_ModuleData.Builder->SetInsertPoint(entry_block);
 }
 
-void csaw::Builder::EndModule(bool output, const bool emit_ir, const std::string& dest_dir, const std::string& output_type)
+void csaw::Builder::EndModule(const std::string& output_file, const llvm::CodeGenFileType output_type, const std::string& emit_ir_file)
 {
     GetBuilder().CreateRetVoid();
     if (verifyFunction(*GetGlobal(), &llvm::errs()))
@@ -102,37 +102,34 @@ void csaw::Builder::EndModule(bool output, const bool emit_ir, const std::string
         return;
     }
 
-    if (emit_ir)
-        (void)EmitIR(GetModule(), dest_dir);
+    if (!emit_ir_file.empty())
+        (void)EmitIR(GetModule(), emit_ir_file);
 
-    if (output)
-        (void)Output(GetModule(), dest_dir, output_type);
+    if (!output_file.empty())
+        (void)Output(GetModule(), output_file, output_type);
 
     const auto name = GetModule().getName().str();
     m_Modules[name] = std::move(m_ModuleData);
     m_ModuleData = {};
 }
 
-int csaw::Builder::EmitIR(const llvm::Module& module, const std::filesystem::path& dest_dir)
+int csaw::Builder::EmitIR(const llvm::Module& module, const std::string& output_file)
 {
-    const auto name = module.getName().str();
-    const auto filename = absolute(dest_dir / (name + ".ll")).string();
-
     std::error_code error_code;
-    llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(output_file, error_code, llvm::sys::fs::OF_None);
     if (error_code)
     {
-        std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
+        std::cout << "Failed to open output file '" << output_file << "': " << error_code.message() << std::endl;
         return -1;
     }
 
-    module.print(dest, nullptr, true, true);
+    module.print(dest, nullptr, false, true);
     dest.flush();
 
     return 0;
 }
 
-int csaw::Builder::Output(llvm::Module& module, const std::filesystem::path& dest_dir, const std::string& type)
+int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, const llvm::CodeGenFileType output_type)
 {
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
@@ -157,35 +154,18 @@ int csaw::Builder::Output(llvm::Module& module, const std::filesystem::path& des
     const auto machine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
     const auto data_layout = machine->createDataLayout();
 
-    llvm::CodeGenFileType filetype = llvm::CodeGenFileType::CGFT_Null;
-    std::string fileext;
-
-    if (type == "obj")
-    {
-        filetype = llvm::CodeGenFileType::CGFT_ObjectFile;
-        fileext = ".o";
-    }
-    else if (type == "asm")
-    {
-        filetype = llvm::CodeGenFileType::CGFT_AssemblyFile;
-        fileext = ".s";
-    }
-
-    const auto name = module.getName().str();
-    const auto filename = absolute(dest_dir / (name + fileext)).string();
-
     std::error_code error_code;
-    llvm::raw_fd_ostream dest(filename, error_code, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(output_file, error_code, llvm::sys::fs::OF_None);
     if (error_code)
     {
-        std::cout << "Failed to open output file '" << filename << "': " << error_code.message() << std::endl;
+        std::cout << "Failed to open output file '" << output_file << "': " << error_code.message() << std::endl;
         return -1;
     }
 
     llvm::legacy::PassManager pass;
-    if (machine->addPassesToEmitFile(pass, dest, nullptr, filetype))
+    if (machine->addPassesToEmitFile(pass, dest, nullptr, output_type))
     {
-        std::cout << "Failed to output to file '" << filename << "'" << std::endl;
+        std::cout << "Failed to output to file '" << output_file << "'" << std::endl;
         return -1;
     }
 
@@ -198,7 +178,7 @@ int csaw::Builder::Output(llvm::Module& module, const std::filesystem::path& des
     return 0;
 }
 
-int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const char** argv)
+int csaw::Builder::RunJIT(const int argc, const char** argv, const char** env)
 {
     // Initialize Target
     llvm::InitializeNativeTarget();
@@ -258,16 +238,16 @@ int csaw::Builder::RunJIT(const std::string& entry_name, const int argc, const c
     }
 
     // Find entry function
-    auto entry_err = jit->lookup(entry_name);
+    auto entry_err = jit->lookup("main");
     if (auto err = entry_err.takeError())
     {
-        std::cout << "Failed to find entry function '" << entry_name << "'" << std::endl;
+        std::cout << "Failed to find entry function" << std::endl;
         return -1;
     }
 
     // Call entry function
-    const auto entry_fn = entry_err->toPtr<int(*)(int, const char**)>();
-    return entry_fn(argc, argv);
+    const auto entry_fn = entry_err->toPtr<int(*)(int, const char**, const char**)>();
+    return entry_fn(argc, argv, env);
 }
 
 llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* array_size) const
