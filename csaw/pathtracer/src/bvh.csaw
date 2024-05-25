@@ -1,13 +1,12 @@
-\inc "stdbool"
-\inc "stdlib"
-\inc "stdvector"
+\inc "std/stdbool.csh"
+\inc "std/stdlib.csh"
 
-\inc "aabb"
-\inc "bvh"
-\inc "hittable"
-\inc "hittable_list"
-\inc "interval"
-\inc "ray"
+\inc "aabb.csh"
+\inc "bvh.csh"
+\inc "hittable.csh"
+\inc "hittable_list.csh"
+\inc "interval.csh"
+\inc "ray.csh"
 
 @box_compare(a: hittable*, b: hittable*, axis_index: int32): int32 {
     a_axis_interval: interval = a!bounding_box().axis_interval(axis_index);

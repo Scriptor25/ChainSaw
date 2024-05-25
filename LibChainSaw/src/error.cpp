@@ -4,9 +4,9 @@
 #include <csaw/Error.hpp>
 #include <csaw/Parser.hpp>
 
-void csaw::ThrowError(const SourceLoc& loc, const bool is_error, const char* format, ...)
+void csaw::ThrowError(const SourceLoc& loc, const bool is_severe, const char* format, ...)
 {
-    std::cout << loc.ToString() << ": " << (is_error ? "Error" : "Warning") << ": ";
+    std::cout << loc.ToString() << ": ";
 
     va_list args;
     va_start(args, format);
@@ -15,6 +15,8 @@ void csaw::ThrowError(const SourceLoc& loc, const bool is_error, const char* for
 
     std::cout << std::endl;
 
-    if (is_error)
-        throw std::runtime_error("Error");
+    CSawError = 1;
+
+    if (is_severe)
+        throw std::runtime_error("Severe Error");
 }

@@ -1,3 +1,5 @@
+\inc "std/stdio.csh"
+
 def complex {
     real: flt64,
     imaginary: flt64,

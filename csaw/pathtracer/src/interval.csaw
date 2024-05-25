@@ -1,7 +1,7 @@
-\inc "stdbool"
+\inc "std/stdbool.csh"
 
-\inc "common"
-\inc "interval"
+\inc "common.csh"
+\inc "interval.csh"
 
 @interval(a: interval, b: interval) {
     me!min = a.min <= b.min ? a.min : b.min;

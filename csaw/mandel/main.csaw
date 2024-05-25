@@ -1,14 +1,14 @@
-\inc "math"
-\inc "stdimage"
-\inc "stdio"
-\inc "stdlib"
+\inc "std/math.csh"
+\inc "std/stdbool.csh"
+\inc "std/stdio.csh"
+\inc "std/stdlib.csh"
 
 \inc "complex.csaw"
-
-MAX_ITER: int32 = 100;
-SAMPLES:  int32 = 100;
+\inc "image.csaw"
 
 @[c]strcmp(str1: int8*, str2: int8*): int32;
+@"=="(str1: int8*, str2: int8*): bool = strcmp(str1, str2) == 0;
+@"!="(str1: int8*, str2: int8*): bool = strcmp(str1, str2) != 0;
 
 @random::flt64 = rand() / (RAND_MAX + 1.0);
 
@@ -19,6 +19,9 @@ SAMPLES:  int32 = 100;
         z = z.square() + z0;
     ret t;
 }
+
+MAX_ITER: int32 = 100;
+SAMPLES:  int32 = 100;
 
 @[c]main::int32 {
 
@@ -42,12 +45,11 @@ SAMPLES:  int32 = 100;
 
     printf("Rendering with xc=%f yc=%f size=%d width=%d height=%d\n", xc, yc, size, width, height);
 
-    submit: int8* = [int8*]malloc([int64]2);
-    printf("Start? ([y]|n) ");
-    scanf("%1s", submit);
-    submit[1] = '\x00';
-    if (strcmp(submit, "y") != 0)
-        ret 1;
+    submit: int8[2];
+    printf("Start? ([Y]|N) ");
+    scanf("%c%c", &submit[0], &submit[1]);
+    if (submit[1] == 'n' || submit[1] == 'N')
+        ret 0;
 
     out: image = image(width, height);
 
@@ -62,7 +64,7 @@ SAMPLES:  int32 = 100;
                 n += mandel(z0, MAX_ITER);
             }
             grey: int32 = [int32](255.999 * n / (SAMPLES * MAX_ITER));
-            out.pixel(i, j, 0xff << 24 | (grey & 0xff) << 16 | (grey & 0xff) << 8 | (grey & 0xff));
+            out.pixel(i, j, (grey & 0xff) << 16 | (grey & 0xff) << 8 | (grey & 0xff));
         }
     }
 

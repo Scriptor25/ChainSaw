@@ -1,15 +1,14 @@
-\inc "stdio"
-\inc "stdlib"
-\inc "stdvector"
+\inc "std/stdio.csh"
+\inc "std/stdlib.csh"
 
-\inc "bvh"
-\inc "camera"
-\inc "common"
-\inc "hittable"
-\inc "hittable_list"
-\inc "material"
-\inc "sphere"
-\inc "vec3"
+\inc "bvh.csh"
+\inc "camera.csh"
+\inc "common.csh"
+\inc "hittable.csh"
+\inc "hittable_list.csh"
+\inc "material.csh"
+\inc "sphere.csh"
+\inc "vec3.csh"
 
 @simple(filename: int8*): void {
     world: hittable_list;

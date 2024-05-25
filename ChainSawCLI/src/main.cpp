@@ -44,6 +44,8 @@ int main(const int argc, const char** argv, const char** env)
     std::string output_file;
     std::string emit_ir_file;
 
+    jit_args.push_back(argv[0]);
+
     for (size_t i = 1; i < argc; ++i)
     {
         if (const std::string arg_str = argv[i]; arg_str == "-a")
@@ -83,6 +85,8 @@ int main(const int argc, const char** argv, const char** env)
     csaw::Builder builder;
     csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr) { builder.Gen(ptr); };
 
+    int error = 0;
+
     for (const auto& file : input_files)
     {
         const auto module_name = std::filesystem::path(file).filename().string();
@@ -91,13 +95,13 @@ int main(const int argc, const char** argv, const char** env)
         std::ifstream stream(file);
         std::vector<std::filesystem::path> processed;
         csaw::ParseData data(file, stream, callback, include_dirs, processed);
-        csaw::Parser::Parse(data);
+        error |= csaw::Parser::Parse(data);
 
         builder.EndModule(output_file, llvm::CodeGenFileType::CGFT_ObjectFile, emit_ir_file);
     }
 
     if (run_jit)
-        builder.RunJIT(static_cast<int>(jit_args.size()), jit_args.data(), env);
+        error |= builder.RunJIT(static_cast<int>(jit_args.size()), jit_args.data(), env);
 
-    return 0;
+    return error;
 }

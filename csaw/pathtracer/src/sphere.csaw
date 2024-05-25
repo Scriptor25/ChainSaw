@@ -1,13 +1,13 @@
-\inc "math"
-\inc "stdbool"
+\inc "std/math.csh"
+\inc "std/stdbool.csh"
 
-\inc "aabb"
-\inc "hittable"
-\inc "interval"
-\inc "material"
-\inc "ray"
-\inc "sphere"
-\inc "vec3"
+\inc "aabb.csh"
+\inc "hittable.csh"
+\inc "interval.csh"
+\inc "material.csh"
+\inc "ray.csh"
+\inc "sphere.csh"
+\inc "vec3.csh"
 
 @sphere(center: point3, radius: flt64, mat: material*) {
     me!type = 'S';

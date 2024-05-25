@@ -1,4 +1,0 @@
-\inc "vec3"
-
-def color = vec3;
-@toint(col: color): int32;

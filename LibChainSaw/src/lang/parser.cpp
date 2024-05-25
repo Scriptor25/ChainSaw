@@ -2,13 +2,15 @@
 #include <csaw/Error.hpp>
 #include <csaw/Parser.hpp>
 
-void csaw::Parser::Parse(const ParseData& data)
+int csaw::Parser::Parse(const ParseData& data)
 {
     if (std::ranges::find(data.Processed, data.Filename) != data.Processed.end())
-        return;
+        return 0;
 
     data.Processed.emplace_back(data.Filename);
     Parser parser(data);
+
+    CSawError = 0;
 
     try
     {
@@ -23,7 +25,10 @@ void csaw::Parser::Parse(const ParseData& data)
     catch (const std::runtime_error& error)
     {
         std::cout << data.Filename << ": " << error.what() << std::endl;
+        return 1;
     }
+
+    return CSawError;
 }
 
 csaw::Parser::Parser(const ParseData& data)

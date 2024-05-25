@@ -1,7 +1,7 @@
-\inc "math"
+\inc "std/math.csh"
 
-\inc "common"
-\inc "vec3"
+\inc "common.csh"
+\inc "vec3.csh"
 
 @vec3(x: flt64, y: flt64, z: flt64) {
     me!x = x;

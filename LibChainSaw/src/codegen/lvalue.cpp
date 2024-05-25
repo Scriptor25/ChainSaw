@@ -15,6 +15,9 @@ csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const Typ
         return Expect<LValuePtr>("Type is null: " + ty.Msg());
 
     const auto pointer = builder->CreateAlloca(ty.Get());
+    if (!pointer)
+        return Expect<LValuePtr>("Type " + type->Name + " is not defined");
+
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 

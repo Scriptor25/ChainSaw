@@ -252,6 +252,9 @@ int csaw::Builder::RunJIT(const int argc, const char** argv, const char** env)
 
 llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* array_size) const
 {
+    if (!type->isSized())
+        return nullptr;
+
     const auto block = GetBuilder().GetInsertBlock();
     GetBuilder().SetInsertPointPastAllocas(block->getParent());
     const auto inst = GetBuilder().CreateAlloca(type, array_size);

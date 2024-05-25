@@ -1,7 +1,7 @@
-\inc "math"
+\inc "std/math.csh"
 
-\inc "color"
-\inc "interval"
+\inc "color.csh"
+\inc "interval.csh"
 
 @linear_to_gamma(linear_component: flt64): flt64 {
     if (linear_component > 0)

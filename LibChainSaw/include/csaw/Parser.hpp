@@ -55,7 +55,7 @@ namespace csaw
     class Parser
     {
     public:
-        static void Parse(const ParseData& data);
+        static int Parse(const ParseData& data);
 
     private:
         explicit Parser(const ParseData& data);

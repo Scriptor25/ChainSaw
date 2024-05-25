@@ -1,6 +1,6 @@
-\inc "stdlib"
+\inc "std/stdlib.csh"
 
-\inc "common"
+\inc "common.csh"
 
 @to_radians(degrees: flt64): flt64 = degrees * pi / 180;
 @random::flt64 = rand() / (RAND_MAX + 1.0);

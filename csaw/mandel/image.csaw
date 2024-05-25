@@ -1,0 +1,30 @@
+\inc "std/stdio.csh"
+\inc "std/stdlib.csh"
+
+def image {
+    width: int32,
+    height: int32,
+    buffer: int32*
+}
+
+@image(width: int32, height: int32) {
+    me!width = width;
+    me!height = height;
+    me!buffer = malloc(width * height * $(int32));
+}
+
+@pixel:image(x: int32, y: int32, color: int32): void = me!buffer[x + y * me!width] = color;
+
+@toppm:image(name: int8*): void {
+    stream: FILE* = fopen(name, "wb");
+
+    fprintf(stream, "P6\n%d %d\n255\n", me!width, me!height);
+    for (i: int32; i < me!width * me!height; ++i) {
+        c: int32 = me!buffer[i];
+        fprintf(stream, "%c%c%c", (c >> 16) & 0xff, (c >> 8) & 0xff, c & 0xff);
+    }
+
+    fclose(stream);
+}
+
+@destroy:image:void = free(me!buffer);
