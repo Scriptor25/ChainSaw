@@ -1,10 +1,11 @@
 #include <iostream>
+#include <ranges>
 #include <csaw/Error.hpp>
 #include <csaw/Parser.hpp>
 
 int csaw::Parser::Parse(const ParseData& data)
 {
-    if (std::ranges::find(data.Processed, data.Filename) != data.Processed.end())
+    if (std::ranges::find(data.Processed, std::filesystem::path(data.Filename)) != data.Processed.end())
         return 0;
 
     data.Processed.emplace_back(data.Filename);
