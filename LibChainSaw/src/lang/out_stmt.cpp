@@ -1,4 +1,5 @@
 #include <ostream>
+#include <ranges>
 #include <string>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
