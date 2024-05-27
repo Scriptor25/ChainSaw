@@ -4,14 +4,18 @@
 #include <csaw/Stmt.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
+#include <llvm/Transforms/Utils/ModuleUtils.h>
 
 void csaw::Builder::Gen(const VariableStatement& statement)
 {
-    const auto is_c = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
+    const auto is_const = std::ranges::find(statement.Mods, "const") != statement.Mods.end();
 
     const auto type = Gen(statement.Type);
     if (!type)
         return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Type->Name.c_str(), type.Msg().c_str());
+
+    if (is_const && !statement.Value)
+        return ThrowErrorStmt(statement, false, "Failed to create global constant because no initializer is present");
 
     ValuePtr initializer;
     if (statement.Value)
@@ -55,20 +59,19 @@ void csaw::Builder::Gen(const VariableStatement& statement)
 
     if (m_ScopeStack.empty())
     {
-        llvm::Constant* global_initializer = nullptr;
-        if (initializer)
-            global_initializer = llvm::dyn_cast<llvm::Constant>(initializer->GetValue());
+        auto global_initializer = initializer && !initializer->IsLValue() ? llvm::dyn_cast<llvm::Constant>(initializer->GetValue()) : nullptr;
+        bool not_initialized = !global_initializer;
 
-        const bool is_initialized = global_initializer;
-        if (!is_initialized)
+        if (is_const && not_initialized)
+            return ThrowErrorStmt(statement, false, "Failed to create global constant because its initializer is not a constant expression");
+
+        if (not_initialized && initializer)
             global_initializer = llvm::Constant::getNullValue(type.Get());
 
-        const auto linkage = is_c ? llvm::GlobalValue::ExternalLinkage : llvm::GlobalValue::InternalLinkage;
-
-        const auto pointer = new llvm::GlobalVariable(GetModule(), type.Get(), false, linkage, global_initializer, statement.Name);
+        const auto pointer = new llvm::GlobalVariable(GetModule(), type.Get(), is_const, is_const ? llvm::GlobalValue::InternalLinkage : llvm::GlobalValue::ExternalLinkage, global_initializer, statement.Name);
         const auto ref = LValue::Direct(this, statement.Type, pointer);
 
-        if (!is_initialized && initializer)
+        if (not_initialized && initializer)
             ref->StoreValue(initializer->GetValue());
 
         m_Values[statement.Name] = ref;

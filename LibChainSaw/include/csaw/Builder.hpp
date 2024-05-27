@@ -35,9 +35,12 @@ namespace csaw
         [[nodiscard]] llvm::Function* GetGlobal() const;
 
         void BeginModule(const std::string& name, const std::string& source_file);
-        void EndModule(const std::string& output_file, llvm::CodeGenFileType output_type, const std::string& emit_ir_file);
+        int EndModule(const std::string& emit_ir_directory);
 
-        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::string& output_file);
+        int LinkModules();
+        [[nodiscard]] int OutputModules(const std::string& output_file, llvm::CodeGenFileType output_type) const;
+
+        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::string& output_directory);
         [[nodiscard]] static int Output(llvm::Module& module, const std::string& output_file, llvm::CodeGenFileType output_type);
 
         int RunJIT(int argc, const char** argv, const char** env);
@@ -51,6 +54,8 @@ namespace csaw
         [[nodiscard]] std::pair<llvm::Function*, Signature> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
         void PushScopeStack();
         void PopScopeStack();
+
+        int NextCtor();
 
         [[nodiscard]] Expect<RValuePtr> Cast(const ValuePtr& value, const TypePtr& type) const;
         [[nodiscard]] Expect<RValPair> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
@@ -71,7 +76,7 @@ namespace csaw
         [[nodiscard]] RValuePtr Gen(const CharExpression& expression) const;
         LValuePtr Gen(const DereferenceExpression& expression);
         [[nodiscard]] RValuePtr Gen(const FloatExpression& expression) const;
-        LValuePtr Gen(const IdentifierExpression& expression);
+        ValuePtr Gen(const IdentifierExpression& expression);
         LValuePtr Gen(const IndexExpression& expression);
         [[nodiscard]] RValuePtr Gen(const IntExpression& expression) const;
         LValuePtr Gen(const MemberExpression& expression);
@@ -118,7 +123,8 @@ namespace csaw
 
         ModuleData m_ModuleData;
         std::map<llvm::Function*, Signature> m_Signatures;
-        std::vector<std::map<std::string, LValuePtr>> m_ScopeStack;
-        std::map<std::string, LValuePtr> m_Values;
+        std::vector<std::map<std::string, ValuePtr>> m_ScopeStack;
+        std::map<std::string, ValuePtr> m_Values;
+        int m_CtorPriority;
     };
 }

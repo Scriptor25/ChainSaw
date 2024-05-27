@@ -1,5 +1,5 @@
-infinity: flt64 = 1.0 / 0.0;
-pi: flt64 = 3.1415926535897932385;
+infinity: [const] flt64 = 1.0 / 0.0;
+pi:       [const] flt64 = 3.1415926535897932385;
 
 @to_radians(degrees: flt64): flt64;
 @random::flt64;

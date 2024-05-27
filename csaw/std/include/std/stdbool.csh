@@ -1,5 +1,5 @@
 ## STDBOOL ##
 
 def bool = int1;
-true:  bool = [bool]1;
-false: bool = [bool]0;
+true:  [const] bool = [bool]1;
+false: [const] bool = [bool]0;

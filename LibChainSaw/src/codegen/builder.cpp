@@ -6,6 +6,7 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Linker/Linker.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/TargetSelect.h>
@@ -62,6 +63,7 @@ void csaw::Builder::BeginModule(const std::string& name, const std::string& sour
     m_Signatures.clear();
     m_ScopeStack.clear();
     m_Values.clear();
+    m_CtorPriority = 0;
 
     m_ModuleData.Context = std::make_unique<llvm::LLVMContext>();
     m_ModuleData.Builder = std::make_unique<llvm::IRBuilder<>>(GetContext());
@@ -78,49 +80,102 @@ void csaw::Builder::BeginModule(const std::string& name, const std::string& sour
     m_ModuleData.Builder->SetInsertPoint(entry_block);
 }
 
-void csaw::Builder::EndModule(const std::string& output_file, const llvm::CodeGenFileType output_type, const std::string& emit_ir_file)
+int csaw::Builder::EndModule(const std::string& emit_ir_directory)
 {
-    GetBuilder().CreateRetVoid();
-    if (verifyFunction(*GetGlobal(), &llvm::errs()))
+    if (!GetGlobal()->getEntryBlock().empty())
     {
-        std::cout << "Failed to verify global function" << std::endl;
-        GetGlobal()->viewCFG();
-        GetGlobal()->eraseFromParent();
-        return;
+        GetBuilder().CreateRetVoid();
+        if (verifyFunction(*GetGlobal(), &llvm::errs()))
+        {
+            std::cout << "Failed to verify global function" << std::endl;
+            GetGlobal()->viewCFG();
+            GetGlobal()->eraseFromParent();
+            return 1;
+        }
+
+        // Optimize Global
+        m_FPM->run(*GetGlobal(), *m_FAM);
+
+        // Append Global to CTORs
+        appendToGlobalCtors(GetModule(), GetGlobal(), 0);
     }
-
-    // Optimize Global
-    m_FPM->run(*GetGlobal(), *m_FAM);
-
-    // Append Global to CTORs
-    appendToGlobalCtors(GetModule(), GetGlobal(), 0);
+    else GetGlobal()->eraseFromParent();
 
     if (verifyModule(GetModule()))
     {
         std::cout << "Failed to verify module" << std::endl;
         m_ModuleData = {};
-        return;
+        return 1;
     }
 
-    if (!emit_ir_file.empty())
-        (void)EmitIR(GetModule(), emit_ir_file);
-
-    if (!output_file.empty())
-        (void)Output(GetModule(), output_file, output_type);
+    if (!emit_ir_directory.empty())
+        (void)EmitIR(GetModule(), emit_ir_directory);
 
     const auto name = GetModule().getName().str();
     m_Modules[name] = std::move(m_ModuleData);
     m_ModuleData = {};
+
+    return 0;
 }
 
-int csaw::Builder::EmitIR(const llvm::Module& module, const std::string& output_file)
+int csaw::Builder::LinkModules()
 {
+    std::cout << "Warning: linking modules may or may not crash the compile process, but only if you're using global constructors; linking is still work in progress, prefer compiling the modules one by one and link them manually using tools like gcc or clang" << std::endl;
+
+    std::vector<ModuleData> modules;
+    for (auto& [key, data] : m_Modules)
+        modules.push_back(std::move(data));
+    m_Modules.clear();
+
+    auto module = std::move(modules[0]);
+    llvm::Linker linker(*module.Module);
+
+    int error = 0;
+    for (size_t i = 1; i < modules.size(); ++i)
+    {
+        const auto name = modules[i].Module->getName().str();
+        const int err = linker.linkInModule(std::move(modules[i].Module));
+        if (err)
+            std::cout << "Failed to link module '" << name << "'" << std::endl;
+        error |= err;
+    }
+
+    m_Modules[module.Module->getName().str()] = std::move(module);
+
+    return error;
+}
+
+int csaw::Builder::OutputModules(const std::string& output_file, const llvm::CodeGenFileType output_type) const
+{
+    if (m_Modules.empty())
+    {
+        std::cout << "Failed to output modules: no module present" << std::endl;
+        return 1;
+    }
+
+    if (m_Modules.size() > 1)
+    {
+        // LinkModules();
+        std::cout << "Failed to output modules: module linking not yet supported" << std::endl;
+        return 1;
+    }
+
+    auto& module = *m_Modules.begin()->second.Module;
+    (void)Output(module, output_file, output_type);
+
+    return 0;
+}
+
+int csaw::Builder::EmitIR(const llvm::Module& module, const std::string& output_directory)
+{
+    const auto output_file = (std::filesystem::path(output_directory) / (module.getName().str() + ".ll")).string();
+
     std::error_code error_code;
     llvm::raw_fd_ostream dest(output_file, error_code, llvm::sys::fs::OF_None);
     if (error_code)
     {
         std::cout << "Failed to open output file '" << output_file << "': " << error_code.message() << std::endl;
-        return -1;
+        return 1;
     }
 
     module.print(dest, nullptr, false, true);
@@ -144,7 +199,7 @@ int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, 
     if (!target)
     {
         std::cout << "Failed to get target for triple: " << err << std::endl;
-        return -1;
+        return 1;
     }
 
     const auto cpu = "generic";
@@ -159,14 +214,14 @@ int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, 
     if (error_code)
     {
         std::cout << "Failed to open output file '" << output_file << "': " << error_code.message() << std::endl;
-        return -1;
+        return 1;
     }
 
     llvm::legacy::PassManager pass;
     if (machine->addPassesToEmitFile(pass, dest, nullptr, output_type))
     {
         std::cout << "Failed to output to file '" << output_file << "'" << std::endl;
-        return -1;
+        return 1;
     }
 
     module.setTargetTriple(triple);
@@ -186,13 +241,14 @@ int csaw::Builder::RunJIT(const int argc, const char** argv, const char** env)
     llvm::InitializeNativeTargetAsmParser();
 
     // Create LLJIT
-    llvm::orc::LLJITBuilder builder;
-    builder.setLinkProcessSymbolsByDefault(true);
-    auto jit_err = builder.create();
+    llvm::orc::LLJITBuilder lljit_builder;
+    lljit_builder.setLinkProcessSymbolsByDefault(true);
+    auto jit_err = lljit_builder.create();
     if (auto err = jit_err.takeError())
     {
+        std::cout << "Failed to create JIT:" << std::endl;
         logAllUnhandledErrors(std::move(err), llvm::errs());
-        return -1;
+        return 1;
     }
 
     const std::unique_ptr<llvm::orc::LLJIT> jit = std::move(*jit_err);
@@ -207,46 +263,73 @@ int csaw::Builder::RunJIT(const int argc, const char** argv, const char** env)
 
     if (auto err = jit->getMainJITDylib().define(absoluteSymbols(symbols)))
     {
+        std::cout << "Failed to register symbol table in JIT:" << std::endl;
         logAllUnhandledErrors(std::move(err), llvm::errs());
-        return -1;
+        return 1;
     }
 
     // Add all modules to jit
-    for (auto& [name, pair] : m_Modules)
+    if (m_Modules.empty())
     {
-        pair.Module->setDataLayout(jit->getDataLayout());
-        pair.Module->setTargetTriple(jit->getTargetTriple().getTriple());
+        std::cout << "Failed to add modules to JIT: no modules present" << std::endl;
+        return 1;
+    }
 
-        if (auto err = jit->addIRModule(llvm::orc::ThreadSafeModule(std::move(pair.Module), std::move(pair.Context))))
+    std::vector<std::string> ctor_names;
+    for (auto& [key, data] : m_Modules)
+    {
+        auto& [context, builder, module, global] = data;
+
+        const auto name = module->getName().str();
+        module->setDataLayout(jit->getDataLayout());
+        module->setTargetTriple(jit->getTargetTriple().getTriple());
+
+        if (const auto global_ctors = module->getNamedGlobal("llvm.global_ctors"))
         {
-            std::cout << "Failed to add module '" << name << "': " << std::endl;
+            const auto ctor_array = llvm::cast<llvm::ConstantArray>(global_ctors->getInitializer());
+            for (unsigned i = 0; i < ctor_array->getNumOperands(); ++i)
+            {
+                const auto ctor_struct = llvm::cast<llvm::ConstantStruct>(ctor_array->getOperand(i));
+                const auto ctor = ctor_struct->getOperand(1);
+
+                if (const auto func = llvm::dyn_cast<llvm::Function>(ctor->stripPointerCasts()))
+                    ctor_names.push_back(func->getName().str());
+            }
+        }
+
+        if (auto err = jit->addIRModule(llvm::orc::ThreadSafeModule(std::move(module), std::move(context))))
+        {
+            std::cout << "Failed to add module '" << name << "' to JIT: " << std::endl;
             logAllUnhandledErrors(std::move(err), llvm::errs());
+            return 1;
         }
     }
 
-    for (auto& [name, pair] : m_Modules)
+    for (const auto& ctor_name : ctor_names)
     {
-        auto global = jit->lookup(name + ".global");
-        if (auto err = global.takeError())
+        auto ctor_error = jit->lookup(ctor_name);
+        if (auto err = ctor_error.takeError())
         {
-            std::cout << "Failed to find global function for module '" << name << "'" << std::endl;
-            continue;
+            std::cout << "Failed to lookup ctor function '" << ctor_name << "':" << std::endl;
+            logAllUnhandledErrors(std::move(err), llvm::errs());
+            return 1;
         }
 
-        const auto global_fn = global->toPtr<void()>();
-        global_fn();
+        const auto ctor_fn = ctor_error->toPtr<void()>();
+        ctor_fn();
     }
 
     // Find entry function
     auto entry_err = jit->lookup("main");
     if (auto err = entry_err.takeError())
     {
-        std::cout << "Failed to find entry function" << std::endl;
-        return -1;
+        std::cout << "Failed to lookup entry function 'main':" << std::endl;
+        logAllUnhandledErrors(std::move(err), llvm::errs());
+        return 1;
     }
 
     // Call entry function
-    const auto entry_fn = entry_err->toPtr<int(*)(int, const char**, const char**)>();
+    const auto entry_fn = entry_err->toPtr<int(int, const char**, const char**)>();
     return entry_fn(argc, argv, env);
 }
 
@@ -289,4 +372,9 @@ void csaw::Builder::PopScopeStack()
 {
     m_Values = m_ScopeStack.back();
     m_ScopeStack.pop_back();
+}
+
+int csaw::Builder::NextCtor()
+{
+    return m_CtorPriority++;
 }

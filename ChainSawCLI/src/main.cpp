@@ -26,7 +26,7 @@ static int show_help()
     std::cout << std::endl;
     std::cout << "OPTIONS" << std::endl;
     std::cout << '\t' << "-a <arg>  add <arg> to the jit args" << std::endl;
-    std::cout << '\t' << "-e <file> emit generated ir to <file>" << std::endl;
+    std::cout << '\t' << "-e <dir>  emit generated ir to <dir>/<filename>.ll" << std::endl;
     std::cout << '\t' << "-h        display help" << std::endl;
     std::cout << '\t' << "-i <dir>  add <dir> to the include search paths" << std::endl;
     std::cout << '\t' << "-j        run JIT" << std::endl;
@@ -42,7 +42,7 @@ int main(const int argc, const char** argv, const char** env)
     std::vector<std::string> input_files;
     bool run_jit = false;
     std::string output_file;
-    std::string emit_ir_file;
+    std::string emit_ir_directory;
 
     jit_args.push_back(argv[0]);
 
@@ -54,7 +54,7 @@ int main(const int argc, const char** argv, const char** env)
         }
         else if (arg_str == "-e")
         {
-            emit_ir_file = argv[++i];
+            emit_ir_directory = argv[++i];
         }
         else if (arg_str == "-h")
         {
@@ -97,11 +97,26 @@ int main(const int argc, const char** argv, const char** env)
         csaw::ParseData data(file, stream, callback, include_dirs, processed);
         error |= csaw::Parser::Parse(data);
 
-        builder.EndModule(output_file, llvm::CodeGenFileType::CGFT_ObjectFile, emit_ir_file);
+        error |= builder.EndModule(emit_ir_directory);
+    }
+
+    /*if (!error)
+        error |= builder.LinkModules();
+    else std::cout << "Skip linking modules because of error" << std::endl;*/
+
+    if (!output_file.empty())
+    {
+        if (!error)
+            error |= builder.OutputModules(output_file, llvm::CGFT_ObjectFile);
+        else std::cout << "Skip output because of error" << std::endl;
     }
 
     if (run_jit)
-        error |= builder.RunJIT(static_cast<int>(jit_args.size()), jit_args.data(), env);
+    {
+        if (!error)
+            error |= builder.RunJIT(static_cast<int>(jit_args.size()), jit_args.data(), env);
+        else std::cout << "Skip JIT because of error" << std::endl;
+    }
 
     return error;
 }

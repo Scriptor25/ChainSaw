@@ -101,7 +101,7 @@ csaw::RValuePtr csaw::Builder::Gen(const FloatExpression& expression) const
     return RValue::Create(Type::GetFlt64(), value);
 }
 
-csaw::LValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const IdentifierExpression& expression)
 {
     if (const auto& value = m_Values[expression.Id])
         return value;

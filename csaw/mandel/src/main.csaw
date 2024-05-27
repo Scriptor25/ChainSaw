@@ -1,10 +1,9 @@
+\inc "complex.csh"
+\inc "image.csh"
 \inc "std/math.csh"
 \inc "std/stdbool.csh"
 \inc "std/stdio.csh"
 \inc "std/stdlib.csh"
-
-\inc "complex.csaw"
-\inc "image.csaw"
 
 @[c]strcmp(str1: int8*, str2: int8*): int32;
 @"=="(str1: int8*, str2: int8*): bool = strcmp(str1, str2) == 0;
@@ -20,8 +19,8 @@
     ret t;
 }
 
-MAX_ITER: int32 = 100;
-SAMPLES:  int32 = 100;
+MAX_ITER: [const] int32 = 100;
+SAMPLES:  [const] int32 = 100;
 
 @[c]main::int32 {
 
