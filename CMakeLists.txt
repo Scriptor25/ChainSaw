@@ -6,3 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(ChainSaw VERSION 1.0.0)
 add_subdirectory(LibChainSaw)
 add_subdirectory(ChainSawCLI)
+
+install(DIRECTORY csaw/std/include DESTINATION /)
