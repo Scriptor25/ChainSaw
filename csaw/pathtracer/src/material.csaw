@@ -1,13 +1,13 @@
-\inc "math"
-\inc "stdbool"
-\inc "stdio"
+\inc "std/math.csh"
+\inc "std/stdbool.csh"
+\inc "std/stdio.csh"
 
-\inc "color"
-\inc "common"
-\inc "hittable"
-\inc "material"
-\inc "ray"
-\inc "vec3"
+\inc "color.csh"
+\inc "common.csh"
+\inc "hittable.csh"
+\inc "material.csh"
+\inc "ray.csh"
+\inc "vec3.csh"
 
 @lambertian(albedo: color) {
     me!type = 'L';

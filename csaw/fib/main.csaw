@@ -4,4 +4,4 @@
     ret fib(n - 1) + fib(n - 2);
 }
 
-@main::int32 = fib(10);
+@[c]main::int32 = fib(10);

@@ -1,11 +1,10 @@
-\inc "stdbool"
-\inc "stdvector"
+\inc "std/stdbool.csh"
 
-\inc "aabb"
-\inc "hittable"
-\inc "hittable_list"
-\inc "interval"
-\inc "ray"
+\inc "aabb.csh"
+\inc "hittable.csh"
+\inc "hittable_list.csh"
+\inc "interval.csh"
+\inc "ray.csh"
 
 @hittable_list {
     me!type = 'L';
@@ -29,7 +28,7 @@
     closest_so_far: flt64 = ray_t.max;
 
     for (i: int64; i < me!objects.size; ++i) {
-        object: hittable* = me!objects.at(i);
+        object: hittable* = me!objects[i];
         if (object!hit(r, interval(ray_t.min, closest_so_far), &temp_rec)) {
             hit_anything = true;
             closest_so_far = temp_rec.t;

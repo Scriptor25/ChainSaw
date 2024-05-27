@@ -1,14 +1,14 @@
-\inc "stdbool"
-\inc "stdio"
+\inc "std/stdbool.csh"
+\inc "std/stdio.csh"
 
-\inc "aabb"
-\inc "bvh"
-\inc "hittable"
-\inc "hittable_list"
-\inc "interval"
-\inc "ray"
-\inc "sphere"
-\inc "vec3"
+\inc "aabb.csh"
+\inc "bvh.csh"
+\inc "hittable.csh"
+\inc "hittable_list.csh"
+\inc "interval.csh"
+\inc "ray.csh"
+\inc "sphere.csh"
+\inc "vec3.csh"
 
 @set_face_normal:hit_record(r: ray, outward_normal: vec3): void {
     ## Sets the hit record normal vector.

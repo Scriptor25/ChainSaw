@@ -1,13 +1,13 @@
 #include <filesystem>
 #include <fstream>
-#include <csaw/CSaw.hpp>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Error.hpp>
+#include <csaw/Parser.hpp>
 
 void csaw::Parser::ParseCompileDirective()
 {
-    const auto line = m_Line;
-
+    const auto loc = m_Loc;
     const auto directive = Expect(TK_COMPILE_DIRECTIVE).Value;
+
     if (directive == "inc")
     {
         const auto filename = Expect(TK_STRING).Value;
@@ -28,12 +28,36 @@ void csaw::Parser::ParseCompileDirective()
         }
 
         if (!stream.is_open())
-            CSAW_MESSAGE_(true, m_Data.Filename, line, "Failed to open include file '" + filename + "', please check your include paths");
+            return ThrowError(loc, true, "Failed to open include file '%s'", filename.c_str());
 
-        Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
+        int err = CSawError;
+        err |= Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
+        CSawError = err;
+
         stream.close();
         return;
     }
 
-    CSAW_MESSAGE_(true, m_Data.Filename, line, "Unhandled compile directive '" + directive + "'");
+    if (directive == "temp")
+    {
+        std::vector<TypePtr> args;
+
+        Expect("<");
+        while (!AtEOF() && !At(">"))
+        {
+            const auto type = ParseType();
+            args.push_back(type);
+
+            if (!At(">"))
+                Expect(",");
+        }
+        Expect(">");
+
+        const auto temp = ParseStatement();
+
+        ThrowError(loc, false, "Templates are still work in progress");
+        return;
+    }
+
+    ThrowError(loc, false, "Undefined compile directive '%s'", directive.c_str());
 }

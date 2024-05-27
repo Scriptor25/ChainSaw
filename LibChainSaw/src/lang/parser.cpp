@@ -1,47 +1,47 @@
 #include <iostream>
-#include <csaw/CSaw.hpp>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Error.hpp>
+#include <csaw/Parser.hpp>
 
-static bool error(const csaw::ParseData& data, const csaw::ChainSawMessage& message, const size_t line)
-{
-    std::cerr << (message.Filename.empty() ? data.Filename : message.Filename) << "(" << (message.Line == 0 ? line : message.Line) << "): " << message.Message << std::endl;
-    return !message.CanRecover;
-}
-
-void csaw::Parser::Parse(const ParseData& data)
+int csaw::Parser::Parse(const ParseData& data)
 {
     if (std::ranges::find(data.Processed, data.Filename) != data.Processed.end())
-        return;
+        return 0;
 
     data.Processed.emplace_back(data.Filename);
     Parser parser(data);
 
-    do
+    CSawError = 0;
+
+    try
     {
-        try
+        do
         {
             while (parser.At(TK_COMPILE_DIRECTIVE)) parser.ParseCompileDirective();
             if (!parser.AtEOF())
                 data.Callback(parser.ParseStatement());
         }
-        catch (const ChainSawMessage& message)
-        {
-            if (error(data, message, parser.m_Line))
-                break;
-        }
+        while (!parser.AtEOF());
     }
-    while (!parser.AtEOF());
+    catch (const std::runtime_error& error)
+    {
+        std::cout << data.Filename << ": " << error.what() << std::endl;
+        return 1;
+    }
+
+    return CSawError;
 }
 
 csaw::Parser::Parser(const ParseData& data)
-    : m_Data(data)
+    : m_Data(data), m_Loc{data.Filename, 1, 1}
 {
     Next();
 }
 
-int csaw::Parser::Escape() const
+int csaw::Parser::Escape()
 {
     int c = m_Data.Stream.get();
+    ++m_Loc.Column;
+
     switch (c)
     {
     case 'a': return '\a';
@@ -59,8 +59,10 @@ int csaw::Parser::Escape() const
         std::string value;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         return std::stoi(value, nullptr, 8);
     }
@@ -69,8 +71,10 @@ int csaw::Parser::Escape() const
     {
         std::string value;
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         c = m_Data.Stream.get();
+        ++m_Loc.Column;
         value += static_cast<char>(c);
         return std::stoi(value, nullptr, 16);
     }
@@ -103,7 +107,7 @@ csaw::Token csaw::Parser::Get()
 csaw::Token csaw::Parser::Expect(const int type)
 {
     if (!At(type))
-        CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Unexpected type " + TkToString(m_Token.Type) + ", expected " + TkToString(type));
+        ThrowError(m_Loc, true, "Expected type %s, found type %s, value '%s'", TkToString(type).c_str(), TkToString(m_Token.Type).c_str(), m_Token.Value.c_str());
     Token token = m_Token;
     Next();
     return token;
@@ -112,7 +116,7 @@ csaw::Token csaw::Parser::Expect(const int type)
 void csaw::Parser::Expect(const std::string& value)
 {
     if (!At(value))
-        CSAW_MESSAGE_(false, m_Data.Filename, m_Line, "Unexpected value '" + m_Token.Value + "', expected '" + value + "'");
+        ThrowError(m_Loc, true, "Expected value '%s', found type %s, value '%s'", value.c_str(), TkToString(m_Token.Type).c_str(), m_Token.Value.c_str());
     Next();
 }
 

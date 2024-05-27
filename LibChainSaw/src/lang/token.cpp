@@ -1,15 +1,15 @@
 #include <ostream>
 #include <string>
-#include <csaw/lang/Parser.hpp>
+#include <csaw/Parser.hpp>
 
-uint32_t csaw::Token::IntValue() const
+uint64_t csaw::Token::IntValue() const
 {
     switch (Type)
     {
-    case TK_INT_BIN: return std::stoi(Value, nullptr, 2);
-    case TK_INT_OCT: return std::stoi(Value, nullptr, 8);
-    case TK_INT_DEC: return std::stoi(Value, nullptr, 10);
-    case TK_INT_HEX: return std::stoi(Value, nullptr, 16);
+    case TK_INT_BIN: return std::stoull(Value, nullptr, 2);
+    case TK_INT_OCT: return std::stoull(Value, nullptr, 8);
+    case TK_INT_DEC: return std::stoull(Value, nullptr, 10);
+    case TK_INT_HEX: return std::stoull(Value, nullptr, 16);
     default: return 0;
     }
 }
@@ -49,5 +49,5 @@ std::ostream& csaw::operator<<(std::ostream& out, const TokenType& type)
 
 std::ostream& csaw::operator<<(std::ostream& out, const Token& token)
 {
-    return out << token.Line << ": " << token.Value << " (" << token.Type << ')';
+    return out << token.Loc.ToString() << ": " << token.Value << " (" << token.Type << ')';
 }

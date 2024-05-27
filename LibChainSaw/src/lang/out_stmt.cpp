@@ -1,8 +1,8 @@
 #include <ostream>
 #include <string>
-#include <csaw/CSaw.hpp>
-#include <csaw/lang/Expr.hpp>
-#include <csaw/lang/Stmt.hpp>
+#include <csaw/Error.hpp>
+#include <csaw/Expr.hpp>
+#include <csaw/Stmt.hpp>
 
 static size_t depth = 0;
 static bool end = true;
@@ -41,7 +41,8 @@ std::ostream& csaw::operator<<(std::ostream& out, const StatementPtr& ptr)
         return out;
     }
 
-    CSAW_MESSAGE_STMT(true, *ptr, "Printing is not implemented for this statement");
+    ThrowErrorStmt(*ptr, false, "Outstream is not implemented for this statement");
+    return out;
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const ScopeStatement& statement)
@@ -88,7 +89,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
         {
             if (i > 0)
                 out << ", ";
-            out << statement.Args[i].first << ": " << statement.Args[i].second;
+            out << statement.Args[i];
         }
         if (statement.IsVarArgs)
             out << ", ?";

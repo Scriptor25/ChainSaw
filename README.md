@@ -1,146 +1,140 @@
 # ChainSaw - A programming language
 
-# Warning: this documentation is still in the making, dont belive everything, or better, anything written here!
+# Warning: this documentation is still in the making!
 
-1. [Why](#why)
-2. [Usage](#usage)
-3. [The language specifications](#the-language-specifications)
-    1. [Functions](#functions)
-        1. [Signature](#signature)
-        2. [Arguments](#arguments)
-        3. [Example](#example)
-    2. [Primitive Types](#primitive-types)
-    3. [Variables](#variables)
+## TODO:
+
+* Operators and operator overloading
+* Structs
+* Compile directives
+* The `me` pointer
+* ...
 
 ## Why
 
-There is an unholy amount of programming languages out there: so why? Why making my own programming language? Because
-why not! It's not about some cool new features or something the world needed, but to just make a programming language.
-It's more like a learning project where I develop and upgrade ChainSaw as I get better and have more knowledge on the
-subject. E.g. at the beginning there only where the very abstract types 'void', 'num', 'chr' and 'str' and structs where
-called 'things'. Now the type names are called 'void', 'int1', 'int8', ..., 'int128', 'flt16', ..., 'flt64', etc. Also,
-it now supports pointers so 'str' is now called 'int8*'. 'Things' are now structs, defined by using the 'def'
-keyword. To keep it short, a lot changed from where I started off with this project a few years ago, and I learned so
-much in the process to the point where I now use LLVM as a codegen backend (that means a lot of headache I had and have
-to go through D: ). So to summarize, if you need a language that just works, use C, and if you want to try something
-new, use ChainSaw. And, if you think you made something cool with my language, share the project with me, I'd be happy
-to hear from someone actually working with this mess... But till then, enjoy this 'masterpiece'!
+There is an unholy amount of programming languages out there, what raises the question: why? Why making my own
+programming language? Because why not! It's not about some cool new features or something the world needed, but to just
+make a programming language. It's more like a learning project where I develop and upgrade ChainSaw as I get better and
+have more knowledge on the subject. E.g. at the beginning there only where the very abstract types 'void', 'num', 'chr'
+and 'str' and structs where called 'things'. Now the type names are called 'void', 'int1', 'int8', ..., 'int128',
+'flt16', ..., 'flt64', etc. Also, it now supports pointers so 'str' is now called 'int8*'. 'Things' are now structs,
+defined by using the 'def' keyword. To keep it short, a lot changed from where I started off with this project a few
+years ago, and I learned so much in the process to the point where I now use LLVM as a codegen backend (that means a lot
+of headache I had and have to go through D: ). So to summarize, if you need a language that just works, use C, and if
+you want to try something new, use ChainSaw. And, if you think you made something cool with my language, share the
+project with me, I'd be happy to hear from someone actually working with this mess... But till then, enjoy this
+'masterpiece' of a documentation!
 
 And btw if you don't understand this documentation or simply don't want to read it, you can take a look at
-the [example directory](csaw). It contains 3 examples and the standard library for ChainSaw:
-
-* [fibonacci](csaw/fib)
-* [ghost game](csaw/ghost)
-* [mandelbrot set](csaw/mandel)
-* [standard library](csaw/stdlib)
+the [examples](csaw).
 
 ## Usage
 
-The ChainSaw commandline interface (CSawCLI) is very easy to use:
+The commandline interface is very easy to use and can be integrated into build systems like gnu make:
 
-``CSawCLI [<flag|option>...] <filename>``
+`csaw [options] file...`
 
-Flags are defined as ``--foo``, options additionally have a value: ``--foo=bar``
+Use `csaw` without any arguments or `csaw -h` to display the help text.
 
-* ``flag``:
-    * ``--help``: show the help text
-* ``option``:
-    * ``--include``: a comma separated list of additional include directories
-* ``filename``: the file to operate on
+So for example, if you have a project with a source and an include directory, you could do something like this:
 
-To compile the [fibonacci](csaw/fib) example:
+```makefile
+CSAW = <path to csaw>
+GCC  = gcc
 
-``CSawCLI <path-to-csaw-examples>/fib/main.csaw``
+STDDIR = <path to the csaw std includes>
+INCDIR = include
+SRCDIR = src
+OBJDIR = build
 
-Or the [mandelbrot set](csaw/mandel):
+CSAW_FLAGS = -i $(INCDIR) -i $(STDDIR)
+GCC_FLAGS  =
 
-``CSawCLI --include=<path-to-csaw-examples> <path-to-csaw-examples>/mandel/main.csaw``
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
+TARGET = $(OBJDIR)/<name of your target executable>
+SRCS   = $(call rwildcard, $(SRCDIR), *.csaw)
+OBJS   = $(patsubst $(SRCDIR)/%.csaw, $(OBJDIR)/%.o, $(SRCS))
+
+all: $(TARGET)
+
+clean:
+	@if exist $(OBJDIR) rd /s /q $(OBJDIR)
+
+run: $(TARGET)
+	@$(TARGET)
+
+$(TARGET): $(OBJS)
+	$(GCC) $(GCC_FLAGS) -o $@ $^
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.csaw
+	@if not exist $(@D) mkdir $(subst /,\,$(@D))
+	$(CSAW) $(CSAW_FLAGS) -o $@ $<
+
+.PHONY: all clean run
+```
+
+This is the template I personally use on windows. I guess there are better ways to manage a project, but for small ones
+it's enough.
 
 ## The language specifications
 
-### General syntax rules
-
-1. You need a semicolon after every statement
-2. Every function needs at least a declared signature before being used, so you can't do this:
-    ```
-    @foo = bar();
-    
-    @bar { ... }
-    ```
-   You have to do this:
-    ```
-    @bar;
-    
-    @foo = bar();
-    
-    @bar { ... }
-    ```
-   i.e. you have to define something first to use it.
-3. It's illegal to use any statements except defines for structs, functions, constructors or variables outside a
-   function.
-4. A function has to return a result of its return type on every code path, except for void.
-5. There can be two functions with the same name, but they must have different numbers of arguments or a different
-   callee.
-
 ### Functions
 
-#### Signature
+There are a few different ways to declare a function. The simplest one is just the function name and a return type:
 
-There are a few different ways to define/declare a function. The most simple one is just the function name:
+`@foo::void`
 
-``@foo``
+This function takes no arguments, has no parent type and returns void.
 
-This function takes no arguments, is not callable on any object and returns void.
+To shorten this, here a table with all possible combinations:
 
-To shorten this, here a matrix of all possible ways:
+| Signature               | Parent Type | Return Type | Takes Arguments | Call (x: bar, p: parent) |
+|-------------------------|-------------|-------------|-----------------|--------------------------|
+| `@foo::bar`             | none        | bar         | no              | x = foo()                |
+| `@foo(...): bar`        | none        | bar         | yes             | x = foo(...)             |
+| `@foo:parent:bar`       | parent      | bar         | no              | x = c.foo()              |
+| `@foo:parent(...): bar` | parent      | bar         | yes             | x = p.foo(...)           |
 
-| Signature                 | Callee Type | Return Type | Takes Arguments | Called (x: bar, c: callee) |
-|---------------------------|-------------|-------------|-----------------|----------------------------|
-| ``@foo``                  | none        | void        | no              | foo()                      |
-| ``@foo::bar``             | none        | bar         | no              | x = foo()                  |
-| ``@foo(...)``             | none        | void        | yes             | foo(...)                   |
-| ``@foo(...): bar``        | none        | bar         | yes             | x = foo(...)               |
-| ``@foo:callee``           | callee      | void        | no              | c.foo()                    |
-| ``@foo:callee:bar``       | callee      | bar         | no              | x = c.foo()                |
-| ``@foo:callee(...)``      | callee      | void        | yes             | c.foo(...)                 |
-| ``@foo:callee(...): bar`` | callee      | bar         | yes             | x = c.foo(...)             |
-
-Where ``foo`` is the function name, ``bar`` the return type and ``callee`` the type on which the function can be called
+Where `foo` is the function name, `bar` the return type and `parent` the type on which the function can be called
 on.
 
-To define a constructor for a type, simply swap the ``@`` for a ``$``. It returns an instance of the type specified with
-the constructor name. Because a constructor does not have a return type or a callee type, the only possible options for
-a constructor are
+To define a constructor for a type, simply don't specify a return type. It returns an instance of the type specified
+with the constructor name. Because a constructor does not have a return or parent type, the only possible options
+for a constructor are
 
-* ``$foo`` and
-* ``$foo(...)``
+* `@foo` and
+* `@foo(...)`
 
-#### Arguments
+Function arguments are comma separated and defined by the name, a colon and the type: `foo: bar, foo1: bar1, ...`. If
+you don't use the argument or don't need a name for it yet (e.g. if you only want to pre-declare the function), you can
+instead just use the type, e.g. `bar, bar1, ...`.
 
-are comma separated and defined by the name, a colon and the type: ``foo: bar, foo1: bar1, ...``
+For variadic args simply put a `?` as the last argument. Example:
 
-For variadic args simply put a ``?`` after the last argument name instead of ``: type``. Example:
+`@foo(foo1: bar1, foo2: bar2, ?): bar`
 
-``@foo(foo1: bar1, foo2: bar2, foo3?)``
+The function body can be either a scoped statement (`{ ... }`) or a simple expression or statement (`= ...;`):
 
-#### Function body
-
-The function body can be either a scoped statement (``{ ... }``) or a simple expression (``= ...;``):
-
-``@foo { ... }``
+`@foo { ... }`
 
 or
 
-```@foo = ...;```
+`@foo = ...;`
 
-If you just want to predefine a function, i.e. don't define a body for it yet, you can just put a semicolon on after the
-signature:
+If you just want to pre-declare a function, i.e. don't define a body for it yet, you can just end the signature with a
+semicolon:
 
-``@foo::bar;``
+`@foo::bar;`
 
-#### Example
+To add modifiers to a function, like the C++ `extern "C"`, put them into the brackets after the `@`:
 
-Here is a simple example of functions:
+`@[c]foo`
+
+The `c` modifier leaves the function name untouched so the function can be recognized by linkers if you want to access
+standard c functionality.
+
+Here is a simple example for functions:
 
 ```
 @fib(n: int32): int32 {
@@ -149,50 +143,66 @@ Here is a simple example of functions:
     ret fib(n - 1) + fib(n - 2);
 }
 
-@main::int32 = fib(10);
+@[c]main::int32 = fib(10);
 ```
 
 ### Primitive Types
 
 ChainSaw has several builtin primitive types:
 
-Void: ``void``
+Void: `void`
 
 Integer:
 
-* ``int1``
-* ``int8``
-* ``int16``
-* ``int32``
-* ``int64``
-* ``int128``
+* `int1`
+* `int8`
+* `int16`
+* `int32`
+* `int64`
+* `int128`
 
 Float:
 
-* ``flt16``
-* ``flt32``
-* ``flt64``
+* `flt16`
+* `flt32`
+* `flt64`
 
-The number next to the type stands for the number of bits this type uses.
+The number next to the type stands for the number of bits this type uses. This is platform and system independent.
 
 You can also use pointers
 
-``foo*``
+`foo*`
 
 as types. Or pointers to pointers:
 
-``foo**``
+`foo**`
 
 Or even pointers to pointers to pointers:
 
-``foo***``
+`foo***`
 
 Just like plain old C...
 
+A very new addition to the collection are arrays (and yes, just like the commit says, it was a pain in the ass to
+somehow get this to work):
+
+`foo[10]`
+
+This allocates an array of size 10 of type `foo` on the stack. To access the elements, use the `[]` operator:
+
+`bar[index]`
+
+You can assign into an element, as well as getting a reference to it. So to input an array as a pointer, you have to do
+something like this:
+
+`&bar[0]`
+
+By taking the first element and using its reference, you get the array's pointer.
+
 ### Variables
 
-Variables are defined similar to function args: ``foo: bar``, where ``foo`` is the name and ``bar`` the type; But: you
-can also initialize them: ``foo: bar = foobar``.
+Variables are defined similar to function args: `foo: bar`, where `foo` is the name and `bar` the type; But: you
+can also initialize them: `foo: bar = foobar`.
 
-Assigning to a variable is the same as in languages like C: ``foo = bar`` where ``foo`` is the variable (destination)
-and ``bar`` the value (source).
+Assigning to a variable is the same as in languages like C: `foo = bar` where `foo` is the variable (destination)
+and `bar` the value (source).

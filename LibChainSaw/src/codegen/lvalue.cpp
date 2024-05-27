@@ -1,17 +1,30 @@
-#include <csaw/CSaw.hpp>
-#include <csaw/codegen/Builder.hpp>
-#include <csaw/codegen/Value.hpp>
+#include <csaw/Builder.hpp>
+#include <csaw/Type.hpp>
+#include <csaw/Value.hpp>
 
-csaw::LValuePtr csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
+llvm::Value* csaw::Value::GetBoolValue(const Builder* builder) const
 {
-    const auto pointer = builder->CreateAlloca(builder->Gen(type));
+    const auto value = GetValue();
+    return builder->GetBuilder().CreateIsNotNull(value);
+}
+
+csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
+{
+    const auto ty = builder->Gen(type);
+    if (!ty)
+        return Expect<LValuePtr>("Type is null: " + ty.Msg());
+
+    const auto pointer = builder->CreateAlloca(ty.Get());
+    if (!pointer)
+        return Expect<LValuePtr>("Type " + type->Name + " is not defined");
+
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 
-csaw::LValuePtr csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value)
+csaw::Expect<csaw::LValuePtr> csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value)
 {
     const auto lvalue = Allocate(builder, type);
-    lvalue->StoreValue(value);
+    if (lvalue) lvalue.Get()->StoreValue(value);
     return lvalue;
 }
 
@@ -30,10 +43,10 @@ csaw::RValuePtr csaw::LValue::GetReference() const
     return RValue::Create(PointerType::Get(m_Type), m_Pointer);
 }
 
-csaw::LValuePtr csaw::LValue::Dereference() const
+csaw::Expect<csaw::LValuePtr> csaw::LValue::Dereference() const
 {
     if (!m_Type->IsPointer())
-        CSAW_MESSAGE_NONE(true, "cannot dereference non-pointer lvalue");
+        return Expect<LValuePtr>("Value type is non-pointer");
 
     const auto type = m_Type->AsPointer()->Base;
     const auto pointer = GetValue();
@@ -52,7 +65,8 @@ csaw::TypePtr csaw::LValue::GetType() const
 
 llvm::Value* csaw::LValue::GetValue() const
 {
-    return m_Builder->GetBuilder().CreateLoad(m_Builder->Gen(m_Type), m_Pointer);
+    const auto type = m_Builder->Gen(m_Type);
+    return m_Builder->GetBuilder().CreateLoad(type.Get(), m_Pointer);
 }
 
 bool csaw::LValue::IsLValue() const

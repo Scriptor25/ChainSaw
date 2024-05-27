@@ -1,9 +1,9 @@
-\inc "stdbool"
+\inc "std/stdbool.csh"
 
-\inc "aabb"
-\inc "interval"
-\inc "ray"
-\inc "vec3"
+\inc "aabb.csh"
+\inc "interval.csh"
+\inc "ray.csh"
+\inc "vec3.csh"
 
 @aabb = *me = aabb(interval(), interval(), interval());
 

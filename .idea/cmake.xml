@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeSharedSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug - Visual Studio" ENABLED="true" GENERATION_DIR="out" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot; -Thost=x64 -DCMAKE_INSTALL_PREFIX:PATH=C:/Users/FelixSchreiber/Documents/Projects/C++/ChainSaw/out/install" />
+    </configurations>
+  </component>
+</project>

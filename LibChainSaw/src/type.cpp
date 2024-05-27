@@ -1,19 +1,28 @@
 #include <iostream>
 #include <map>
-#include <csaw/CSaw.hpp>
 #include <csaw/Type.hpp>
 
+#define INFO_NONE    0b00000000
+#define INFO_IS_VOID 0b00000001
+#define INFO_IS_INT  0b00000010
+#define INFO_IS_FLT  0b00000100
+#define INFO_IS_PTR  0b00001000
+#define INFO_IS_ARR  0b00010000
+#define INFO_IS_STR  0b00100000
+#define INFO_IS_FUN  0b01000000
+#define INFO_IS_TEMP 0b10000000
+
 static std::map<std::string, csaw::TypePtr> Types = {
-    {"void", std::make_shared<csaw::Type>("void", false, 0)},
-    {"int1", std::make_shared<csaw::Type>("int1", false, 1)},
-    {"int8", std::make_shared<csaw::Type>("int8", false, 8)},
-    {"int16", std::make_shared<csaw::Type>("int16", false, 16)},
-    {"int32", std::make_shared<csaw::Type>("int32", false, 32)},
-    {"int64", std::make_shared<csaw::Type>("int64", false, 64)},
-    {"int128", std::make_shared<csaw::Type>("int128", false, 128)},
-    {"flt16", std::make_shared<csaw::Type>("flt16", true, 16)},
-    {"flt32", std::make_shared<csaw::Type>("flt32", true, 32)},
-    {"flt64", std::make_shared<csaw::Type>("flt64", true, 64)},
+    {"void", std::make_shared<csaw::Type>("void", INFO_IS_VOID)},
+    {"int1", std::make_shared<csaw::Type>("int1", INFO_IS_INT)},
+    {"int8", std::make_shared<csaw::Type>("int8", INFO_IS_INT)},
+    {"int16", std::make_shared<csaw::Type>("int16", INFO_IS_INT)},
+    {"int32", std::make_shared<csaw::Type>("int32", INFO_IS_INT)},
+    {"int64", std::make_shared<csaw::Type>("int64", INFO_IS_INT)},
+    {"int128", std::make_shared<csaw::Type>("int128", INFO_IS_INT)},
+    {"flt16", std::make_shared<csaw::Type>("flt16", INFO_IS_FLT)},
+    {"flt32", std::make_shared<csaw::Type>("flt32", INFO_IS_FLT)},
+    {"flt64", std::make_shared<csaw::Type>("flt64", INFO_IS_FLT)},
 };
 
 std::ostream& csaw::operator<<(std::ostream& out, const TypePtr& ptr)
@@ -21,11 +30,18 @@ std::ostream& csaw::operator<<(std::ostream& out, const TypePtr& ptr)
     return out << ptr->Name;
 }
 
+std::ostream& csaw::operator<<(std::ostream& out, const Arg& arg)
+{
+    if (arg.Name.empty())
+        return out << arg.Type;
+    return out << arg.Name << ": " << arg.Type;
+}
+
 csaw::TypePtr csaw::Type::Get(const std::string& name)
 {
-    if (const auto& type = Types[name])
-        return type;
-    CSAW_MESSAGE_NONE(true, "cannot resolve type with name '" + name + "'");
+    auto& type = Types[name];
+    if (!type) type = std::make_shared<Type>(name, INFO_NONE);
+    return type;
 }
 
 csaw::TypePtr csaw::Type::GetVoid()
@@ -78,42 +94,54 @@ csaw::TypePtr csaw::Type::GetFlt64()
     return Types["flt64"];
 }
 
-csaw::TypePtr csaw::Type::GetOrCreate(const std::string& name)
-{
-    auto& type = Types[name];
-    if (type)
-        return type;
-    return type = std::make_shared<Type>(name, false, 0);
-}
-
 void csaw::Type::Alias(const std::string& name, const TypePtr& origin)
 {
     Types[name] = origin;
 }
 
-csaw::Type::Type(const std::string& name, const bool is_flt, const size_t bits)
-    : Name(name), IsFlt(is_flt), Bits(bits)
+csaw::Type::Type(const std::string& name, const int info)
+    : Name(name), Info(info)
 {
+}
+
+bool csaw::Type::IsVoid() const
+{
+    return Info & INFO_IS_VOID;
+}
+
+bool csaw::Type::IsInt() const
+{
+    return Info & INFO_IS_INT;
+}
+
+bool csaw::Type::IsFlt() const
+{
+    return Info & INFO_IS_FLT;
 }
 
 bool csaw::Type::IsPointer() const
 {
-    return false;
+    return Info & INFO_IS_PTR;
 }
 
 bool csaw::Type::IsArray() const
 {
-    return false;
+    return Info & INFO_IS_ARR;
 }
 
 bool csaw::Type::IsStruct() const
 {
-    return false;
+    return Info & INFO_IS_STR;
 }
 
 bool csaw::Type::IsFunction() const
 {
-    return false;
+    return Info & INFO_IS_FUN;
+}
+
+bool csaw::Type::IsTemplate() const
+{
+    return Info & INFO_IS_TEMP;
 }
 
 const csaw::PointerType* csaw::Type::AsPointer() const
@@ -136,19 +164,66 @@ const csaw::FunctionType* csaw::Type::AsFunction() const
     return dynamic_cast<const FunctionType*>(this);
 }
 
+const csaw::TemplateType* csaw::Type::AsTemplate() const
+{
+    return dynamic_cast<const TemplateType*>(this);
+}
+
 bool csaw::Type::ParentOf(const TypePtr& type) const
 {
-    if (this == type.get() || this == GetVoid().get())
+    if (this == type.get())
         return true;
 
-    if (IsStruct() || type->IsStruct() || IsFunction())
-        return false;
+    if (IsVoid())
+        return true;
 
     if (IsPointer())
-        return type->IsPointer() ? AsPointer()->Base->ParentOf(type->AsPointer()->Base) : type->IsFunction() ? AsPointer()->Base->ParentOf(type) : false;
+    {
+        const auto ptr = AsPointer();
 
-    if (Bits >= type->Bits && (IsFlt || !type->IsFlt))
+        if (type->IsPointer())
+            return ptr->Base->ParentOf(type->AsPointer()->Base);
+
+        if (type->IsArray())
+            return ptr->Base->ParentOf(type->AsArray()->Base);
+
+        return false;
+    }
+
+    if (IsArray() && type->IsArray())
+    {
+        const auto aarr = AsArray();
+        const auto barr = type->AsArray();
+
+        if (aarr->Size != barr->Size)
+            return false;
+
+        return aarr->Base->ParentOf(barr->Base);
+    }
+
+    if (IsFunction() && type->IsFunction())
+    {
+        const auto afunc = AsFunction();
+        const auto bfunc = type->AsFunction();
+
+        if (!afunc->Result->IsVoid() && afunc->Result != bfunc->Result)
+            return false;
+
+        if (afunc->IsVararg && !bfunc->IsVararg)
+            return false;
+
+        if (bfunc->Args.size() > afunc->Args.size())
+            return false;
+
+        for (size_t i = 0; i < bfunc->Args.size(); ++i)
+            if (!bfunc->Args[i]->ParentOf(afunc->Args[i]))
+                return false;
+
         return true;
+    }
+
+    if ((IsInt() || IsFlt()) && (type->IsInt() || type->IsFlt()))
+        return IsFlt() || !type->IsFlt();
 
     return false;
 }
@@ -163,13 +238,8 @@ csaw::PointerTypePtr csaw::PointerType::Get(const TypePtr& base)
 }
 
 csaw::PointerType::PointerType(const std::string& name, const TypePtr& base)
-    : Type(name, false, 0), Base(base)
+    : Type(name, INFO_IS_PTR), Base(base)
 {
-}
-
-bool csaw::PointerType::IsPointer() const
-{
-    return true;
 }
 
 csaw::ArrayTypePtr csaw::ArrayType::Get(const TypePtr& base, const size_t size)
@@ -182,16 +252,11 @@ csaw::ArrayTypePtr csaw::ArrayType::Get(const TypePtr& base, const size_t size)
 }
 
 csaw::ArrayType::ArrayType(const std::string& name, const TypePtr& base, const size_t size)
-    : Type(name, false, 0), Base(base), Size(size)
+    : Type(name, INFO_IS_ARR), Base(base), Size(size)
 {
 }
 
-bool csaw::ArrayType::IsArray() const
-{
-    return true;
-}
-
-csaw::StructTypePtr csaw::StructType::Create(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
+csaw::StructTypePtr csaw::StructType::Create(const std::string& name, const std::vector<Arg>& elements)
 {
     auto& type = Types[name];
     if (!type)
@@ -206,14 +271,9 @@ csaw::StructTypePtr csaw::StructType::Get(const std::string& name)
     return std::dynamic_pointer_cast<StructType>(Types[name]);
 }
 
-csaw::StructType::StructType(const std::string& name, const std::vector<std::pair<std::string, TypePtr>>& elements)
-    : Type(name, false, 0), Elements(elements)
+csaw::StructType::StructType(const std::string& name, const std::vector<Arg>& elements)
+    : Type(name, INFO_IS_STR), Elements(elements)
 {
-}
-
-bool csaw::StructType::IsStruct() const
-{
-    return true;
 }
 
 std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& name) const
@@ -228,28 +288,44 @@ std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& na
     return {-1, {}};
 }
 
-csaw::FunctionTypePtr csaw::FunctionType::Get(const TypePtr& result, const std::vector<TypePtr>& args, const bool is_vararg)
+csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
 {
-    std::string name = '%' + result->Name + '(';
+    std::string name = "(";
     for (size_t i = 0; i < args.size(); ++i)
     {
         if (i > 0) name += ", ";
         name += args[i]->Name;
     }
-    name += ')';
+    name += ")(" + result->Name + ')';
 
     auto& type = Types[name];
     if (!type)
-        type = std::make_shared<FunctionType>(name, result, args, is_vararg);
+        type = std::make_shared<FunctionType>(name, args, is_vararg, result);
     return std::dynamic_pointer_cast<FunctionType>(type);
 }
 
-csaw::FunctionType::FunctionType(const std::string& name, const TypePtr& result, const std::vector<TypePtr>& args, const bool is_vararg)
-    : Type(name, false, 0), Result(result), Args(args), IsVararg(is_vararg)
+csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
+    : Type(name, INFO_IS_FUN), Args(args), IsVararg(is_vararg), Result(result)
 {
 }
 
-bool csaw::FunctionType::IsFunction() const
+csaw::TemplateTypePtr csaw::TemplateType::Get(const TypePtr& base, const std::vector<TypePtr>& args)
 {
-    return true;
+    std::string name = base->Name + '<';
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        if (i > 0) name += ", ";
+        name += args[i]->Name;
+    }
+    name += '>';
+
+    auto& type = Types[name];
+    if (!type)
+        type = std::make_shared<TemplateType>(name, base, args);
+    return std::dynamic_pointer_cast<TemplateType>(type);
+}
+
+csaw::TemplateType::TemplateType(const std::string& name, const TypePtr& base, const std::vector<TypePtr>& args)
+    : Type(name, INFO_IS_TEMP), Base(base), Args(args)
+{
 }
