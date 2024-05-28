@@ -26,18 +26,24 @@
             vector
           ];
         };
-        preInstall = ''
-          rm -rf build
-        '';
-        installPhase = ''
-          runHook preInstall
-          cmake -S . -B build
-          cmake --build build --target csaw --config Debug
-          runHook postInstall
-        '';
-        postInstall = ''
-          cp build/csaw
-        '';
+
+        packages.${system} = {
+          myPackage = pkgs.stdenv.mkDerivation {
+            name = "chainsaw-lang";
+            preInstall = ''
+              rm -rf build
+            '';
+            installPhase = ''
+              runHook preInstall
+              cmake -S . -B build
+              cmake --build build --target csaw --config Debug
+              runHook postInstall
+            '';
+            postInstall = ''
+              cp build/csaw
+            '';
+          };
+        };
       }
     );
 }
