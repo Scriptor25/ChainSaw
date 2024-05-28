@@ -11,37 +11,38 @@
     flake-utils.lib.eachDefaultSystem
     (
       system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {inherit system;};
+        devPackages = with pkgs; [
+          gcc
+          gnumake
+          cmake
+          ninja
+          llvmPackages_17.llvm
+          llvmPackages_17.libllvm
+          lldb_17
+          zlib
+        ];
       in {
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            gcc
-            gnumake
-            cmake
-            ninja
-            llvmPackages_17.llvm
-            llvmPackages_17.libllvm
-            lldb_17
-            zlib
-            vector
-          ];
+        devShell = pkgs.mkShell {
+          packages = devPackages;
         };
 
-        packages.${system} = {
-          myPackage = pkgs.stdenv.mkDerivation {
-            name = "chainsaw-lang";
-            preInstall = ''
-              rm -rf build
-            '';
-            installPhase = ''
-              runHook preInstall
-              cmake -S . -B build
-              cmake --build build --target csaw --config Debug
-              runHook postInstall
-            '';
-            postInstall = ''
-              cp build/csaw
-            '';
+        packages.default = pkgs.stdenv.mkDerivation {
+          name = "chainsaw-lang";
+          src = ./.;
+          buildInputs = devPackages;
+          preInstall = ''
+            rm -rf build
+          '';
+          installPhase = ''
+            runHook preInstall
+            cmake -S . -B build
+            cmake --build build --target csaw --config Debug
+            mkdir $out/bin
+            cp build/csaw $out/bin/
+          '';
+          meta = {
+            description = "Chainsaw Programming Language";
           };
         };
       }
