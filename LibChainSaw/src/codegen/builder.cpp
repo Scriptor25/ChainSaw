@@ -15,9 +15,11 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
+#include <llvm/Transforms/Utils/Mem2Reg.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 
-csaw::Builder::Builder()
+csaw::Builder::Builder(const bool obfusecate)
+    : m_Obfusecate(obfusecate)
 {
     m_FPM = std::make_unique<llvm::FunctionPassManager>();
     m_LAM = std::make_unique<llvm::LoopAnalysisManager>();
@@ -30,6 +32,7 @@ csaw::Builder::Builder()
     m_FPM->addPass(llvm::ReassociatePass());
     m_FPM->addPass(llvm::GVNPass());
     m_FPM->addPass(llvm::SimplifyCFGPass());
+    m_FPM->addPass(llvm::PromotePass());
 
     llvm::PassBuilder pb;
     pb.registerModuleAnalyses(*m_MAM);

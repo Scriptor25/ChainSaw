@@ -31,6 +31,7 @@ static int show_help()
     std::cout << '\t' << "-i <dir>  add <dir> to the include search paths" << std::endl;
     std::cout << '\t' << "-j        run JIT" << std::endl;
     std::cout << '\t' << "-o <file> write output to <file>" << std::endl;
+    std::cout << '\t' << "-n        obfusecate symbol names" << std::endl;
     std::cout << '\t' << "-v        display version" << std::endl;
     return 0;
 }
@@ -41,6 +42,7 @@ int main(const int argc, const char** argv, const char** env)
     std::vector<std::string> include_dirs;
     std::vector<std::string> input_files;
     bool run_jit = false;
+    bool obfusecate = false;
     std::string output_file;
     std::string emit_ir_directory;
 
@@ -72,6 +74,10 @@ int main(const int argc, const char** argv, const char** env)
         {
             output_file = argv[++i];
         }
+        else if (arg_str == "-n")
+        {
+            obfusecate = true;
+        }
         else if (arg_str == "-v")
         {
             show_version();
@@ -82,7 +88,7 @@ int main(const int argc, const char** argv, const char** env)
     if (input_files.empty())
         return show_help();
 
-    csaw::Builder builder;
+    csaw::Builder builder(obfusecate);
     csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr) { builder.Gen(ptr); };
 
     int error = 0;

@@ -41,7 +41,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Result->Name.c_str(), result_type.Msg().c_str());
 
         const auto function_type = llvm::FunctionType::get(result_type.Get(), arg_types, statement.IsVarArgs);
-        function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, signature.Mangle(), GetModule());
+        function = llvm::Function::Create(function_type, llvm::GlobalValue::ExternalLinkage, signature.Mangle(m_Obfusecate), GetModule());
 
         m_Signatures[function] = signature;
     }
