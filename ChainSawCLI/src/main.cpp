@@ -43,6 +43,7 @@ int main(const int argc, const char** argv, const char** env)
     std::vector<std::string> input_files;
     bool run_jit = false;
     bool obfusecate = false;
+    bool version = false;
     std::string output_file;
     std::string emit_ir_directory;
 
@@ -80,12 +81,15 @@ int main(const int argc, const char** argv, const char** env)
         }
         else if (arg_str == "-v")
         {
-            show_version();
+            version = true;
         }
         else input_files.push_back(arg_str);
     }
 
-    if (input_files.empty())
+    if (version)
+        show_version();
+
+    if (!version && input_files.empty())
         return show_help();
 
     csaw::Builder builder(obfusecate);
