@@ -20,6 +20,8 @@ execute_process(
 )
 
 separate_arguments(llvm_libnames)
+message(STATUS "LLVM Lib Dir: ${llvm_libdir}")
+message(STATUS "LLVM Lib Names: ${llvm_libnames}")
 
 set(CHAINSAW_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CHAINSAW_VERSION_MINOR ${PROJECT_VERSION_MINOR})
