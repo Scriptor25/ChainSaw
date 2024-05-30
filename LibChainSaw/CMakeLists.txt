@@ -9,7 +9,7 @@ execute_process(
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
-        COMMAND llvm-config --libnames
+        COMMAND llvm-config --libnames --ignore-libllvm
         OUTPUT_VARIABLE llvm_libnames
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
