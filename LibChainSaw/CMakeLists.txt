@@ -3,13 +3,18 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
+set(llvm_config llvm-config-17)
+if (NOT COMMAND ${llvm_config})
+    set(llvm_config llvm-config)
+endif ()
+
 execute_process(
-        COMMAND llvm-config --libdir
+        COMMAND ${llvm_config} --libdir
         OUTPUT_VARIABLE llvm_libdir
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
-        COMMAND llvm-config --libnames --ignore-libllvm
+        COMMAND ${llvm_config} --libnames --ignore-libllvm
         OUTPUT_VARIABLE llvm_libnames
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
