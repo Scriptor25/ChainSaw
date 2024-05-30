@@ -188,9 +188,13 @@ int csaw::Builder::EmitIR(const llvm::Module& module, const std::string& output_
 
 int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, const llvm::CodeGenFileType output_type)
 {
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllTargetMCAs();
+    llvm::InitializeAllDisassemblers();
 
     const auto triple = llvm::sys::getDefaultTargetTriple();
 

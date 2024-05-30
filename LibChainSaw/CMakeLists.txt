@@ -3,7 +3,18 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-llvm_map_components_to_libnames(llvm_libs core support analysis passes X86 orcjit)
+execute_process(
+        COMMAND llvm-config --libdir
+        OUTPUT_VARIABLE llvm_libdir
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+        COMMAND llvm-config --libnames
+        OUTPUT_VARIABLE llvm_libnames
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+separate_arguments(llvm_libnames)
 
 set(CHAINSAW_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CHAINSAW_VERSION_MINOR ${PROJECT_VERSION_MINOR})
@@ -18,4 +29,5 @@ file(GLOB_RECURSE src src/**.cpp include/**.hpp)
 add_library(LibChainSaw STATIC ${src})
 target_include_directories(LibChainSaw PUBLIC include ${CMAKE_CURRENT_BINARY_DIR} ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(LibChainSaw PUBLIC ${LLVM_DEFINITIONS})
-target_link_libraries(LibChainSaw PUBLIC ${llvm_libs})
+target_link_directories(LibChainSaw PUBLIC ${llvm_libdir})
+target_link_libraries(LibChainSaw PUBLIC ${llvm_libnames})
