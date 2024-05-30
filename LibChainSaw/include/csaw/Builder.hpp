@@ -27,7 +27,7 @@ namespace csaw
     class Builder
     {
     public:
-        Builder();
+        explicit Builder(bool obfusecate);
 
         [[nodiscard]] llvm::LLVMContext& GetContext() const;
         [[nodiscard]] llvm::IRBuilder<>& GetBuilder() const;
@@ -111,6 +111,7 @@ namespace csaw
         [[nodiscard]] RValuePtr GenInc(const RValuePtr& value) const;
         [[nodiscard]] RValuePtr GenDec(const RValuePtr& value) const;
 
+        bool m_Obfusecate;
         std::map<std::string, ModuleData> m_Modules;
 
         std::unique_ptr<llvm::FunctionPassManager> m_FPM;
@@ -125,6 +126,6 @@ namespace csaw
         std::map<llvm::Function*, Signature> m_Signatures;
         std::vector<std::map<std::string, ValuePtr>> m_ScopeStack;
         std::map<std::string, ValuePtr> m_Values;
-        int m_CtorPriority;
+        int m_CtorPriority = 0;
     };
 }

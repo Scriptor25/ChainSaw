@@ -2,9 +2,12 @@
 #include <csaw/Signature.hpp>
 #include <csaw/Type.hpp>
 
-std::string csaw::Signature::Mangle() const
+std::string csaw::Signature::Mangle(const bool obfusecate) const
 {
-    if (IsC) return Name;
+    static std::hash<std::string> hasher;
+
+    if (IsC)
+        return Name;
 
     std::string name = Name;
 
@@ -21,6 +24,9 @@ std::string csaw::Signature::Mangle() const
 
     if (Result)
         name += '$' + Result->Name;
+
+    if (obfusecate)
+        return std::to_string(hasher(name));
 
     return name;
 }

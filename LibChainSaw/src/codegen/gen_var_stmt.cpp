@@ -62,8 +62,8 @@ void csaw::Builder::Gen(const VariableStatement& statement)
         auto global_initializer = initializer && !initializer->IsLValue() ? llvm::dyn_cast<llvm::Constant>(initializer->GetValue()) : nullptr;
         bool not_initialized = !global_initializer;
 
-        if (is_const && not_initialized)
-            return ThrowErrorStmt(statement, false, "Failed to create global constant because its initializer is not a constant expression");
+        /*if (is_const && not_initialized)
+            return ThrowErrorStmt(statement, false, "Failed to create global constant because its initializer is not a constant expression");*/
 
         if (not_initialized && initializer)
             global_initializer = llvm::Constant::getNullValue(type.Get());
