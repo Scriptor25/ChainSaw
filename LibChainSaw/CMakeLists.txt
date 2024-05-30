@@ -3,7 +3,7 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-if (COMMAND "llvm-config-17")
+if (COMMAND "llvm-config-17 --help")
     message(STATUS "Found llvm-config-17")
     set(llvm_config "llvm-config-17")
 else ()
