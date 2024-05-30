@@ -3,9 +3,12 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-set(llvm_config llvm-config-17)
-if (NOT COMMAND ${llvm_config})
-    set(llvm_config llvm-config)
+if (COMMAND "llvm-config-17")
+    message(STATUS "Found llvm-config-17")
+    set(llvm_config "llvm-config-17")
+else ()
+    message(STATUS "Cannot find llvm-config-17; defaulting to llvm-config")
+    set(llvm_config "llvm-config")
 endif ()
 
 execute_process(
