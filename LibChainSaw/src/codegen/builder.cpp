@@ -121,10 +121,9 @@ int csaw::Builder::EndModule(const std::string& emit_ir_directory)
     return 0;
 }
 
+// DO NOT USE
 int csaw::Builder::LinkModules()
 {
-    std::cout << "Warning: linking modules may or may not crash the compile process, but only if you're using global constructors; linking is still work in progress, prefer compiling the modules one by one and link them manually using tools like gcc or clang" << std::endl;
-
     std::vector<ModuleData> modules;
     for (auto& [key, data] : m_Modules)
         modules.push_back(std::move(data));
@@ -189,11 +188,9 @@ int csaw::Builder::EmitIR(const llvm::Module& module, const std::string& output_
 
 int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, const llvm::CodeGenFileType output_type)
 {
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmParsers();
-    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
 
     const auto triple = llvm::sys::getDefaultTargetTriple();
 
