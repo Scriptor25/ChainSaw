@@ -1,11 +1,12 @@
 ## INCLUDES
+\inc "std/math.csh"
 \inc "std/stdbool.csh"
 \inc "std/stdlib.csh"
 \inc "std/stdio.csh"
 
 ## RANDOM
-@random::flt64 = (rand() % (RAND_MAX + 1)) / (RAND_MAX + 1.0);
-@randomInt(min: int32, max: int32): int32 = min + [int32]((max - min) * random());
+@random::flt64 = (rand() % RAND_MAX) / [flt64]RAND_MAX;
+@randomInt(min: int32, max: int32): int32 = min + [int32]round((max - min) * random());
 
 ## Main - Ghost Game
 @[c]main::int32 {
