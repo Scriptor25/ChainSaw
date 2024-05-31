@@ -8,4 +8,4 @@ project(ChainSaw VERSION 1.0.0)
 add_subdirectory(LibChainSaw)
 add_subdirectory(ChainSawCLI)
 
-install(DIRECTORY csaw/std/include DESTINATION /)
+install(DIRECTORY csaw/std/include DESTINATION ${CMAKE_INSTALL_PREFIX})

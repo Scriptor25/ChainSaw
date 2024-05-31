@@ -38,6 +38,8 @@ SetupIconFile={#MyAppIcoFile}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+AllowCancelDuringInstall=yes
+AppContact=f.schreiber.2006@proton.me
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

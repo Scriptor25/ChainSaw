@@ -15,9 +15,11 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
+#include <llvm/Transforms/Utils/Mem2Reg.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 
-csaw::Builder::Builder()
+csaw::Builder::Builder(const bool obfusecate)
+    : m_Obfusecate(obfusecate)
 {
     m_FPM = std::make_unique<llvm::FunctionPassManager>();
     m_LAM = std::make_unique<llvm::LoopAnalysisManager>();
@@ -30,6 +32,7 @@ csaw::Builder::Builder()
     m_FPM->addPass(llvm::ReassociatePass());
     m_FPM->addPass(llvm::GVNPass());
     m_FPM->addPass(llvm::SimplifyCFGPass());
+    m_FPM->addPass(llvm::PromotePass());
 
     llvm::PassBuilder pb;
     pb.registerModuleAnalyses(*m_MAM);
@@ -118,10 +121,9 @@ int csaw::Builder::EndModule(const std::string& emit_ir_directory)
     return 0;
 }
 
+// DO NOT USE
 int csaw::Builder::LinkModules()
 {
-    std::cout << "Warning: linking modules may or may not crash the compile process, but only if you're using global constructors; linking is still work in progress, prefer compiling the modules one by one and link them manually using tools like gcc or clang" << std::endl;
-
     std::vector<ModuleData> modules;
     for (auto& [key, data] : m_Modules)
         modules.push_back(std::move(data));
@@ -188,9 +190,11 @@ int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, 
 {
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllTargetMCAs();
+    llvm::InitializeAllDisassemblers();
 
     const auto triple = llvm::sys::getDefaultTargetTriple();
 

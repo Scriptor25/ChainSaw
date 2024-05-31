@@ -29,6 +29,14 @@ csaw::RValuePtr csaw::Builder::GenNot(const RValuePtr& value) const
 
 csaw::RValuePtr csaw::Builder::GenInv(const RValuePtr& value) const
 {
+    const auto vty = Gen(value->GetType()).Get();
+
+    if (vty->isIntegerTy())
+    {
+        const auto result = GetBuilder().CreateNot(value->GetValue());
+        return RValue::Create(value->GetType(), result);
+    }
+
     return nullptr;
 }
 

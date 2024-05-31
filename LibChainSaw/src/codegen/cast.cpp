@@ -132,7 +132,20 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
             const auto value = GetBuilder().CreateSIToFP(right->GetValue(), lty.Get());
             return {{left, RValue::Create(left->GetType(), value)}};
         }
+
+        if (rty.Get()->isFloatingPointTy())
+        {
+            if ((lty.Get()->isHalfTy() && (rty.Get()->isFloatTy() || rty.Get()->isDoubleTy()))
+                || lty.Get()->isFloatTy() && rty.Get()->isDoubleTy())
+            {
+                const auto value = GetBuilder().CreateFPCast(left->GetValue(), rty.Get());
+                return {{RValue::Create(right->GetType(), value), right}};
+            }
+
+            const auto value = GetBuilder().CreateFPCast(right->GetValue(), lty.Get());
+            return {{left, RValue::Create(left->GetType(), value)}};
+        }
     }
 
-    return Expect<RValPair>("Superior cast between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
+    return Expect<RValPair>("Implicit casting between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
 }

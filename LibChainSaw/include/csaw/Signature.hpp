@@ -7,7 +7,7 @@ namespace csaw
 {
     struct Signature
     {
-        [[nodiscard]] std::string Mangle() const;
+        [[nodiscard]] std::string Mangle(bool obfusecate) const;
         [[nodiscard]] bool IsConstructor() const;
 
         [[nodiscard]] FunctionTypePtr GetFunctionType() const;

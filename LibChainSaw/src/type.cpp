@@ -184,9 +184,6 @@ bool csaw::Type::ParentOf(const TypePtr& type) const
         if (type->IsPointer())
             return ptr->Base->ParentOf(type->AsPointer()->Base);
 
-        if (type->IsArray())
-            return ptr->Base->ParentOf(type->AsArray()->Base);
-
         return false;
     }
 
