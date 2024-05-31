@@ -2,10 +2,9 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <csaw/Builder.hpp>
 #include <csaw/ChainSaw.hpp>
-
-#include "csaw/Builder.hpp"
-#include "csaw/Parser.hpp"
+#include <csaw/Parser.hpp>
 
 static const std::string NAME = "csaw";
 static const std::string DESCRIPTION = "ChainSaw CLI";

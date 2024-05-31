@@ -6,6 +6,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "LLVM Available Libs: ${LLVM_AVAILABLE_LIBS}")
 
 set(llvm_libs ${LLVM_AVAILABLE_LIBS})
+list(REMOVE_ITEM llvm_libs "LLVM")
 
 if(LLVM_ENABLE_FFI)
     find_package(FFI REQUIRED)
