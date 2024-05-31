@@ -1,6 +1,0 @@
-\inc "pcg/pcg_basic.csh"
-
-@pcg32_random_t(state: int64, inc: int64) {
-    me!state = state;
-    me!inc = inc;
-}
