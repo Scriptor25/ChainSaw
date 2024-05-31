@@ -36,16 +36,16 @@
           name = "chainsaw-lang";
           src = ./.;
           buildInputs = devPackages;
-          preInstall = ''
-            rm -rf build
+          configurePhase = ''
             mkdir build
+            cmake -S . -B build
+          '';
+          buildPhase = ''
+            cmake --build build --target csaw --config Debug
           '';
           installPhase = ''
-            runHook preInstall
-            cmake -S . -B build
-            cmake --build build --target csaw --config Debug
-            mkdir $out/bin
-            cp build/ChainSawCLI $out/bin/
+            mkdir -p $out/bin
+            cp build/ChainSawCLI/csaw $out/bin/csaw
           '';
           meta = {
             description = "Chainsaw Programming Language";
