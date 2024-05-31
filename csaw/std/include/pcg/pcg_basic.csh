@@ -21,15 +21,14 @@
      http://www.pcg-random.org
 #
 
-def pcg_state_setseq_64 {
+def pcg32_random_t {
     state: int64,
     inc: int64,
 }
 
-def pcg32_random_t = pcg_state_setseq_64;
+@pcg32_random_t(state: int64, inc: int64);
 
-PCG32_INITIALIZER_1: [const] int64 = 0x853c49e6748fea9b;
-PCG32_INITIALIZER_2: [const] int64 = 0xda3e39cb94b95bdb;
+PCG32_INITIALIZER: [const] pcg32_random_t = pcg32_random_t(0x853c49e6748fea9b, 0xda3e39cb94b95bdb);
 
 @[c]pcg32_srandom_r(rngptr: pcg32_random_t*, initstate: int64, initseq: int64): void;
 @[c]pcg32_random_r(rngptr: pcg32_random_t*): int32;

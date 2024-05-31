@@ -4,14 +4,11 @@
 \inc "pcg/pcg_basic.csh"
 
 ## RANDOM
-@init_random::void = pcg32_srandom(0x853c49e6748fea9b, 0xda3e39cb94b95bdb);
-@random::flt64 = pcg32_random() / [flt64]0xffffffff;
+@random::flt64 = pcg32_random_r(&PCG32_INITIALIZER) / [flt64]0xffffffff;
 @randomInt(min: int32, max: int32): int32 = min + [int32]((max - min) * random());
 
 ## Main - Ghost Game
 @[c]main::int32 {
-
-    init_random();
 
     printf("Ghost Game\n\n");
 
