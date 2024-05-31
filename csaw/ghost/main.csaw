@@ -4,7 +4,7 @@
 \inc "std/stdio.csh"
 
 ## RANDOM
-@random::flt64 = rand() / (RAND_MAX + 1.0);
+@random::flt64 = (rand() % RAND_MAX) / (RAND_MAX + 1.0);
 @randomInt(min: int32, max: int32): int32 = min + [int32]((max - min) * random());
 
 ## Main - Ghost Game
