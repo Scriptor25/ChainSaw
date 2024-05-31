@@ -3,9 +3,10 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-message(STATUS "LLVM Available Libs: ${LLVM_AVAILABLE_LIBS}")
+llvm_map_components_to_libnames(llvm_libs AllTargetsCodeGens AllTargetsAsmParsers AllTargetsDescs AllTargetsDisassemblers AllTargetsInfos AllTargetsMCAs)
+message(STATUS "Using LLVM Components: ${llvm_libs}")
 
-set(llvm_libs ${LLVM_AVAILABLE_LIBS})
+#set(llvm_libs ${LLVM_AVAILABLE_LIBS})
 list(REMOVE_ITEM llvm_libs "LLVM")
 
 if(LLVM_ENABLE_FFI)
@@ -35,7 +36,7 @@ endif()
 if(LLVM_ENABLE_CURL)
     find_package(CURL REQUIRED)
     list(APPEND llvm_libs ${CURL_LIBRARIES})
-endif()
+endif()#
 
 set(CHAINSAW_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CHAINSAW_VERSION_MINOR ${PROJECT_VERSION_MINOR})
