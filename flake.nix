@@ -17,10 +17,15 @@
           gnumake
           cmake
           ninja
-          llvmPackages_17.llvm
-          llvmPackages_17.libllvm
-          lldb_17
+          llvm_17
           zlib
+          libffi
+          libedit
+          libz
+          ncurses
+          libxml2
+          libpfm
+          curl
         ];
       in {
         devShell = pkgs.mkShell {
@@ -33,13 +38,14 @@
           buildInputs = devPackages;
           preInstall = ''
             rm -rf build
+            mkdir build
           '';
           installPhase = ''
             runHook preInstall
             cmake -S . -B build
             cmake --build build --target csaw --config Debug
             mkdir $out/bin
-            cp build/csaw $out/bin/
+            cp build/ChainSawCLI $out/bin/
           '';
           meta = {
             description = "Chainsaw Programming Language";
