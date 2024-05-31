@@ -8,11 +8,11 @@ def size_t = int64;
 def wchar_t = int32;
 
 ## Constants
-EXIT_FAILURE: [const] int32 = 1;
-EXIT_SUCCESS: [const] int32 = 0;
-MB_CUR_MAX:   [const] int32 = 1;
+EXIT_FAILURE: int32;
+EXIT_SUCCESS: int32;
+MB_CUR_MAX:   int32;
 NULL:         [const] void* = 0;
-RAND_MAX:     [const] int32 = 0x7fff;
+RAND_MAX:     int32;
 
 ## String conversions
 @[c]atof(str: int8*): flt64;
