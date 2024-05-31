@@ -101,6 +101,7 @@ list(APPEND llvm_libs
         Remarks
         Polly
 )
+
 foreach (target ${LLVM_TARGETS_TO_BUILD})
     list(APPEND llvm_libs
             LLVM${target}CodeGen
