@@ -3,38 +3,157 @@
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-message(STATUS "LLVM Available Libs: ${LLVM_AVAILABLE_LIBS}")
+set(llvm_libs)
+list(APPEND llvm_libs
+        LLVMDemangle
+        LLVMSupport
+        LLVMTableGen
+        LLVMTableGenGlobalISel
+        LLVMTableGenCommon
+        LLVMCore
+        LLVMFuzzerCLI
+        LLVMFuzzMutate
+        LLVMFileCheck
+        LLVMInterfaceStub
+        LLVMIRPrinter
+        LLVMIRReader
+        LLVMIRReader
+        LLVMCodeGenTypes
+        LLVMCodeGen
+        LLVMSelectionDAG
+        LLVMAsmPrinter
+        LLVMMIRParser
+        LLVMGlobalISel
+        LLVMBinaryFormat
+        LLVMBitReader
+        LLVMBitWriter
+        LLVMBitstreamReader
+        LLVMDWARFLinker
+        LLVMDWARFLinkerParallel
+        LLVMExtensions
+        LLVMFrontendHLSL
+        LLVMFrontendOpenACC
+        LLVMFrontendOpenMP
+        LLVMTransformUtils
+        LLVMInstrumentation
+        LLVMAggressiveInstCombine
+        LLVMInstCombine
+        LLVMScalarOpts
+        LLVMipo
+        LLVMVectorize
+        LLVMObjCARCOpts
+        LLVMCoroutines
+        LLVMCFGuard
+        LLVMLinker
+        LLVMAnalysis
+        LLVMLTO
+        LLVMMC
+        LLVMMCParser
+        LLVMMCDisassembler
+        LLVMMCA
+        LLVMObjCopy
+        LLVMObject
+        LLVMObjectYAML
+        LLVMOption
+        LLVMRemarks
+        LLVMDebuginfod
+        LLVMDebugInfoDWARF
+        LLVMDebugInfoGSYM
+        LLVMDebugInfoLogicalView
+        LLVMDebugInfoMSF
+        LLVMDebugInfoCodeView
+        LLVMDebugInfoPDB
+        LLVMSymbolize
+        LLVMDebugInfoBTF
+        LLVMDWP
+        LLVMExecutionEngine
+        LLVMInterpreter
+        LLVMJITLink
+        LLVMMCJIT
+        LLVMOrcJIT
+        LLVMOrcShared
+        LLVMOrcTargetProcess
+        LLVMRuntimeDyld
+        LLVMPerfJITEvents
+        LLVMTarget
+        LLVMAsmParser
+        LLVMLineEditor
+        LLVMProfileData
+        LLVMCoverage
+        LLVMPasses
+        LLVMTargetParser
+        LLVMTextAPI
+        LLVMDlltoolDriver
+        LLVMLibDriver
+        LLVMXRay
+        LLVMWindowsDriver
+        LLVMWindowsManifest
+        LTO
+        LLVMBOLTCore
+        LLVMBOLTPasses
+        LLVMBOLTProfile
+        LLVMBOLTRewrite
+        LLVMBOLTRuntimeLibs
+        LLVMBOLTUtils
+        LLVMCFIVerify
+        LLVMDiff
+        LLVMExegesis
+        Remarks
+        Polly
+)
 
-set(llvm_libs ${LLVM_AVAILABLE_LIBS})
+foreach (target ${LLVM_TARGETS_TO_BUILD})
+    list(APPEND llvm_libs
+            LLVM${target}CodeGen
+            LLVM${target}AsmParser
+            LLVM${target}Disassembler
+            LLVM${target}TargetMCA
+            LLVM${target}Desc
+            LLVM${target}Info
+            LLVM${target}Utils
+            LLVMExegesis${target}
+            LLVMBOLTTarget${target}
+    )
+endforeach ()
 
-if(LLVM_ENABLE_FFI)
+# check if library exists
+foreach (lib ${llvm_libs})
+    if (NOT ${lib} IN_LIST LLVM_AVAILABLE_LIBS)
+        message(WARNING "Removing unknown lib '${lib}' from LLVM libs")
+        list(REMOVE_ITEM llvm_libs ${lib})
+    endif ()
+endforeach ()
+
+message(STATUS "Using LLVM Components: ${llvm_libs}")
+
+if (LLVM_ENABLE_FFI)
     find_package(FFI REQUIRED)
     list(APPEND llvm_libs ${FFI_LIBRARIES})
-endif()
-if(LLVM_ENABLE_LIBEDIT)
+endif ()
+if (LLVM_ENABLE_LIBEDIT)
     find_package(LibEdit REQUIRED)
     list(APPEND llvm_libs ${LibEdit_LIBRARIES})
-endif()
-if(LLVM_ENABLE_TERMINFO)
+endif ()
+if (LLVM_ENABLE_TERMINFO)
     find_package(Terminfo REQUIRED)
     list(APPEND llvm_libs ${Terminfo_LIBRARIES})
-endif()
-if(LLVM_ENABLE_ZLIB)
+endif ()
+if (LLVM_ENABLE_ZLIB)
     find_package(ZLIB REQUIRED)
     list(APPEND llvm_libs ${ZLIB_LIBRARIES})
-endif()
-if(LLVM_ENABLE_ZSTD)
+endif ()
+if (LLVM_ENABLE_ZSTD)
     find_package(zstd REQUIRED)
     list(APPEND llvm_libs ${zstd_LIBRARIES})
-endif()
-if(LLVM_ENABLE_LIBXML2)
+endif ()
+if (LLVM_ENABLE_LIBXML2)
     find_package(LibXml2 REQUIRED)
     list(APPEND llvm_libs ${LibXml2_LIBRARIES})
-endif()
-if(LLVM_ENABLE_CURL)
+endif ()
+if (LLVM_ENABLE_CURL)
     find_package(CURL REQUIRED)
     list(APPEND llvm_libs ${CURL_LIBRARIES})
-endif()
+endif ()
 
 set(CHAINSAW_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CHAINSAW_VERSION_MINOR ${PROJECT_VERSION_MINOR})
