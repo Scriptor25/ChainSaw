@@ -11,6 +11,8 @@
 ## Main - Ghost Game
 @[c]main::int32 {
 
+    init_random();
+
     printf("Ghost Game\n\n");
 
     running: bool = true;
