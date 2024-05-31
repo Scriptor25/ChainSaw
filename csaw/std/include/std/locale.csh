@@ -1,11 +1,11 @@
 # LOCALE #
 
-LC_ALL:      int32;
-LC_COLLATE:  int32;
-LC_CTYPE:    int32;
-LC_MONETARY: int32;
-LC_NUMERIC:  int32;
-LC_TIME:     int32;
+LC_ALL:      [const] int32 = 0;
+LC_COLLATE:  [const] int32 = 1;
+LC_CTYPE:    [const] int32 = 2;
+LC_MONETARY: [const] int32 = 3;
+LC_NUMERIC:  [const] int32 = 4;
+LC_TIME:     [const] int32 = 5;
 
 def lconv {
 	decimal_point: int8*,

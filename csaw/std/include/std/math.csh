@@ -12,8 +12,8 @@ HUGE_VAL: flt16;
 HUGE_VALF: flt32;
 HUGE_VALL: flt64;
 
-MATH_ERRNO:     int32;
-MATH_ERREXCEPT: int32;
+MATH_ERRNO:     [const] int32 = 0b01;
+MATH_ERREXCEPT: [const] int32 = 0b10;
 
 ## Trigonometric functions
 @[c]cos(x: flt64): flt64;
