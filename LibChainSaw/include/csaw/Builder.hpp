@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <csaw/Def.hpp>
 #include <csaw/Expect.hpp>
 #include <csaw/Signature.hpp>

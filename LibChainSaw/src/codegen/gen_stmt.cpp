@@ -5,7 +5,6 @@
 #include <csaw/Stmt.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
-#include <llvm/IR/Verifier.h>
 
 void csaw::Builder::Gen(const StatementPtr& ptr)
 {
