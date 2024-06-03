@@ -304,12 +304,9 @@ csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, 
             name += ", ";
         name += "?";
     }
-    if (parent || result)
-    {
-        name += ")(";
-        if (parent) name += parent->Name + ":";
-        if (result) name += result->Name;
-    }
+    name += ")(";
+    if (parent) name += parent->Name + ":";
+    if (result) name += result->Name;
     name += ')';
 
     auto& type = Types[name];
@@ -321,11 +318,6 @@ csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, 
 csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& parent, const TypePtr& result)
     : Type(name, INFO_IS_FUN), Args(args), IsVararg(is_vararg), Parent(parent), Result(result)
 {
-}
-
-bool csaw::FunctionType::IsConstructor() const
-{
-    return !Result && !Parent;
 }
 
 csaw::TemplateTypePtr csaw::TemplateType::Get(const TypePtr& base, const std::vector<TypePtr>& args)

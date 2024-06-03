@@ -1,4 +1,5 @@
 \inc "std/math.csh"
+\inc "std/stdio.csh"
 
 \inc "common.csh"
 \inc "vec3.csh"

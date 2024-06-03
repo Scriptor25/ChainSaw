@@ -1,5 +1,6 @@
 \inc "std/math.csh"
 \inc "std/stdbool.csh"
+\inc "std/stdio.csh"
 
 \inc "aabb.csh"
 \inc "hittable.csh"

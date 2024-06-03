@@ -1,4 +1,5 @@
 \inc "std/stdlib.csh"
+\inc "std/stdio.csh"
 
 \inc "vector.csh"
 

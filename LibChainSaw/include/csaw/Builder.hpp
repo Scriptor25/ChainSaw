@@ -86,8 +86,8 @@ namespace csaw
         LValuePtr Gen(const IndexExpression& expression);
         RValuePtr Gen(const IntExpression& expression, const TypePtr& expected);
         ValuePtr Gen(const MemberExpression& expression, const TypePtr& expected);
-        RValuePtr Gen(const ReferenceExpression& expression);
-        ValuePtr Gen(const SelectExpression& expression);
+        RValuePtr Gen(const ReferenceExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const SelectExpression& expression, const TypePtr& expected);
         RValuePtr Gen(const SizeOfExpression& expression);
         RValuePtr Gen(const StringExpression& expression);
         RValuePtr Gen(const UnaryExpression& expression);

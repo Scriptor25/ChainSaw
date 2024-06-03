@@ -76,7 +76,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+                function->eraseFromParent();
                 return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
             }
             m_Values["me"] = alloc.Get();
@@ -88,7 +88,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+                function->eraseFromParent();
                 return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
             }
             m_Values[name] = alloc.Get();
@@ -113,7 +113,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         {
             PopScopeStack();
             GetBuilder().SetInsertPoint(bkp_block);
-            for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+            function->eraseFromParent();
             return;
         }
 
@@ -126,7 +126,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+                function->eraseFromParent();
                 return ThrowErrorStmt(statement, false, "Failed to cast: %s", cast.Msg().c_str());
             }
             GetBuilder().CreateRet(cast.Get()->GetValue());
@@ -144,7 +144,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (verifyFunction(*function, &llvm::errs()))
     {
         function->viewCFG();
-        for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+        function->eraseFromParent();
         return ThrowErrorStmt(statement, false, "Failed to verify function");
     }
 

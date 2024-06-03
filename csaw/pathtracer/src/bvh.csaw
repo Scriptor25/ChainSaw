@@ -14,9 +14,9 @@
     ret (a_axis_interval.min < b_axis_interval.min) ? -1 : (a_axis_interval.min > b_axis_interval.min) ? 1 : 0;
 }
 
-@[c]box_x_compare(a: hittable**, b: hittable**): int32 = box_compare(*a, *b, 0);
-@[c]box_y_compare(a: hittable**, b: hittable**): int32 = box_compare(*a, *b, 1);
-@[c]box_z_compare(a: hittable**, b: hittable**): int32 = box_compare(*a, *b, 2);
+@box_x_compare(a: void*, b: void*): int32 = box_compare(*[hittable**]a, *[hittable**]b, 0);
+@box_y_compare(a: void*, b: void*): int32 = box_compare(*[hittable**]a, *[hittable**]b, 1);
+@box_z_compare(a: void*, b: void*): int32 = box_compare(*[hittable**]a, *[hittable**]b, 2);
 
 @bvh_node(list: hittable_list) = *me = bvh_node(list.objects, 0, list.objects.size);
 
@@ -29,9 +29,9 @@
 
     axis: int32 = me!bbox.longest_axis();
 
-    comparator: (void*, void*)(int32)* = (axis == 0) ? &box_x_compare
-                                       : (axis == 1) ? &box_y_compare
-                                                     : &box_z_compare;
+    comparator: (void*, void*)(int32)* = (axis == 0) ? box_x_compare
+                                       : (axis == 1) ? box_y_compare
+                                                     : box_z_compare;
 
     object_span: int64 = end - start;
 

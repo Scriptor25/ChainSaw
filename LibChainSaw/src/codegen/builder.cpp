@@ -210,6 +210,7 @@ int csaw::Builder::Output(llvm::Module& module, const std::string& output_file, 
     const auto features = "";
 
     llvm::TargetOptions options;
+
     const auto machine = target->createTargetMachine(triple, cpu, features, options, llvm::Reloc::PIC_);
     const auto data_layout = machine->createDataLayout();
 
@@ -552,6 +553,9 @@ std::pair<llvm::Function*, csaw::Signature> csaw::Builder::FindBestFunction(cons
 int csaw::Builder::RankFunction(const Signature& signature, const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args)
 {
     int score = 0;
+
+    if (signature.Name == name) score += 100;
+    if (signature.Parent == parent) score += 100;
 
     for (size_t i = 0; i < signature.Args.size(); ++i)
     {

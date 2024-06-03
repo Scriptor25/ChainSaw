@@ -29,9 +29,9 @@ csaw::ValuePtr csaw::Builder::Gen(const ExpressionPtr& ptr, const TypePtr& expec
     if (const auto p = std::dynamic_pointer_cast<MemberExpression>(ptr))
         return Gen(*p, expected);
     if (const auto p = std::dynamic_pointer_cast<ReferenceExpression>(ptr))
-        return Gen(*p);
+        return Gen(*p, expected);
     if (const auto p = std::dynamic_pointer_cast<SelectExpression>(ptr))
-        return Gen(*p);
+        return Gen(*p, expected);
     if (const auto p = std::dynamic_pointer_cast<SizeOfExpression>(ptr))
         return Gen(*p);
     if (const auto p = std::dynamic_pointer_cast<StringExpression>(ptr))

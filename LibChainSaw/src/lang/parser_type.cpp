@@ -39,17 +39,10 @@ csaw::TypePtr csaw::Parser::ParseType()
         Expect(")");
 
         Expect("(");
-        auto parent = ParseType();
-        TypePtr result;
-        if (!NextIfAt(":"))
-        {
-            result = parent;
-            parent = nullptr;
-        }
-        else result = ParseType();
+        const auto result = ParseType();
         Expect(")");
 
-        return ParseType(FunctionType::Get(args, is_vararg, parent, result));
+        return ParseType(FunctionType::Get(args, is_vararg, nullptr, result));
     }
 
     const auto name = Expect(TK_IDENTIFIER).Value;

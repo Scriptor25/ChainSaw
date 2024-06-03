@@ -33,13 +33,7 @@ csaw::Expect<llvm::Type*> csaw::Builder::Gen(const TypePtr& type) const
 
         std::vector<llvm::Type*> args;
         if (fty->Parent)
-        {
-            const auto parent = Gen(PointerType::Get(fty->Parent));
-            if (!parent)
-                return Expect<llvm::Type*>("Function parent of " + type->Name + " is null: " + parent.Msg());
-
-            args.push_back(parent.Get());
-        }
+            args.push_back(GetBuilder().getPtrTy());
         for (const auto& arg : fty->Args)
         {
             const auto argtype = Gen(arg);

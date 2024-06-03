@@ -4,9 +4,9 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const TypePtr& expected)
 {
-    const auto condition = Gen(expression.Condition, nullptr);
+    const auto condition = Gen(expression.Condition, Type::GetInt1());
     if (!condition)
         return nullptr;
 
@@ -20,7 +20,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     const auto br_inst = GetBuilder().CreateCondBr(condition->GetBoolValue(), true_block, false_block);
 
     GetBuilder().SetInsertPoint(true_block);
-    const auto true_value = Gen(expression.True, nullptr);
+    const auto true_value = Gen(expression.True, expected);
     if (!true_value)
     {
         br_inst->eraseFromParent();
@@ -34,7 +34,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
 
     false_block->insertInto(parent);
     GetBuilder().SetInsertPoint(false_block);
-    const auto false_value = Gen(expression.False, nullptr);
+    const auto false_value = Gen(expression.False, expected);
     if (!false_value)
     {
         true_block->eraseFromParent();

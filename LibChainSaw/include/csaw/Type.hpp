@@ -85,8 +85,6 @@ namespace csaw
 
         FunctionType(const std::string& name, const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& parent, const TypePtr& result);
 
-        bool IsConstructor() const;
-
         std::vector<TypePtr> Args;
         bool IsVararg;
         TypePtr Parent;
