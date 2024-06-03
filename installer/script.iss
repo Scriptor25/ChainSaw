@@ -12,7 +12,7 @@
 #define MyAppAssocExtHeader ".csh"
 #define MyAppAssocKeySource StringChange(MyAppAssocNameSource, " ", "") + MyAppAssocExtSource
 #define MyAppAssocKeyHeader StringChange(MyAppAssocNameHeader, " ", "") + MyAppAssocExtHeader
-#define MyAppIcoFile "C:\Users\FelixSchreiber\Documents\Projects\C++\ChainSaw\installer\logo.ico"
+#define MyAppIcoFile "logo.ico"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -29,7 +29,7 @@ DefaultDirName={autopf}\{#MyAppName}
 ChangesAssociations=no
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\FelixSchreiber\Documents\Projects\C++\ChainSaw\LICENSE
+LicenseFile=..\LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -45,7 +45,7 @@ AppContact=f.schreiber.2006@proton.me
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "C:\Users\FelixSchreiber\Documents\Projects\C++\ChainSaw\out\install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 Source: "{#MyAppIcoFile}"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

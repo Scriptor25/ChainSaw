@@ -4,7 +4,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type) const
+csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type)
 {
     if (!value)
         return Expect<RValuePtr>("Value is empty");
@@ -28,13 +28,13 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         if (tty.Get()->isPointerTy())
         {
             const auto result = GetBuilder().CreatePointerCast(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
 
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreatePtrToInt(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
     }
 
@@ -43,19 +43,19 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         if (tty.Get()->isPointerTy())
         {
             const auto result = GetBuilder().CreateIntToPtr(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
 
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreateIntCast(value->GetValue(), tty.Get(), true);
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
             const auto result = GetBuilder().CreateSIToFP(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
     }
 
@@ -64,43 +64,44 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreateFPToSI(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
             const auto result = GetBuilder().CreateFPCast(value->GetValue(), tty.Get());
-            return RValue::Create(type, result);
+            return RValue::Create(this, type, result);
         }
     }
 
     return Expect<RValuePtr>("Cast from " + value->GetType()->Name + " to " + type->Name + " is not implemented");
 }
 
-csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, const RValuePtr& right) const
+csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left, const RValuePtr& right)
 {
     if (!left)
-        return Expect<RValPair>("Left value is empty");
+        return Expect<RValuePair>("Left value is empty");
 
     if (!right)
-        return Expect<RValPair>("Right value is empty");
+        return Expect<RValuePair>("Right value is empty");
 
     if (left->GetType() == right->GetType())
         return {{left, right}};
 
     const auto lty = Gen(left->GetType());
     if (!lty)
-        return Expect<RValPair>("Left type is null: " + lty.Msg());
+        return Expect<RValuePair>("Left type is null: " + lty.Msg());
+
     const auto rty = Gen(right->GetType());
     if (!rty)
-        return Expect<RValPair>("Right type is null: " + rty.Msg());
+        return Expect<RValuePair>("Right type is null: " + rty.Msg());
 
     if (lty.Get()->isPointerTy())
     {
         if (rty.Get()->isIntegerTy())
         {
             const auto value = GetBuilder().CreatePtrToInt(left->GetValue(), rty.Get());
-            return {{RValue::Create(right->GetType(), value), right}};
+            return {{RValue::Create(this, right->GetType(), value), right}};
         }
     }
 
@@ -111,17 +112,17 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
             if (lty.Get()->getIntegerBitWidth() > rty.Get()->getIntegerBitWidth())
             {
                 const auto value = GetBuilder().CreateIntCast(right->GetValue(), lty.Get(), true);
-                return {{left, RValue::Create(left->GetType(), value)}};
+                return {{left, RValue::Create(this, left->GetType(), value)}};
             }
 
             const auto value = GetBuilder().CreateIntCast(left->GetValue(), rty.Get(), true);
-            return {{RValue::Create(right->GetType(), value), right}};
+            return {{RValue::Create(this, right->GetType(), value), right}};
         }
 
         if (rty.Get()->isFloatingPointTy())
         {
             const auto value = GetBuilder().CreateSIToFP(left->GetValue(), rty.Get());
-            return {{RValue::Create(right->GetType(), value), right}};
+            return {{RValue::Create(this, right->GetType(), value), right}};
         }
     }
 
@@ -130,7 +131,7 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
         if (rty.Get()->isIntegerTy())
         {
             const auto value = GetBuilder().CreateSIToFP(right->GetValue(), lty.Get());
-            return {{left, RValue::Create(left->GetType(), value)}};
+            return {{left, RValue::Create(this, left->GetType(), value)}};
         }
 
         if (rty.Get()->isFloatingPointTy())
@@ -139,13 +140,13 @@ csaw::Expect<csaw::RValPair> csaw::Builder::CastToBestOf(const RValuePtr& left, 
                 || lty.Get()->isFloatTy() && rty.Get()->isDoubleTy())
             {
                 const auto value = GetBuilder().CreateFPCast(left->GetValue(), rty.Get());
-                return {{RValue::Create(right->GetType(), value), right}};
+                return {{RValue::Create(this, right->GetType(), value), right}};
             }
 
             const auto value = GetBuilder().CreateFPCast(right->GetValue(), lty.Get());
-            return {{left, RValue::Create(left->GetType(), value)}};
+            return {{left, RValue::Create(this, left->GetType(), value)}};
         }
     }
 
-    return Expect<RValPair>("Implicit casting between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
+    return Expect<RValuePair>("Implicit casting between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
 }

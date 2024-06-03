@@ -144,32 +144,37 @@ bool csaw::Type::IsTemplate() const
     return Info & INFO_IS_TEMP;
 }
 
-const csaw::PointerType* csaw::Type::AsPointer() const
+bool csaw::Type::IsFunctionPointer()
 {
-    return dynamic_cast<const PointerType*>(this);
+    return IsPointer() && AsPointer()->Base->IsFunction();
 }
 
-const csaw::ArrayType* csaw::Type::AsArray() const
+csaw::PointerTypePtr csaw::Type::AsPointer()
 {
-    return dynamic_cast<const ArrayType*>(this);
+    return std::dynamic_pointer_cast<PointerType>(shared_from_this());
 }
 
-const csaw::StructType* csaw::Type::AsStruct() const
+csaw::ArrayTypePtr csaw::Type::AsArray()
 {
-    return dynamic_cast<const StructType*>(this);
+    return std::dynamic_pointer_cast<ArrayType>(shared_from_this());
 }
 
-const csaw::FunctionType* csaw::Type::AsFunction() const
+csaw::StructTypePtr csaw::Type::AsStruct()
 {
-    return dynamic_cast<const FunctionType*>(this);
+    return std::dynamic_pointer_cast<StructType>(shared_from_this());
 }
 
-const csaw::TemplateType* csaw::Type::AsTemplate() const
+csaw::FunctionTypePtr csaw::Type::AsFunction()
 {
-    return dynamic_cast<const TemplateType*>(this);
+    return std::dynamic_pointer_cast<FunctionType>(shared_from_this());
 }
 
-bool csaw::Type::ParentOf(const TypePtr& type) const
+csaw::TemplateTypePtr csaw::Type::AsTemplate()
+{
+    return std::dynamic_pointer_cast<TemplateType>(shared_from_this());
+}
+
+bool csaw::Type::ParentOf(const TypePtr& type)
 {
     if (this == type.get())
         return true;
@@ -285,7 +290,7 @@ std::pair<int, csaw::TypePtr> csaw::StructType::GetElement(const std::string& na
     return {-1, {}};
 }
 
-csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
+csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& parent, const TypePtr& result)
 {
     std::string name = "(";
     for (size_t i = 0; i < args.size(); ++i)
@@ -293,17 +298,34 @@ csaw::FunctionTypePtr csaw::FunctionType::Get(const std::vector<TypePtr>& args, 
         if (i > 0) name += ", ";
         name += args[i]->Name;
     }
-    name += ")(" + result->Name + ')';
+    if (is_vararg)
+    {
+        if (!args.empty())
+            name += ", ";
+        name += "?";
+    }
+    if (parent || result)
+    {
+        name += ")(";
+        if (parent) name += parent->Name + ":";
+        if (result) name += result->Name;
+    }
+    name += ')';
 
     auto& type = Types[name];
     if (!type)
-        type = std::make_shared<FunctionType>(name, args, is_vararg, result);
+        type = std::make_shared<FunctionType>(name, args, is_vararg, parent, result);
     return std::dynamic_pointer_cast<FunctionType>(type);
 }
 
-csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& result)
-    : Type(name, INFO_IS_FUN), Args(args), IsVararg(is_vararg), Result(result)
+csaw::FunctionType::FunctionType(const std::string& name, const std::vector<TypePtr>& args, const bool is_vararg, const TypePtr& parent, const TypePtr& result)
+    : Type(name, INFO_IS_FUN), Args(args), IsVararg(is_vararg), Parent(parent), Result(result)
 {
+}
+
+bool csaw::FunctionType::IsConstructor() const
+{
+    return !Result && !Parent;
 }
 
 csaw::TemplateTypePtr csaw::TemplateType::Get(const TypePtr& base, const std::vector<TypePtr>& args)

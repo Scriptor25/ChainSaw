@@ -6,7 +6,7 @@
 
 csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
 {
-    const auto condition = Gen(expression.Condition);
+    const auto condition = Gen(expression.Condition, nullptr);
     if (!condition)
         return nullptr;
 
@@ -17,10 +17,10 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     auto false_block = llvm::BasicBlock::Create(GetContext(), "false");
     const auto end_block = llvm::BasicBlock::Create(GetContext(), "end");
 
-    const auto br_inst = GetBuilder().CreateCondBr(condition->GetBoolValue(this), true_block, false_block);
+    const auto br_inst = GetBuilder().CreateCondBr(condition->GetBoolValue(), true_block, false_block);
 
     GetBuilder().SetInsertPoint(true_block);
-    const auto true_value = Gen(expression.True);
+    const auto true_value = Gen(expression.True, nullptr);
     if (!true_value)
     {
         br_inst->eraseFromParent();
@@ -34,7 +34,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
 
     false_block->insertInto(parent);
     GetBuilder().SetInsertPoint(false_block);
-    const auto false_value = Gen(expression.False);
+    const auto false_value = Gen(expression.False, nullptr);
     if (!false_value)
     {
         true_block->eraseFromParent();
@@ -131,5 +131,5 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     const auto phi = GetBuilder().CreatePHI(type.Get(), 2);
     phi->addIncoming(true_rvalue->GetValue(), true_block);
     phi->addIncoming(false_rvalue->GetValue(), false_block);
-    return RValue::Create(true_rvalue->GetType(), phi);
+    return RValue::Create(this, true_rvalue->GetType(), phi);
 }

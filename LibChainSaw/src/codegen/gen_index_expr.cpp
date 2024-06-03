@@ -7,56 +7,49 @@
 
 csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
 {
-    const auto array = Gen(expression.Array);
+    const auto array = Gen(expression.Array, nullptr);
     if (!array)
         return nullptr;
 
-    const auto index = Gen(expression.Index);
+    const auto index = Gen(expression.Index, nullptr);
     if (!index)
         return nullptr;
 
-    if (const auto [function, signature] = FindFunction("[]", array->GetType(), {index->GetType()}); function)
+    if (const auto [function, signature] = FindBestFunction("[]", array->GetType(), {index->GetType()}); function)
     {
-        if (!signature.Result->IsPointer())
-        {
-            ThrowErrorStmt(expression, false, "Function overloading the index operator must return a value with pointer type");
+        if (AssertStmt(signature.Result->IsPointer(), expression, false, "Function overloading the index operator must return a value with pointer type"))
             return nullptr;
-        }
-
-        const auto cast_index = Cast(index, signature.Args[0]);
-        if (!cast_index)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast_index.Msg().c_str());
-            return nullptr;
-        }
 
         LValuePtr larray;
         if (array->IsLValue())
             larray = std::dynamic_pointer_cast<LValue>(array);
         else
         {
-            const auto alloc = LValue::AllocateAndStore(this, array->GetType(), array->GetValue());
-            if (!alloc)
-            {
-                ThrowErrorStmt(expression, false, "Failed to allocate: %s", alloc.Msg().c_str());
+            const auto alloc = LValue::AllocateAndStore(this, array->GetType(), array);
+            if (AssertStmt(alloc, expression, false, "Failed to allocate and store: %s", alloc.Msg().c_str()))
                 return nullptr;
-            }
+
             larray = alloc.Get();
         }
 
-        const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {larray->GetPointer(), cast_index.Get()->GetValue()});
-        return LValue::Direct(this, signature.Result->AsPointer()->Base, value);
+        const ValuePtr callee = RValue::Create(this, PointerType::Get(signature.GetFunctionType()), function);
+        const auto value = CreateCall(callee, larray, {index});
+        if (AssertStmt(value, expression, false, "Failed to call function: %s", value.Msg().c_str()))
+            return nullptr;
+
+        const auto deref = value.Get()->Dereference();
+        if (AssertStmt(deref, expression, false, "Failed to dereference: %s", deref.Msg().c_str()))
+            return nullptr;
+
+        return deref.Get();
     }
 
     if (array->GetType()->IsPointer())
     {
         const auto base = array->GetType()->AsPointer()->Base;
         const auto ty = Gen(base);
-        if (!ty)
-        {
-            ThrowErrorStmt(expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str());
+        if (AssertStmt(ty, expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str()))
             return nullptr;
-        }
 
         const auto pointer = GetBuilder().CreateGEP(ty.Get(), array->GetValue(), {index->GetValue()});
         return LValue::Direct(this, base, pointer);
@@ -66,11 +59,8 @@ csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
     {
         const auto base = array->GetType()->AsArray()->Base;
         const auto ty = Gen(array->GetType());
-        if (!ty)
-        {
-            ThrowErrorStmt(expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str());
+        if (AssertStmt(ty, expression, false, "Failed to generate type %s: %s", base->Name.c_str(), ty.Msg().c_str()))
             return nullptr;
-        }
 
         const auto larray = std::dynamic_pointer_cast<LValue>(array);
         const auto pointer = GetBuilder().CreateGEP(ty.Get(), larray->GetPointer(), {GetBuilder().getInt64(0), index->GetValue()});

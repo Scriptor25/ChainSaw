@@ -2,6 +2,22 @@
 #include <csaw/Signature.hpp>
 #include <csaw/Type.hpp>
 
+bool csaw::Signature::operator==(const Signature& other) const
+{
+    if (Name != other.Name
+        || Parent != other.Parent
+        || Result != other.Result
+        || Args.size() != other.Args.size()
+        || IsVarargs != other.IsVarargs)
+        return false;
+
+    for (size_t i = 0; i < Args.size(); ++i)
+        if (Args[i] != other.Args[i])
+            return false;
+
+    return true;
+}
+
 std::string csaw::Signature::Mangle(const bool obfusecate) const
 {
     static std::hash<std::string> hasher;
@@ -38,5 +54,5 @@ bool csaw::Signature::IsConstructor() const
 
 csaw::FunctionTypePtr csaw::Signature::GetFunctionType() const
 {
-    return FunctionType::Get(Args, IsVarargs, Result);
+    return FunctionType::Get(Args, IsVarargs, Parent, Result);
 }

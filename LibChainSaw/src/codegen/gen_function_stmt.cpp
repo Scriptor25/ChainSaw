@@ -28,14 +28,17 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (has_ptr)
         arg_types.insert(arg_types.begin(), GetBuilder().getPtrTy());
 
-    auto [function, signature] = FindFunction(statement.Name, statement.Parent, args);
+    Signature signature;
+    signature.Name = statement.Name;
+    signature.Parent = statement.Parent;
+    signature.Args = args;
+    signature.IsVarargs = statement.IsVarArgs;
+    signature.Result = statement.Result;
+    signature.IsC = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
 
+    auto function = FindFunctionBySignature(signature);
     if (!function)
     {
-        signature.Result = statement.Result;
-        signature.IsVarargs = statement.IsVarArgs;
-        signature.IsC = std::ranges::find(statement.Mods, "c") != statement.Mods.end();
-
         const auto result_type = signature.IsConstructor() ? Gen(Type::GetVoid()) : Gen(statement.Result);
         if (!result_type)
             return ThrowErrorStmt(statement, false, "Failed to generate type %s: %s", statement.Result->Name.c_str(), result_type.Msg().c_str());
@@ -68,27 +71,25 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         if (i < 0)
         {
             const auto type = signature.IsConstructor() ? Type::Get(statement.Name) : statement.Parent;
-            const auto alloc = LValue::AllocateAndStore(this, PointerType::Get(type), &arg);
+            const auto alloc = LValue::AllocateAndStore(this, PointerType::Get(type), RValue::Create(this, PointerType::Get(type), &arg));
             if (!alloc)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                m_Signatures.erase(function);
-                function->eraseFromParent();
-                return ThrowErrorStmt(statement, false, "Failed to allocate: %s", alloc.Msg().c_str());
+                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+                return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
             }
             m_Values["me"] = alloc.Get();
         }
         else
         {
-            const auto alloc = LValue::AllocateAndStore(this, statement.Args[i].Type, &arg);
+            const auto alloc = LValue::AllocateAndStore(this, statement.Args[i].Type, RValue::Create(this, statement.Args[i].Type, &arg));
             if (!alloc)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                m_Signatures.erase(function);
-                function->eraseFromParent();
-                return ThrowErrorStmt(statement, false, "Failed to allocate: %s", alloc.Msg().c_str());
+                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
+                return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
             }
             m_Values[name] = alloc.Get();
         }
@@ -107,13 +108,12 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     }
     else if (const auto expression = std::dynamic_pointer_cast<Expression>(statement.Body))
     {
-        const auto result = Gen(expression);
+        const auto result = Gen(expression, nullptr);
         if (!result)
         {
             PopScopeStack();
             GetBuilder().SetInsertPoint(bkp_block);
-            m_Signatures.erase(function);
-            function->eraseFromParent();
+            for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
             return;
         }
 
@@ -126,8 +126,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                m_Signatures.erase(function);
-                function->eraseFromParent();
+                for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
                 return ThrowErrorStmt(statement, false, "Failed to cast: %s", cast.Msg().c_str());
             }
             GetBuilder().CreateRet(cast.Get()->GetValue());
@@ -145,8 +144,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (verifyFunction(*function, &llvm::errs()))
     {
         function->viewCFG();
-        m_Signatures.erase(function);
-        function->eraseFromParent();
+        for (auto block = function->begin(); block != function->end(); block = block->eraseFromParent());
         return ThrowErrorStmt(statement, false, "Failed to verify function");
     }
 

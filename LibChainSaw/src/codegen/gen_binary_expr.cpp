@@ -1,87 +1,46 @@
 #include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
-#include <csaw/Signature.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 {
-    const auto left = Gen(expression.Left);
+    const auto left = Gen(expression.Left, nullptr);
     if (!left)
         return nullptr;
 
-    const auto right = Gen(expression.Right);
+    const auto right = Gen(expression.Right, nullptr);
     if (!right)
         return nullptr;
 
     auto op = expression.Operator;
 
-    if (const auto [function, signature] = FindFunction(op, nullptr, {left->GetType(), right->GetType()}); function)
-    {
-        const auto cast_left = Cast(left, signature.Args[0]);
-        if (!cast_left)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast_left.Msg().c_str());
-            return nullptr;
-        }
-
-        const auto cast_right = Cast(right, signature.Args[1]);
-        if (!cast_right)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast_right.Msg().c_str());
-            return nullptr;
-        }
-
-        const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {cast_left.Get()->GetValue(), cast_right.Get()->GetValue()});
-        return RValue::Create(signature.Result, value);
-    }
+    if (const auto result = FindBestAndCall(op, nullptr, {left, right}))
+        return result.Get();
 
     const auto lleft = std::dynamic_pointer_cast<LValue>(left);
-
     if (left->IsLValue())
-    {
-        if (const auto [function, signature] = FindFunction(op, left->GetType(), {right->GetType()}); function)
-        {
-            const auto cast_right = Cast(right, signature.Args[0]);
-            if (!cast_right)
-            {
-                ThrowErrorStmt(expression, false, "Failed to cast: %s", cast_right.Msg().c_str());
-                return nullptr;
-            }
-
-            const auto value = GetBuilder().CreateCall(function->getFunctionType(), function, {lleft->GetPointer(), cast_right.Get()->GetValue()});
-            return RValue::Create(signature.Result, value);
-        }
-    }
+        if (const auto result = FindBestAndCall(op, lleft, {right}))
+            return result.Get();
 
     if (op == "=")
     {
-        if (!left->IsLValue())
-        {
-            ThrowErrorStmt(expression, false, "Cannot assign to rvalue");
+        if (AssertStmt(left->IsLValue(), expression, false, "Cannot assign to rvalue"))
             return nullptr;
-        }
 
-        const auto cast_right = Cast(right, lleft->GetType());
-        if (!cast_right)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast_right.Msg().c_str());
+        if (const auto store = lleft->StoreValue(right);
+            AssertStmt(store, expression, false, "Failed to store: %s", store.Msg().c_str()))
             return nullptr;
-        }
 
-        lleft->StoreValue(cast_right.Get()->GetValue());
         return lleft->GetRValue();
     }
 
-    const auto cast = CastToBestOf(left->GetRValue(), right->GetRValue());
-    if (!cast)
-    {
-        ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
+    const auto best_cast = CastToBestOf(left->GetRValue(), right->GetRValue());
+    if (AssertStmt(best_cast, expression, false, "Failed to cast: %s", best_cast.Msg().c_str()))
         return nullptr;
-    }
 
-    const auto& [lhs, rhs] = cast.Get();
+    const auto& [lhs, rhs] = best_cast.Get();
 
     RValuePtr value;
     if (op == "==") value = GenCmpEQ(lhs, rhs);
@@ -112,22 +71,19 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 
         if (value && assign)
         {
-            if (!left->IsLValue())
-            {
+            if (AssertStmt(left->IsLValue(), expression, false, "Cannot assign to rvalue"))
                 return nullptr;
-            }
-            const auto cast_right = Cast(value, lleft->GetType());
-            if (!cast_right)
-            {
+
+            if (const auto store = lleft->StoreValue(value);
+                AssertStmt(store, expression, false, "Failed to store: %s", store.Msg().c_str()))
                 return nullptr;
-            }
-            lleft->StoreValue(cast_right.Get()->GetValue());
+
             return lleft->GetRValue();
         }
     }
 
-    if (!value)
-        ThrowErrorStmt(expression, false, "Binary operation '%s %s %s' is not implemented", left->GetType()->Name.c_str(), expression.Operator.c_str(), right->GetType()->Name.c_str());
+    if (AssertStmt(value, expression, false, "Binary operation '%s %s %s' is not implemented", left->GetType()->Name.c_str(), expression.Operator.c_str(), right->GetType()->Name.c_str()))
+        return nullptr;
 
     return value;
 }

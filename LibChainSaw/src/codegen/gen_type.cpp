@@ -14,25 +14,32 @@ csaw::Expect<llvm::Type*> csaw::Builder::Gen(const TypePtr& type) const
         const auto arrayty = type->AsArray();
         const auto base = Gen(arrayty->Base);
         if (!base)
-            return Expect<llvm::Type*>("Array base of " + type->Name + " is null: " + base.Msg());
+            return Expect<llvm::Type*>("Failed to generate base type of array type " + type->Name + ": " + base.Msg());
 
         return llvm::ArrayType::get(base.Get(), arrayty->Size);
     }
 
     if (type->IsStruct())
-    {
         if (const auto structty = llvm::StructType::getTypeByName(GetContext(), type->Name))
             return structty;
-    }
 
     if (type->IsFunction())
     {
         const auto fty = type->AsFunction();
+
         const auto result = Gen(fty->Result);
         if (!result)
             return Expect<llvm::Type*>("Function result of " + type->Name + " is null: " + result.Msg());
 
         std::vector<llvm::Type*> args;
+        if (fty->Parent)
+        {
+            const auto parent = Gen(PointerType::Get(fty->Parent));
+            if (!parent)
+                return Expect<llvm::Type*>("Function parent of " + type->Name + " is null: " + parent.Msg());
+
+            args.push_back(parent.Get());
+        }
         for (const auto& arg : fty->Args)
         {
             const auto argtype = Gen(arg);

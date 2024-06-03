@@ -119,7 +119,7 @@ endforeach ()
 # check if library exists
 foreach (lib ${llvm_libs})
     if (NOT ${lib} IN_LIST LLVM_AVAILABLE_LIBS)
-        message(WARNING "Removing unknown lib '${lib}' from LLVM libs")
+        message(STATUS "Removing unknown lib '${lib}' from LLVM libs")
         list(REMOVE_ITEM llvm_libs ${lib})
     endif ()
 endforeach ()

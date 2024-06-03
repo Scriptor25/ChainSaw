@@ -1,13 +1,12 @@
 #include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
-#include <csaw/Signature.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
 csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
 {
-    const auto value = Gen(expression.Value);
+    const auto value = Gen(expression.Value, nullptr);
     if (!value)
         return nullptr;
 
@@ -18,19 +17,13 @@ csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
     {
         if (expression.OpRight) // get and op (@(++):vec3(unused: int1): vec3 ...)
         {
-            if (const auto [function, signature] = FindFunction(op, value->GetType(), {Type::GetInt1()}); function)
-            {
-                const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, {lvalue->GetPointer(), GetBuilder().getInt1(true)});
-                return RValue::Create(signature.Result, result);
-            }
+            if (const auto result = FindBestAndCall(op, lvalue, {RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
+                return result.Get();
         }
         else // op and get (@(++):vec3:vec3 ...)
         {
-            if (const auto [function, signature] = FindFunction(op, value->GetType(), {}); function)
-            {
-                const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, {lvalue->GetPointer()});
-                return RValue::Create(signature.Result, result);
-            }
+            if (const auto result = FindBestAndCall(op, lvalue, {}))
+                return result.Get();
         }
     }
 
@@ -63,20 +56,13 @@ csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
 
     if (assign)
     {
-        if (!value->IsLValue())
-        {
-            ThrowErrorStmt(expression, false, "Cannot assign to rvalue");
+        if (AssertStmt(value->IsLValue(), expression, false, "Cannot assign to rvalue"))
             return nullptr;
-        }
 
-        const auto cast = Cast(result, lvalue->GetType());
-        if (!cast)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
+        if (const auto store = lvalue->StoreValue(result);
+            AssertStmt(store, expression, false, "Failed to store: %s", store.Msg().c_str()))
             return nullptr;
-        }
 
-        lvalue->StoreValue(cast.Get()->GetValue());
         if (expression.OpRight) result = rvalue;
     }
 

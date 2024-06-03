@@ -21,7 +21,7 @@ namespace csaw
         llvm::Function* Global = nullptr;
     };
 
-    typedef std::pair<RValuePtr, RValuePtr> RValPair;
+    typedef std::pair<RValuePtr, RValuePtr> RValuePair;
 
     class Builder
     {
@@ -39,8 +39,8 @@ namespace csaw
         int LinkModules();
         [[nodiscard]] int OutputModules(const std::string& output_file, llvm::CodeGenFileType output_type) const;
 
-        [[nodiscard]] static int EmitIR(const llvm::Module& module, const std::string& output_directory);
-        [[nodiscard]] static int Output(llvm::Module& module, const std::string& output_file, llvm::CodeGenFileType output_type);
+        static int EmitIR(const llvm::Module& module, const std::string& output_directory);
+        static int Output(llvm::Module& module, const std::string& output_file, llvm::CodeGenFileType output_type);
 
         int RunJIT(int argc, const char** argv, const char** env);
 
@@ -49,66 +49,73 @@ namespace csaw
         void Gen(const StatementPtr& ptr);
         [[nodiscard]] Expect<llvm::Type*> Gen(const TypePtr& type) const;
 
+        Expect<RValuePtr> Cast(const ValuePtr& value, const TypePtr& type);
+        Expect<RValuePair> CastToBestOf(const RValuePtr& left, const RValuePtr& right);
+
     private:
-        [[nodiscard]] std::pair<llvm::Function*, Signature> FindFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args) const;
+        llvm::Function* FindFunctionBySignature(const Signature& sig);
+        std::pair<llvm::Function*, Signature> FindBestFunctionBySignature(const Signature& sig);
+        Expect<RValuePtr> CreateCall(const ValuePtr& callee, const LValuePtr& parent, const std::vector<ValuePtr>& args);
+        Expect<LValuePtr> CreateCtorCall(const ValuePtr& callee, const TypePtr& ctortype, const std::vector<ValuePtr>& args);
+        Expect<RValuePtr> FindBestAndCall(const std::string& name, const LValuePtr& parent, const std::vector<ValuePtr>& args);
+        Expect<LValuePtr> FindBestCtorAndCall(const std::string& name, const std::vector<ValuePtr>& args);
+        [[nodiscard]] std::map<llvm::Function*, Signature> FindFunctions(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, bool is_ctor) const;
+        [[nodiscard]] std::pair<llvm::Function*, Signature> FindBestFunction(const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args, bool is_ctor = false) const;
+        static int RankFunction(const Signature& signature, const std::string& name, const TypePtr& parent, const std::vector<TypePtr>& args);
+
         void PushScopeStack();
         void PopScopeStack();
-
-        int NextCtor();
-
-        [[nodiscard]] Expect<RValuePtr> Cast(const ValuePtr& value, const TypePtr& type) const;
-        [[nodiscard]] Expect<RValPair> CastToBestOf(const RValuePtr& left, const RValuePtr& right) const;
 
         void Gen(const ScopeStatement& statement);
         void Gen(const ForStatement& statement);
         void Gen(const FunctionStatement& statement);
         void Gen(const IfStatement& statement);
         void Gen(const RetStatement& statement);
-        void Gen(const DefStatement& statement) const;
+        void Gen(const DefStatement& statement);
         void Gen(const VariableStatement& statement);
         void Gen(const WhileStatement& statement);
 
-        ValuePtr Gen(const ExpressionPtr& ptr);
+        ValuePtr Gen(const ExpressionPtr& ptr, const TypePtr& expected);
         RValuePtr Gen(const BinaryExpression& expression);
-        RValuePtr Gen(const CallExpression& expression);
+        ValuePtr Gen(const CallExpression& expression, const TypePtr& expected);
         RValuePtr Gen(const CastExpression& expression);
-        [[nodiscard]] RValuePtr Gen(const CharExpression& expression) const;
+        RValuePtr Gen(const CharExpression& expression);
         LValuePtr Gen(const DereferenceExpression& expression);
-        [[nodiscard]] RValuePtr Gen(const FloatExpression& expression) const;
-        ValuePtr Gen(const IdentifierExpression& expression);
+        RValuePtr Gen(const FloatExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const IdentifierExpression& expression, const TypePtr& expected);
         LValuePtr Gen(const IndexExpression& expression);
-        [[nodiscard]] RValuePtr Gen(const IntExpression& expression) const;
-        LValuePtr Gen(const MemberExpression& expression);
+        RValuePtr Gen(const IntExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const MemberExpression& expression, const TypePtr& expected);
         RValuePtr Gen(const ReferenceExpression& expression);
         ValuePtr Gen(const SelectExpression& expression);
-        [[nodiscard]] RValuePtr Gen(const SizeOfExpression& expression) const;
-        [[nodiscard]] RValuePtr Gen(const StringExpression& expression) const;
+        RValuePtr Gen(const SizeOfExpression& expression);
+        RValuePtr Gen(const StringExpression& expression);
         RValuePtr Gen(const UnaryExpression& expression);
 
-        [[nodiscard]] RValuePtr GenCmpEQ(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenCmpNE(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenCmpLE(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenCmpGE(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenAnd(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenLogicalAnd(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenOr(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenLogicalOr(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenXor(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenCmpLT(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenCmpGT(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenShl(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenAShr(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenLShr(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenAdd(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenSub(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenMul(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenDiv(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenRem(const RValuePtr& left, const RValuePtr& right) const;
-        [[nodiscard]] RValuePtr GenNeg(const RValuePtr& value) const;
-        [[nodiscard]] RValuePtr GenNot(const RValuePtr& value) const;
-        [[nodiscard]] RValuePtr GenInv(const RValuePtr& value) const;
-        [[nodiscard]] RValuePtr GenInc(const RValuePtr& value) const;
-        [[nodiscard]] RValuePtr GenDec(const RValuePtr& value) const;
+        RValuePtr GenCmpEQ(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenCmpNE(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenCmpLE(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenCmpGE(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenAnd(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenLogicalAnd(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenOr(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenLogicalOr(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenXor(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenCmpLT(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenCmpGT(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenShl(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenAShr(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenLShr(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenAdd(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenSub(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenMul(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenDiv(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenRem(const RValuePtr& left, const RValuePtr& right);
+        RValuePtr GenNeg(const RValuePtr& value);
+        RValuePtr GenNot(const RValuePtr& value);
+        RValuePtr GenInv(const RValuePtr& value);
+        RValuePtr GenInc(const RValuePtr& value);
+        RValuePtr GenDec(const RValuePtr& value);
 
         bool m_Obfusecate;
         std::map<std::string, ModuleData> m_Modules;
@@ -125,6 +132,5 @@ namespace csaw
         std::map<llvm::Function*, Signature> m_Signatures;
         std::vector<std::map<std::string, ValuePtr>> m_ScopeStack;
         std::map<std::string, ValuePtr> m_Values;
-        int m_CtorPriority = 0;
     };
 }
