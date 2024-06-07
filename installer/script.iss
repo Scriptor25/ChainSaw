@@ -28,7 +28,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 ChangesAssociations=no
 DefaultGroupName={#MyAppName}
-DisableProgramGroupPage=yes
+DisableProgramGroupPage=auto
 LicenseFile=..\LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
@@ -40,13 +40,16 @@ SolidCompression=yes
 WizardStyle=modern
 AllowCancelDuringInstall=yes
 AppContact=f.schreiber.2006@proton.me
+ChangesEnvironment=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
-Source: "{#MyAppIcoFile}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\install\bin\*";     DestDir: "{app}\bin";     Components: mainexe; Flags: ignoreversion recursesubdirs
+Source: "..\install\include\*"; DestDir: "{app}\include"; Components: headers; Flags: ignoreversion recursesubdirs
+Source: "..\install\lib\*";     DestDir: "{app}\lib";     Components: libs;    Flags: ignoreversion recursesubdirs
+Source: "{#MyAppIcoFile}";      DestDir: "{app}";                              Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
@@ -60,8 +63,75 @@ Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".csh"; ValueData: ""
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\bin\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\bin\{#MyAppExeName}"; IconFilename: "{app}\logo.ico"
+Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 
-[Run]
-Filename: "{app}\bin\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+[Types]
+Name: "full"; Description: "Full Installation"
+Name: "compact"; Description: "Compact Installation"
+Name: "custom"; Description: "Custom Installation"; Flags: iscustom
 
+[Components]
+Name: "mainexe"; Description: "Main EXE File";               Types: full compact custom; Flags: fixed
+Name: "headers"; Description: "STD Header Files";            Types: full custom
+Name: "libs";    Description: "Additional Library Binaries"; Types: full custom
+
+[Tasks]
+Name: envPath; Description: "Add ChainSaw to the PATH" 
+
+[Code]
+const EnvironmentKey = 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment';
+
+procedure EnvAddPath(Path: string);
+var
+    Paths: string;
+begin
+    { Retrieve current path (use empty string if entry not exists) }
+    if not RegQueryStringValue(HKEY_LOCAL_MACHINE, EnvironmentKey, 'Path', Paths)
+    then Paths := '';
+
+    { Skip if string already found in path }
+    if Pos(';' + Uppercase(Path) + ';', ';' + Uppercase(Paths) + ';') > 0 then exit;
+
+    { App string to the end of the path variable }
+    Paths := Paths + ';'+ Path +';'
+
+    { Overwrite (or create if missing) path environment variable }
+    if RegWriteStringValue(HKEY_LOCAL_MACHINE, EnvironmentKey, 'Path', Paths)
+    then Log(Format('The [%s] added to PATH: [%s]', [Path, Paths]))
+    else Log(Format('Error while adding the [%s] to PATH: [%s]', [Path, Paths]));
+end;
+
+procedure EnvRemovePath(Path: string);
+var
+    Paths: string;
+    P: Integer;
+begin
+    { Skip if registry entry not exists }
+    if not RegQueryStringValue(HKEY_LOCAL_MACHINE, EnvironmentKey, 'Path', Paths) then
+        exit;
+
+    { Skip if string not found in path }
+    P := Pos(';' + Uppercase(Path) + ';', ';' + Uppercase(Paths) + ';');
+    if P = 0 then exit;
+
+    { Update path variable }
+    Delete(Paths, P - 1, Length(Path) + 1);
+
+    { Overwrite path environment variable }
+    if RegWriteStringValue(HKEY_LOCAL_MACHINE, EnvironmentKey, 'Path', Paths)
+    then Log(Format('The [%s] removed from PATH: [%s]', [Path, Paths]))
+    else Log(Format('Error while removing the [%s] from PATH: [%s]', [Path, Paths]));
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+    if (CurStep = ssPostInstall) and WizardIsTaskSelected('envPath')
+    then EnvAddPath(ExpandConstant('{app}') + '\bin');
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+    if CurUninstallStep = usPostUninstall
+    then EnvRemovePath(ExpandConstant('{app}') + '\bin');
+end;
