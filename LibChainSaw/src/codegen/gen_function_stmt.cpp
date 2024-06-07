@@ -70,29 +70,10 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         arg.setName(name);
         if (i < 0)
         {
-            const auto type = signature.IsConstructor() ? Type::Get(statement.Name) : statement.Parent;
-            const auto alloc = LValue::AllocateAndStore(this, PointerType::Get(type), RValue::Create(this, PointerType::Get(type), &arg));
-            if (!alloc)
-            {
-                PopScopeStack();
-                GetBuilder().SetInsertPoint(bkp_block);
-                function->eraseFromParent();
-                return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
-            }
-            m_Values["me"] = alloc.Get();
+            const auto type = PointerType::Get(signature.IsConstructor() ? Type::Get(statement.Name) : statement.Parent);
+            m_Values[name] = RValue::Create(this, type, &arg);
         }
-        else
-        {
-            const auto alloc = LValue::AllocateAndStore(this, statement.Args[i].Type, RValue::Create(this, statement.Args[i].Type, &arg));
-            if (!alloc)
-            {
-                PopScopeStack();
-                GetBuilder().SetInsertPoint(bkp_block);
-                function->eraseFromParent();
-                return ThrowErrorStmt(statement, false, "Failed to allocate and store: %s", alloc.Msg().c_str());
-            }
-            m_Values[name] = alloc.Get();
-        }
+        else m_Values[name] = RValue::Create(this, statement.Args[i].Type, &arg);
 
         ++i;
     }
@@ -113,7 +94,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
         {
             PopScopeStack();
             GetBuilder().SetInsertPoint(bkp_block);
-            function->eraseFromParent();
+            for (auto& block : *function) block.eraseFromParent();
             return;
         }
 
@@ -126,7 +107,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
             {
                 PopScopeStack();
                 GetBuilder().SetInsertPoint(bkp_block);
-                function->eraseFromParent();
+                for (auto& block : *function) block.eraseFromParent();
                 return ThrowErrorStmt(statement, false, "Failed to cast: %s", cast.Msg().c_str());
             }
             GetBuilder().CreateRet(cast.Get()->GetValue());
@@ -144,7 +125,7 @@ void csaw::Builder::Gen(const FunctionStatement& statement)
     if (verifyFunction(*function, &llvm::errs()))
     {
         function->viewCFG();
-        function->eraseFromParent();
+        for (auto& block : *function) block.eraseFromParent();
         return ThrowErrorStmt(statement, false, "Failed to verify function");
     }
 

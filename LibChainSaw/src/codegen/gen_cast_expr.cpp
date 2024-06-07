@@ -4,7 +4,7 @@
 
 csaw::RValuePtr csaw::Builder::Gen(const CastExpression& expression)
 {
-    const auto value = Gen(expression.Value, nullptr);
+    const auto value = Gen(expression.Value, expression.Type);
     if (!value)
         return nullptr;
 

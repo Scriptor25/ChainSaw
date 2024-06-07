@@ -11,20 +11,25 @@ csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
         return nullptr;
 
     const auto op = expression.Operator;
-
     const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
-    if (value->IsLValue())
+
+    if (expression.OpRight) // get and op (@(++):vec3(unused: int1): vec3 ...)
     {
-        if (expression.OpRight) // get and op (@(++):vec3(unused: int1): vec3 ...)
-        {
+        if (value->IsLValue())
             if (const auto result = FindBestAndCall(op, lvalue, {RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
                 return result.Get();
-        }
-        else // op and get (@(++):vec3:vec3 ...)
-        {
+
+        if (const auto result = FindBestAndCall(op, nullptr, {value, RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
+            return result.Get();
+    }
+    else // op and get (@(++):vec3:vec3 ...)
+    {
+        if (value->IsLValue())
             if (const auto result = FindBestAndCall(op, lvalue, {}))
                 return result.Get();
-        }
+
+        if (const auto result = FindBestAndCall(op, nullptr, {value}))
+            return result.Get();
     }
 
     const auto rvalue = value->GetRValue();

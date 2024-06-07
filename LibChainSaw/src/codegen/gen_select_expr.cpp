@@ -37,6 +37,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
     const auto false_value = Gen(expression.False, expected);
     if (!false_value)
     {
+        br_inst->eraseFromParent();
         true_block->eraseFromParent();
         false_block->eraseFromParent();
         GetBuilder().SetInsertPoint(bkp_block);
@@ -55,6 +56,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
             const auto cast = Cast(true_rvalue, false_rvalue->GetType());
             if (!cast)
             {
+                br_inst->eraseFromParent();
                 true_block->eraseFromParent();
                 false_block->eraseFromParent();
                 GetBuilder().SetInsertPoint(bkp_block);
@@ -69,6 +71,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
             const auto cast = Cast(false_rvalue, true_rvalue->GetType());
             if (!cast)
             {
+                br_inst->eraseFromParent();
                 true_block->eraseFromParent();
                 false_block->eraseFromParent();
                 GetBuilder().SetInsertPoint(bkp_block);
@@ -79,6 +82,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
         }
         else
         {
+            br_inst->eraseFromParent();
             true_block->eraseFromParent();
             false_block->eraseFromParent();
             GetBuilder().SetInsertPoint(bkp_block);
@@ -100,6 +104,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
     {
         if (true_rvalue->GetType() != false_rvalue->GetType())
         {
+            br_inst->eraseFromParent();
             true_block->eraseFromParent();
             false_block->eraseFromParent();
             end_block->eraseFromParent();
@@ -120,6 +125,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
     const auto type = Gen(true_rvalue->GetType());
     if (!type)
     {
+        br_inst->eraseFromParent();
         true_block->eraseFromParent();
         false_block->eraseFromParent();
         end_block->eraseFromParent();
