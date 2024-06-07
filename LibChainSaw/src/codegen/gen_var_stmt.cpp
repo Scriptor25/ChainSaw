@@ -64,7 +64,10 @@ void csaw::Builder::Gen(const VariableStatement& statement)
                 AssertStmt(store, statement, false, "Failed to store: %s", store.Msg().c_str()))
                 return;
 
-        m_Values[statement.Name] = ref;
+        auto& dst = m_Values[statement.Name];
+        if (dst)
+            TellStmt(statement, "Warning: variable definition shadows previous variable '%s'. This may lead to linking issues.", statement.Name.c_str());
+        dst = ref;
         return;
     }
 

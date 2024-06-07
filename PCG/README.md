@@ -15,7 +15,7 @@ the C++ library.
 ## Documentation and Examples
 
 Visit [PCG-Random website] for information on how to use this library, or look
-at the sample code -- hopefully it should be fairly self explanatory.
+at the sample code -- hopefully it should be fairly self-explanatory.
 
 ## Building
 
@@ -24,7 +24,7 @@ three demo programs.
 
 The code is written in C89-style C with no significant platform dependencies.
 On a Unix-style system (e.g., Linux, Mac OS X), or any system with `make`,
-you should be able to just type type
+you should be able to just type
 
     make
 

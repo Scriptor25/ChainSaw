@@ -37,7 +37,7 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
     ThrowErrorStmt(*ptr, false, "Code generation is not implemented for this statement");
 }
 
-void csaw::Builder::Gen(const DefStatement& statement)
+void csaw::Builder::Gen(const DefStatement& statement) const
 {
     if (statement.Origin)
     {

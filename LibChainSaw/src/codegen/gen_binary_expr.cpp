@@ -16,13 +16,13 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 
     auto op = expression.Operator;
 
-    if (const auto result = FindBestAndCall(op, nullptr, {left, right}))
-        return result.Get();
-
     const auto lleft = std::dynamic_pointer_cast<LValue>(left);
     if (left->IsLValue())
         if (const auto result = FindBestAndCall(op, lleft, {right}))
             return result.Get();
+
+    if (const auto result = FindBestAndCall(op, nullptr, {left, right}))
+        return result.Get();
 
     if (op == "=")
     {

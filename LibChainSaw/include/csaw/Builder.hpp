@@ -71,7 +71,7 @@ namespace csaw
         void Gen(const FunctionStatement& statement);
         void Gen(const IfStatement& statement);
         void Gen(const RetStatement& statement);
-        void Gen(const DefStatement& statement);
+        void Gen(const DefStatement& statement) const;
         void Gen(const VariableStatement& statement);
         void Gen(const WhileStatement& statement);
 

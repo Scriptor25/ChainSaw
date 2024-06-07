@@ -2,11 +2,24 @@
 #include <csaw/Error.hpp>
 #include <csaw/Parser.hpp>
 
-void csaw::ThrowErrorv(const SourceLoc& loc, const bool is_severe, const char* format, va_list args)
+void csaw::Tellv(const SourceLoc& loc, const char* format, va_list args)
 {
     std::cout << loc.ToString() << ": ";
     vprintf(format, args);
     std::cout << std::endl;
+}
+
+void csaw::Tell(const SourceLoc& loc, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    Tellv(loc, format, args);
+    va_end(args);
+}
+
+void csaw::ThrowErrorv(const SourceLoc& loc, const bool is_severe, const char* format, va_list args)
+{
+    Tellv(loc, format, args);
 
     CSawError = 1;
     if (is_severe)

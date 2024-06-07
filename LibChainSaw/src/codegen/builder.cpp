@@ -361,7 +361,7 @@ llvm::Function* csaw::Builder::FindFunctionBySignature(const Signature& sig)
 std::pair<llvm::Function*, csaw::Signature> csaw::Builder::FindBestFunctionBySignature(const Signature& sig)
 {
     int highscore = 0;
-    std::pair<llvm::Function*, csaw::Signature> best;
+    std::pair<llvm::Function*, Signature> best;
 
     for (const auto& [function, signature] : m_Signatures)
     {

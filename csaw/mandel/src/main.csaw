@@ -19,8 +19,8 @@
     ret t;
 }
 
-MAX_ITER: [internal] int32 = 100;
-SAMPLES:  [internal] int32 = 100;
+MAX_ITER: int32 = 100;
+SAMPLES:  int32 = 100;
 
 @[c]main::int32 {
 
