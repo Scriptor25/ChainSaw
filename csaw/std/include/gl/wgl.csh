@@ -18,39 +18,39 @@ def RECT;
 def UINT = int32;
 def VOID = void;
 
-WGL_FONT_LINES: [const] int32      = 0;
-WGL_FONT_POLYGONS: [const] int32   = 1;
-WGL_SWAP_MAIN_PLANE: [const] int32 = 0x00000001;
-WGL_SWAP_OVERLAY1: [const] int32   = 0x00000002;
-WGL_SWAP_OVERLAY2: [const] int32   = 0x00000004;
-WGL_SWAP_OVERLAY3: [const] int32   = 0x00000008;
-WGL_SWAP_OVERLAY4: [const] int32   = 0x00000010;
-WGL_SWAP_OVERLAY5: [const] int32   = 0x00000020;
-WGL_SWAP_OVERLAY6: [const] int32   = 0x00000040;
-WGL_SWAP_OVERLAY7: [const] int32   = 0x00000080;
-WGL_SWAP_OVERLAY8: [const] int32   = 0x00000100;
-WGL_SWAP_OVERLAY9: [const] int32   = 0x00000200;
-WGL_SWAP_OVERLAY10: [const] int32  = 0x00000400;
-WGL_SWAP_OVERLAY11: [const] int32  = 0x00000800;
-WGL_SWAP_OVERLAY12: [const] int32  = 0x00001000;
-WGL_SWAP_OVERLAY13: [const] int32  = 0x00002000;
-WGL_SWAP_OVERLAY14: [const] int32  = 0x00004000;
-WGL_SWAP_OVERLAY15: [const] int32  = 0x00008000;
-WGL_SWAP_UNDERLAY1: [const] int32  = 0x00010000;
-WGL_SWAP_UNDERLAY2: [const] int32  = 0x00020000;
-WGL_SWAP_UNDERLAY3: [const] int32  = 0x00040000;
-WGL_SWAP_UNDERLAY4: [const] int32  = 0x00080000;
-WGL_SWAP_UNDERLAY5: [const] int32  = 0x00100000;
-WGL_SWAP_UNDERLAY6: [const] int32  = 0x00200000;
-WGL_SWAP_UNDERLAY7: [const] int32  = 0x00400000;
-WGL_SWAP_UNDERLAY8: [const] int32  = 0x00800000;
-WGL_SWAP_UNDERLAY9: [const] int32  = 0x01000000;
-WGL_SWAP_UNDERLAY10: [const] int32 = 0x02000000;
-WGL_SWAP_UNDERLAY11: [const] int32 = 0x04000000;
-WGL_SWAP_UNDERLAY12: [const] int32 = 0x08000000;
-WGL_SWAP_UNDERLAY13: [const] int32 = 0x10000000;
-WGL_SWAP_UNDERLAY14: [const] int32 = 0x20000000;
-WGL_SWAP_UNDERLAY15: [const] int32 = 0x40000000;
+WGL_FONT_LINES: [internal] int32      = 0;
+WGL_FONT_POLYGONS: [internal] int32   = 1;
+WGL_SWAP_MAIN_PLANE: [internal] int32 = 0x00000001;
+WGL_SWAP_OVERLAY1: [internal] int32   = 0x00000002;
+WGL_SWAP_OVERLAY2: [internal] int32   = 0x00000004;
+WGL_SWAP_OVERLAY3: [internal] int32   = 0x00000008;
+WGL_SWAP_OVERLAY4: [internal] int32   = 0x00000010;
+WGL_SWAP_OVERLAY5: [internal] int32   = 0x00000020;
+WGL_SWAP_OVERLAY6: [internal] int32   = 0x00000040;
+WGL_SWAP_OVERLAY7: [internal] int32   = 0x00000080;
+WGL_SWAP_OVERLAY8: [internal] int32   = 0x00000100;
+WGL_SWAP_OVERLAY9: [internal] int32   = 0x00000200;
+WGL_SWAP_OVERLAY10: [internal] int32  = 0x00000400;
+WGL_SWAP_OVERLAY11: [internal] int32  = 0x00000800;
+WGL_SWAP_OVERLAY12: [internal] int32  = 0x00001000;
+WGL_SWAP_OVERLAY13: [internal] int32  = 0x00002000;
+WGL_SWAP_OVERLAY14: [internal] int32  = 0x00004000;
+WGL_SWAP_OVERLAY15: [internal] int32  = 0x00008000;
+WGL_SWAP_UNDERLAY1: [internal] int32  = 0x00010000;
+WGL_SWAP_UNDERLAY2: [internal] int32  = 0x00020000;
+WGL_SWAP_UNDERLAY3: [internal] int32  = 0x00040000;
+WGL_SWAP_UNDERLAY4: [internal] int32  = 0x00080000;
+WGL_SWAP_UNDERLAY5: [internal] int32  = 0x00100000;
+WGL_SWAP_UNDERLAY6: [internal] int32  = 0x00200000;
+WGL_SWAP_UNDERLAY7: [internal] int32  = 0x00400000;
+WGL_SWAP_UNDERLAY8: [internal] int32  = 0x00800000;
+WGL_SWAP_UNDERLAY9: [internal] int32  = 0x01000000;
+WGL_SWAP_UNDERLAY10: [internal] int32 = 0x02000000;
+WGL_SWAP_UNDERLAY11: [internal] int32 = 0x04000000;
+WGL_SWAP_UNDERLAY12: [internal] int32 = 0x08000000;
+WGL_SWAP_UNDERLAY13: [internal] int32 = 0x10000000;
+WGL_SWAP_UNDERLAY14: [internal] int32 = 0x20000000;
+WGL_SWAP_UNDERLAY15: [internal] int32 = 0x40000000;
 
 def PFNCHOOSEPIXELFORMATPROC = (hDc: HDC, pPfd: PIXELFORMATDESCRIPTOR*)(int32)*;
 def PFNDESCRIBEPIXELFORMATPROC = (hdc: HDC, ipfd: int32, cjpfd: UINT, ppfd: PIXELFORMATDESCRIPTOR*)(int32)*;
@@ -106,10 +106,10 @@ def PFNWGLUSEFONTOUTLINESWPROC = (hDC: HDC, first: DWORD, count: DWORD, listBase
 @[c]wglUseFontOutlinesA(hDC: HDC, first: DWORD, count: DWORD, listBase: DWORD, deviation: FLOAT, extrusion: FLOAT, format: int32, lpgmf: LPGLYPHMETRICSFLOAT): BOOL;
 @[c]wglUseFontOutlinesW(hDC: HDC, first: DWORD, count: DWORD, listBase: DWORD, deviation: FLOAT, extrusion: FLOAT, format: int32, lpgmf: LPGLYPHMETRICSFLOAT): BOOL;
 
-WGL_FRONT_COLOR_BUFFER_BIT_ARB: [const] int32 = 0x00000001;
-WGL_BACK_COLOR_BUFFER_BIT_ARB: [const] int32  = 0x00000002;
-WGL_DEPTH_BUFFER_BIT_ARB: [const] int32       = 0x00000004;
-WGL_STENCIL_BUFFER_BIT_ARB: [const] int32     = 0x00000008;
+WGL_FRONT_COLOR_BUFFER_BIT_ARB: [internal] int32 = 0x00000001;
+WGL_BACK_COLOR_BUFFER_BIT_ARB: [internal] int32  = 0x00000002;
+WGL_DEPTH_BUFFER_BIT_ARB: [internal] int32       = 0x00000004;
+WGL_STENCIL_BUFFER_BIT_ARB: [internal] int32     = 0x00000008;
 
 def PFNWGLCREATEBUFFERREGIONARBPROC = (hDC: HDC, iLayerPlane: int32, uType: UINT)(HANDLE)*;
 def PFNWGLDELETEBUFFERREGIONARBPROC = (hRegion: HANDLE)(VOID)*;
@@ -121,42 +121,42 @@ def PFNWGLRESTOREBUFFERREGIONARBPROC = (hRegion: HANDLE, x: int32, y: int32, wid
 @[c]wglSaveBufferRegionARB(hRegion: HANDLE, x: int32, y: int32, width: int32, height: int32): BOOL;
 @[c]wglRestoreBufferRegionARB(hRegion: HANDLE, x: int32, y: int32, width: int32, height: int32, xSrc: int32, ySrc: int32): BOOL;
 
-WGL_CONTEXT_RELEASE_BEHAVIOR_ARB: [const] int32       = 0x2097;
-WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB: [const] int32  = 0;
-WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB: [const] int32 = 0x2098;
+WGL_CONTEXT_RELEASE_BEHAVIOR_ARB: [internal] int32       = 0x2097;
+WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB: [internal] int32  = 0;
+WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB: [internal] int32 = 0x2098;
 
-WGL_CONTEXT_DEBUG_BIT_ARB: [const] int32              = 0x00000001;
-WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB: [const] int32 = 0x00000002;
-WGL_CONTEXT_MAJOR_VERSION_ARB: [const] int32          = 0x2091;
-WGL_CONTEXT_MINOR_VERSION_ARB: [const] int32          = 0x2092;
-WGL_CONTEXT_LAYER_PLANE_ARB: [const] int32            = 0x2093;
-WGL_CONTEXT_FLAGS_ARB: [const] int32                  = 0x2094;
-ERROR_INVALID_VERSION_ARB: [const] int32              = 0x2095;
+WGL_CONTEXT_DEBUG_BIT_ARB: [internal] int32              = 0x00000001;
+WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB: [internal] int32 = 0x00000002;
+WGL_CONTEXT_MAJOR_VERSION_ARB: [internal] int32          = 0x2091;
+WGL_CONTEXT_MINOR_VERSION_ARB: [internal] int32          = 0x2092;
+WGL_CONTEXT_LAYER_PLANE_ARB: [internal] int32            = 0x2093;
+WGL_CONTEXT_FLAGS_ARB: [internal] int32                  = 0x2094;
+ERROR_INVALID_VERSION_ARB: [internal] int32              = 0x2095;
 
 def PFNWGLCREATECONTEXTATTRIBSARBPROC = (hDC: HDC, hShareContext: HGLRC, attribList: int32*)(HGLRC)*;
 
 @[c]wglCreateContextAttribsARB(hDC: HDC, hShareContext: HGLRC, attribList: int32*): HGLRC;
 
-WGL_CONTEXT_OPENGL_NO_ERROR_ARB: [const] int32 = 0x31B3;
+WGL_CONTEXT_OPENGL_NO_ERROR_ARB: [internal] int32 = 0x31B3;
 
-WGL_CONTEXT_PROFILE_MASK_ARB: [const] int32              = 0x9126;
-WGL_CONTEXT_CORE_PROFILE_BIT_ARB: [const] int32          = 0x00000001;
-WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB: [const] int32 = 0x00000002;
-ERROR_INVALID_PROFILE_ARB: [const] int32                 = 0x2096;
+WGL_CONTEXT_PROFILE_MASK_ARB: [internal] int32              = 0x9126;
+WGL_CONTEXT_CORE_PROFILE_BIT_ARB: [internal] int32          = 0x00000001;
+WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB: [internal] int32 = 0x00000002;
+ERROR_INVALID_PROFILE_ARB: [internal] int32                 = 0x2096;
 
-WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB: [const] int32           = 0x00000004;
-WGL_LOSE_CONTEXT_ON_RESET_ARB: [const] int32               = 0x8252;
-WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB: [const] int32 = 0x8256;
-WGL_NO_RESET_NOTIFICATION_ARB: [const] int32               = 0x8261;
+WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB: [internal] int32           = 0x00000004;
+WGL_LOSE_CONTEXT_ON_RESET_ARB: [internal] int32               = 0x8252;
+WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB: [internal] int32 = 0x8256;
+WGL_NO_RESET_NOTIFICATION_ARB: [internal] int32               = 0x8261;
 
 def PFNWGLGETEXTENSIONSSTRINGARBPROC = (hdc: HDC)(char*)*;
 
 @[c]wglGetExtensionsStringARB(hdc: HDC): char*;
 
-WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB: [const] int32 = 0x20A9;
+WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB: [internal] int32 = 0x20A9;
 
-ERROR_INVALID_PIXEL_TYPE_ARB: [const] int32           = 0x2043;
-ERROR_INCOMPATIBLE_DEVICE_CONTEXTS_ARB: [const] int32 = 0x2054;
+ERROR_INVALID_PIXEL_TYPE_ARB: [internal] int32           = 0x2043;
+ERROR_INCOMPATIBLE_DEVICE_CONTEXTS_ARB: [internal] int32 = 0x2054;
 
 def PFNWGLMAKECONTEXTCURRENTARBPROC = (hDrawDC: HDC, hReadDC: HDC, hglrc: HGLRC)(BOOL)*;
 def PFNWGLGETCURRENTREADDCARBPROC = ()(HDC)*;
@@ -164,20 +164,20 @@ def PFNWGLGETCURRENTREADDCARBPROC = ()(HDC)*;
 @[c]wglMakeContextCurrentARB(hDrawDC: HDC, hReadDC: HDC, hglrc: HGLRC): BOOL;
 @[c]wglGetCurrentReadDCARB::HDC;
 
-WGL_SAMPLE_BUFFERS_ARB: [const] int32 = 0x2041;
-WGL_SAMPLES_ARB: [const] int32        = 0x2042;
+WGL_SAMPLE_BUFFERS_ARB: [internal] int32 = 0x2041;
+WGL_SAMPLES_ARB: [internal] int32        = 0x2042;
 
-def HPBUFFERARB__ { unused: [const] int32 }
+def HPBUFFERARB__ { unused: [internal] int32 }
 def HPBUFFERARB = HPBUFFERARB__*;
 
-WGL_DRAW_TO_PBUFFER_ARB: [const] int32    = 0x202D;
-WGL_MAX_PBUFFER_PIXELS_ARB: [const] int32 = 0x202E;
-WGL_MAX_PBUFFER_WIDTH_ARB: [const] int32  = 0x202F;
-WGL_MAX_PBUFFER_HEIGHT_ARB: [const] int32 = 0x2030;
-WGL_PBUFFER_LARGEST_ARB: [const] int32    = 0x2033;
-WGL_PBUFFER_WIDTH_ARB: [const] int32      = 0x2034;
-WGL_PBUFFER_HEIGHT_ARB: [const] int32     = 0x2035;
-WGL_PBUFFER_LOST_ARB: [const] int32       = 0x2036;
+WGL_DRAW_TO_PBUFFER_ARB: [internal] int32    = 0x202D;
+WGL_MAX_PBUFFER_PIXELS_ARB: [internal] int32 = 0x202E;
+WGL_MAX_PBUFFER_WIDTH_ARB: [internal] int32  = 0x202F;
+WGL_MAX_PBUFFER_HEIGHT_ARB: [internal] int32 = 0x2030;
+WGL_PBUFFER_LARGEST_ARB: [internal] int32    = 0x2033;
+WGL_PBUFFER_WIDTH_ARB: [internal] int32      = 0x2034;
+WGL_PBUFFER_HEIGHT_ARB: [internal] int32     = 0x2035;
+WGL_PBUFFER_LOST_ARB: [internal] int32       = 0x2036;
 
 def PFNWGLCREATEPBUFFERARBPROC = (hDC: HDC, iPixelFormat: int32, iWidth: int32, iHeight: int32, piAttribList: int32*)(HPBUFFERARB)*;
 def PFNWGLGETPBUFFERDCARBPROC = (hPbuffer: HPBUFFERARB)(HDC)*;
@@ -191,55 +191,55 @@ def PFNWGLQUERYPBUFFERARBPROC = (hPbuffer: HPBUFFERARB, iAttribute: int32, piVal
 @[c]wglDestroyPbufferARB(hPbuffer: HPBUFFERARB): BOOL;
 @[c]wglQueryPbufferARB(hPbuffer: HPBUFFERARB, iAttribute: int32, piValue: int32*): BOOL;
 
-WGL_NUMBER_PIXEL_FORMATS_ARB: [const] int32    = 0x2000;
-WGL_DRAW_TO_WINDOW_ARB: [const] int32          = 0x2001;
-WGL_DRAW_TO_BITMAP_ARB: [const] int32          = 0x2002;
-WGL_ACCELERATION_ARB: [const] int32            = 0x2003;
-WGL_NEED_PALETTE_ARB: [const] int32            = 0x2004;
-WGL_NEED_SYSTEM_PALETTE_ARB: [const] int32     = 0x2005;
-WGL_SWAP_LAYER_BUFFERS_ARB: [const] int32      = 0x2006;
-WGL_SWAP_METHOD_ARB: [const] int32             = 0x2007;
-WGL_NUMBER_OVERLAYS_ARB: [const] int32         = 0x2008;
-WGL_NUMBER_UNDERLAYS_ARB: [const] int32        = 0x2009;
-WGL_TRANSPARENT_ARB: [const] int32             = 0x200A;
-WGL_TRANSPARENT_RED_VALUE_ARB: [const] int32   = 0x2037;
-WGL_TRANSPARENT_GREEN_VALUE_ARB: [const] int32 = 0x2038;
-WGL_TRANSPARENT_BLUE_VALUE_ARB: [const] int32  = 0x2039;
-WGL_TRANSPARENT_ALPHA_VALUE_ARB: [const] int32 = 0x203A;
-WGL_TRANSPARENT_INDEX_VALUE_ARB: [const] int32 = 0x203B;
-WGL_SHARE_DEPTH_ARB: [const] int32             = 0x200C;
-WGL_SHARE_STENCIL_ARB: [const] int32           = 0x200D;
-WGL_SHARE_ACCUM_ARB: [const] int32             = 0x200E;
-WGL_SUPPORT_GDI_ARB: [const] int32             = 0x200F;
-WGL_SUPPORT_OPENGL_ARB: [const] int32          = 0x2010;
-WGL_DOUBLE_BUFFER_ARB: [const] int32           = 0x2011;
-WGL_STEREO_ARB: [const] int32                  = 0x2012;
-WGL_PIXEL_TYPE_ARB: [const] int32              = 0x2013;
-WGL_COLOR_BITS_ARB: [const] int32              = 0x2014;
-WGL_RED_BITS_ARB: [const] int32                = 0x2015;
-WGL_RED_SHIFT_ARB: [const] int32               = 0x2016;
-WGL_GREEN_BITS_ARB: [const] int32              = 0x2017;
-WGL_GREEN_SHIFT_ARB: [const] int32             = 0x2018;
-WGL_BLUE_BITS_ARB: [const] int32               = 0x2019;
-WGL_BLUE_SHIFT_ARB: [const] int32              = 0x201A;
-WGL_ALPHA_BITS_ARB: [const] int32              = 0x201B;
-WGL_ALPHA_SHIFT_ARB: [const] int32             = 0x201C;
-WGL_ACCUM_BITS_ARB: [const] int32              = 0x201D;
-WGL_ACCUM_RED_BITS_ARB: [const] int32          = 0x201E;
-WGL_ACCUM_GREEN_BITS_ARB: [const] int32        = 0x201F;
-WGL_ACCUM_BLUE_BITS_ARB: [const] int32         = 0x2020;
-WGL_ACCUM_ALPHA_BITS_ARB: [const] int32        = 0x2021;
-WGL_DEPTH_BITS_ARB: [const] int32              = 0x2022;
-WGL_STENCIL_BITS_ARB: [const] int32            = 0x2023;
-WGL_AUX_BUFFERS_ARB: [const] int32             = 0x2024;
-WGL_NO_ACCELERATION_ARB: [const] int32         = 0x2025;
-WGL_GENERIC_ACCELERATION_ARB: [const] int32    = 0x2026;
-WGL_FULL_ACCELERATION_ARB: [const] int32       = 0x2027;
-WGL_SWAP_EXCHANGE_ARB: [const] int32           = 0x2028;
-WGL_SWAP_COPY_ARB: [const] int32               = 0x2029;
-WGL_SWAP_UNDEFINED_ARB: [const] int32          = 0x202A;
-WGL_TYPE_RGBA_ARB: [const] int32               = 0x202B;
-WGL_TYPE_COLORINDEX_ARB: [const] int32         = 0x202C;
+WGL_NUMBER_PIXEL_FORMATS_ARB: [internal] int32    = 0x2000;
+WGL_DRAW_TO_WINDOW_ARB: [internal] int32          = 0x2001;
+WGL_DRAW_TO_BITMAP_ARB: [internal] int32          = 0x2002;
+WGL_ACCELERATION_ARB: [internal] int32            = 0x2003;
+WGL_NEED_PALETTE_ARB: [internal] int32            = 0x2004;
+WGL_NEED_SYSTEM_PALETTE_ARB: [internal] int32     = 0x2005;
+WGL_SWAP_LAYER_BUFFERS_ARB: [internal] int32      = 0x2006;
+WGL_SWAP_METHOD_ARB: [internal] int32             = 0x2007;
+WGL_NUMBER_OVERLAYS_ARB: [internal] int32         = 0x2008;
+WGL_NUMBER_UNDERLAYS_ARB: [internal] int32        = 0x2009;
+WGL_TRANSPARENT_ARB: [internal] int32             = 0x200A;
+WGL_TRANSPARENT_RED_VALUE_ARB: [internal] int32   = 0x2037;
+WGL_TRANSPARENT_GREEN_VALUE_ARB: [internal] int32 = 0x2038;
+WGL_TRANSPARENT_BLUE_VALUE_ARB: [internal] int32  = 0x2039;
+WGL_TRANSPARENT_ALPHA_VALUE_ARB: [internal] int32 = 0x203A;
+WGL_TRANSPARENT_INDEX_VALUE_ARB: [internal] int32 = 0x203B;
+WGL_SHARE_DEPTH_ARB: [internal] int32             = 0x200C;
+WGL_SHARE_STENCIL_ARB: [internal] int32           = 0x200D;
+WGL_SHARE_ACCUM_ARB: [internal] int32             = 0x200E;
+WGL_SUPPORT_GDI_ARB: [internal] int32             = 0x200F;
+WGL_SUPPORT_OPENGL_ARB: [internal] int32          = 0x2010;
+WGL_DOUBLE_BUFFER_ARB: [internal] int32           = 0x2011;
+WGL_STEREO_ARB: [internal] int32                  = 0x2012;
+WGL_PIXEL_TYPE_ARB: [internal] int32              = 0x2013;
+WGL_COLOR_BITS_ARB: [internal] int32              = 0x2014;
+WGL_RED_BITS_ARB: [internal] int32                = 0x2015;
+WGL_RED_SHIFT_ARB: [internal] int32               = 0x2016;
+WGL_GREEN_BITS_ARB: [internal] int32              = 0x2017;
+WGL_GREEN_SHIFT_ARB: [internal] int32             = 0x2018;
+WGL_BLUE_BITS_ARB: [internal] int32               = 0x2019;
+WGL_BLUE_SHIFT_ARB: [internal] int32              = 0x201A;
+WGL_ALPHA_BITS_ARB: [internal] int32              = 0x201B;
+WGL_ALPHA_SHIFT_ARB: [internal] int32             = 0x201C;
+WGL_ACCUM_BITS_ARB: [internal] int32              = 0x201D;
+WGL_ACCUM_RED_BITS_ARB: [internal] int32          = 0x201E;
+WGL_ACCUM_GREEN_BITS_ARB: [internal] int32        = 0x201F;
+WGL_ACCUM_BLUE_BITS_ARB: [internal] int32         = 0x2020;
+WGL_ACCUM_ALPHA_BITS_ARB: [internal] int32        = 0x2021;
+WGL_DEPTH_BITS_ARB: [internal] int32              = 0x2022;
+WGL_STENCIL_BITS_ARB: [internal] int32            = 0x2023;
+WGL_AUX_BUFFERS_ARB: [internal] int32             = 0x2024;
+WGL_NO_ACCELERATION_ARB: [internal] int32         = 0x2025;
+WGL_GENERIC_ACCELERATION_ARB: [internal] int32    = 0x2026;
+WGL_FULL_ACCELERATION_ARB: [internal] int32       = 0x2027;
+WGL_SWAP_EXCHANGE_ARB: [internal] int32           = 0x2028;
+WGL_SWAP_COPY_ARB: [internal] int32               = 0x2029;
+WGL_SWAP_UNDEFINED_ARB: [internal] int32          = 0x202A;
+WGL_TYPE_RGBA_ARB: [internal] int32               = 0x202B;
+WGL_TYPE_COLORINDEX_ARB: [internal] int32         = 0x202C;
 
 def PFNWGLGETPIXELFORMATATTRIBIVARBPROC = (hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, piValues: int32*)(BOOL)*;
 def PFNWGLGETPIXELFORMATATTRIBFVARBPROC = (hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, pfValues: FLOAT*)(BOOL)*;
@@ -249,41 +249,41 @@ def PFNWGLCHOOSEPIXELFORMATARBPROC = (hdc: HDC, piAttribIList: int32*, pfAttribF
 @[c]wglGetPixelFormatAttribfvARB(hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, pfValues: FLOAT*): BOOL;
 @[c]wglChoosePixelFormatARB(hdc: HDC, piAttribIList: int32*, pfAttribFList: FLOAT*, nMaxFormats: UINT, piFormats: int32*, nNumFormats: UINT*): BOOL;
 
-WGL_TYPE_RGBA_FLOAT_ARB: [const] int32 = 0x21A0;
+WGL_TYPE_RGBA_FLOAT_ARB: [internal] int32 = 0x21A0;
 
-WGL_BIND_TO_TEXTURE_RGB_ARB: [const] int32         = 0x2070;
-WGL_BIND_TO_TEXTURE_RGBA_ARB: [const] int32        = 0x2071;
-WGL_TEXTURE_FORMAT_ARB: [const] int32              = 0x2072;
-WGL_TEXTURE_TARGET_ARB: [const] int32              = 0x2073;
-WGL_MIPMAP_TEXTURE_ARB: [const] int32              = 0x2074;
-WGL_TEXTURE_RGB_ARB: [const] int32                 = 0x2075;
-WGL_TEXTURE_RGBA_ARB: [const] int32                = 0x2076;
-WGL_NO_TEXTURE_ARB: [const] int32                  = 0x2077;
-WGL_TEXTURE_CUBE_MAP_ARB: [const] int32            = 0x2078;
-WGL_TEXTURE_1D_ARB: [const] int32                  = 0x2079;
-WGL_TEXTURE_2D_ARB: [const] int32                  = 0x207A;
-WGL_MIPMAP_LEVEL_ARB: [const] int32                = 0x207B;
-WGL_CUBE_MAP_FACE_ARB: [const] int32               = 0x207C;
-WGL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB: [const] int32 = 0x207D;
-WGL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB: [const] int32 = 0x207E;
-WGL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB: [const] int32 = 0x207F;
-WGL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB: [const] int32 = 0x2080;
-WGL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB: [const] int32 = 0x2081;
-WGL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: [const] int32 = 0x2082;
-WGL_FRONT_LEFT_ARB: [const] int32                  = 0x2083;
-WGL_FRONT_RIGHT_ARB: [const] int32                 = 0x2084;
-WGL_BACK_LEFT_ARB: [const] int32                   = 0x2085;
-WGL_BACK_RIGHT_ARB: [const] int32                  = 0x2086;
-WGL_AUX0_ARB: [const] int32                        = 0x2087;
-WGL_AUX1_ARB: [const] int32                        = 0x2088;
-WGL_AUX2_ARB: [const] int32                        = 0x2089;
-WGL_AUX3_ARB: [const] int32                        = 0x208A;
-WGL_AUX4_ARB: [const] int32                        = 0x208B;
-WGL_AUX5_ARB: [const] int32                        = 0x208C;
-WGL_AUX6_ARB: [const] int32                        = 0x208D;
-WGL_AUX7_ARB: [const] int32                        = 0x208E;
-WGL_AUX8_ARB: [const] int32                        = 0x208F;
-WGL_AUX9_ARB: [const] int32                        = 0x2090;
+WGL_BIND_TO_TEXTURE_RGB_ARB: [internal] int32         = 0x2070;
+WGL_BIND_TO_TEXTURE_RGBA_ARB: [internal] int32        = 0x2071;
+WGL_TEXTURE_FORMAT_ARB: [internal] int32              = 0x2072;
+WGL_TEXTURE_TARGET_ARB: [internal] int32              = 0x2073;
+WGL_MIPMAP_TEXTURE_ARB: [internal] int32              = 0x2074;
+WGL_TEXTURE_RGB_ARB: [internal] int32                 = 0x2075;
+WGL_TEXTURE_RGBA_ARB: [internal] int32                = 0x2076;
+WGL_NO_TEXTURE_ARB: [internal] int32                  = 0x2077;
+WGL_TEXTURE_CUBE_MAP_ARB: [internal] int32            = 0x2078;
+WGL_TEXTURE_1D_ARB: [internal] int32                  = 0x2079;
+WGL_TEXTURE_2D_ARB: [internal] int32                  = 0x207A;
+WGL_MIPMAP_LEVEL_ARB: [internal] int32                = 0x207B;
+WGL_CUBE_MAP_FACE_ARB: [internal] int32               = 0x207C;
+WGL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB: [internal] int32 = 0x207D;
+WGL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB: [internal] int32 = 0x207E;
+WGL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB: [internal] int32 = 0x207F;
+WGL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB: [internal] int32 = 0x2080;
+WGL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB: [internal] int32 = 0x2081;
+WGL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: [internal] int32 = 0x2082;
+WGL_FRONT_LEFT_ARB: [internal] int32                  = 0x2083;
+WGL_FRONT_RIGHT_ARB: [internal] int32                 = 0x2084;
+WGL_BACK_LEFT_ARB: [internal] int32                   = 0x2085;
+WGL_BACK_RIGHT_ARB: [internal] int32                  = 0x2086;
+WGL_AUX0_ARB: [internal] int32                        = 0x2087;
+WGL_AUX1_ARB: [internal] int32                        = 0x2088;
+WGL_AUX2_ARB: [internal] int32                        = 0x2089;
+WGL_AUX3_ARB: [internal] int32                        = 0x208A;
+WGL_AUX4_ARB: [internal] int32                        = 0x208B;
+WGL_AUX5_ARB: [internal] int32                        = 0x208C;
+WGL_AUX6_ARB: [internal] int32                        = 0x208D;
+WGL_AUX7_ARB: [internal] int32                        = 0x208E;
+WGL_AUX8_ARB: [internal] int32                        = 0x208F;
+WGL_AUX9_ARB: [internal] int32                        = 0x2090;
 
 def PFNWGLBINDTEXIMAGEARBPROC = (hPbuffer: HPBUFFERARB, iBuffer: int32)(BOOL)*;
 def PFNWGLRELEASETEXIMAGEARBPROC = (hPbuffer: HPBUFFERARB, iBuffer: int32)(BOOL)*;
@@ -293,30 +293,30 @@ def PFNWGLSETPBUFFERATTRIBARBPROC = (hPbuffer: HPBUFFERARB, piAttribList: int32*
 @[c]wglReleaseTexImageARB(hPbuffer: HPBUFFERARB, iBuffer: int32): BOOL;
 @[c]wglSetPbufferAttribARB(hPbuffer: HPBUFFERARB, piAttribList: int32*): BOOL;
 
-WGL_CONTEXT_RESET_ISOLATION_BIT_ARB: [const] int32 = 0x00000008;
+WGL_CONTEXT_RESET_ISOLATION_BIT_ARB: [internal] int32 = 0x00000008;
 
-WGL_SAMPLE_BUFFERS_3DFX: [const] int32 = 0x2060;
-WGL_SAMPLES_3DFX: [const] int32        = 0x2061;
+WGL_SAMPLE_BUFFERS_3DFX: [internal] int32 = 0x2060;
+WGL_SAMPLES_3DFX: [internal] int32        = 0x2061;
 
-WGL_STEREO_EMITTER_ENABLE_3DL: [const] int32  = 0x2055;
-WGL_STEREO_EMITTER_DISABLE_3DL: [const] int32 = 0x2056;
-WGL_STEREO_POLARITY_NORMAL_3DL: [const] int32 = 0x2057;
-WGL_STEREO_POLARITY_INVERT_3DL: [const] int32 = 0x2058;
+WGL_STEREO_EMITTER_ENABLE_3DL: [internal] int32  = 0x2055;
+WGL_STEREO_EMITTER_DISABLE_3DL: [internal] int32 = 0x2056;
+WGL_STEREO_POLARITY_NORMAL_3DL: [internal] int32 = 0x2057;
+WGL_STEREO_POLARITY_INVERT_3DL: [internal] int32 = 0x2058;
 
 def PFNWGLSETSTEREOEMITTERSTATE3DLPROC = (hDC: HDC, uState: UINT)(BOOL)*;
 
 @[c]wglSetStereoEmitterState3DL(hDC: HDC, uState: UINT): BOOL;
 
-WGL_GPU_VENDOR_AMD: [const] int32                = 0x1F00;
-WGL_GPU_RENDERER_STRING_AMD: [const] int32       = 0x1F01;
-WGL_GPU_OPENGL_VERSION_STRING_AMD: [const] int32 = 0x1F02;
-WGL_GPU_FASTEST_TARGET_GPUS_AMD: [const] int32   = 0x21A2;
-WGL_GPU_RAM_AMD: [const] int32                   = 0x21A3;
-WGL_GPU_CLOCK_AMD: [const] int32                 = 0x21A4;
-WGL_GPU_NUM_PIPES_AMD: [const] int32             = 0x21A5;
-WGL_GPU_NUM_SIMD_AMD: [const] int32              = 0x21A6;
-WGL_GPU_NUM_RB_AMD: [const] int32                = 0x21A7;
-WGL_GPU_NUM_SPI_AMD: [const] int32               = 0x21A8;
+WGL_GPU_VENDOR_AMD: [internal] int32                = 0x1F00;
+WGL_GPU_RENDERER_STRING_AMD: [internal] int32       = 0x1F01;
+WGL_GPU_OPENGL_VERSION_STRING_AMD: [internal] int32 = 0x1F02;
+WGL_GPU_FASTEST_TARGET_GPUS_AMD: [internal] int32   = 0x21A2;
+WGL_GPU_RAM_AMD: [internal] int32                   = 0x21A3;
+WGL_GPU_CLOCK_AMD: [internal] int32                 = 0x21A4;
+WGL_GPU_NUM_PIPES_AMD: [internal] int32             = 0x21A5;
+WGL_GPU_NUM_SIMD_AMD: [internal] int32              = 0x21A6;
+WGL_GPU_NUM_RB_AMD: [internal] int32                = 0x21A7;
+WGL_GPU_NUM_SPI_AMD: [internal] int32               = 0x21A8;
 
 def PFNWGLGETGPUIDSAMDPROC = (maxCount: UINT, ids: UINT*)(UINT)*;
 def PFNWGLGETGPUINFOAMDPROC = (id: UINT, property: INT, dataType: GLenum, size: UINT, data: void*)(int32)*;
@@ -338,19 +338,19 @@ def PFNWGLBLITCONTEXTFRAMEBUFFERAMDPROC = (dstCtx: HGLRC, srcX0: GLint, srcY0: G
 @[c]wglGetCurrentAssociatedContextAMD::HGLRC;
 @[c]wglBlitContextFramebufferAMD(dstCtx: HGLRC, srcX0: GLint, srcY0: GLint, srcX1: GLint, srcY1: GLint, dstX0: GLint, dstY0: GLint, dstX1: GLint, dstY1: GLint, mask: GLbitfield, filter: GLenum): VOID;
 
-WGL_TYPE_RGBA_FLOAT_ATI: [const] int32 = 0x21A0;
+WGL_TYPE_RGBA_FLOAT_ATI: [internal] int32 = 0x21A0;
 
-WGL_TEXTURE_RECTANGLE_ATI: [const] int32 = 0x21A5;
+WGL_TEXTURE_RECTANGLE_ATI: [internal] int32 = 0x21A5;
 
-WGL_COLORSPACE_EXT: [const] int32        = 0x309D;
-WGL_COLORSPACE_SRGB_EXT: [const] int32   = 0x3089;
-WGL_COLORSPACE_LINEAR_EXT: [const] int32 = 0x308A;
+WGL_COLORSPACE_EXT: [internal] int32        = 0x309D;
+WGL_COLORSPACE_SRGB_EXT: [internal] int32   = 0x3089;
+WGL_COLORSPACE_LINEAR_EXT: [internal] int32 = 0x308A;
 
-WGL_CONTEXT_ES2_PROFILE_BIT_EXT: [const] int32 = 0x00000004;
+WGL_CONTEXT_ES2_PROFILE_BIT_EXT: [internal] int32 = 0x00000004;
 
-WGL_CONTEXT_ES_PROFILE_BIT_EXT: [const] int32 = 0x00000004;
+WGL_CONTEXT_ES_PROFILE_BIT_EXT: [internal] int32 = 0x00000004;
 
-WGL_DEPTH_FLOAT_EXT: [const] int32 = 0x2040;
+WGL_DEPTH_FLOAT_EXT: [internal] int32 = 0x2040;
 
 def PFNWGLCREATEDISPLAYCOLORTABLEEXTPROC = (id: GLushort)(GLboolean)*;
 def PFNWGLLOADDISPLAYCOLORTABLEEXTPROC = (table: GLushort*, length: GLuint)(GLboolean)*;
@@ -366,9 +366,9 @@ def PFNWGLGETEXTENSIONSSTRINGEXTPROC = ()(char*)*;
 
 @[c]wglGetExtensionsStringEXT::char*;
 
-WGL_FRAMEBUFFER_SRGB_CAPABLE_EXT: [const] int32 = 0x20A9;
+WGL_FRAMEBUFFER_SRGB_CAPABLE_EXT: [internal] int32 = 0x20A9;
 
-ERROR_INVALID_PIXEL_TYPE_EXT: [const] int32 = 0x2043;
+ERROR_INVALID_PIXEL_TYPE_EXT: [internal] int32 = 0x2043;
 
 def PFNWGLMAKECONTEXTCURRENTEXTPROC = (hDrawDC: HDC, hReadDC: HDC, hglrc: HGLRC)(BOOL)*;
 def PFNWGLGETCURRENTREADDCEXTPROC = ()(HDC)*;
@@ -376,21 +376,21 @@ def PFNWGLGETCURRENTREADDCEXTPROC = ()(HDC)*;
 @[c]wglMakeContextCurrentEXT(hDrawDC: HDC, hReadDC: HDC, hglrc: HGLRC): BOOL;
 @[c]wglGetCurrentReadDCEXT::HDC;
 
-WGL_SAMPLE_BUFFERS_EXT: [const] int32 = 0x2041;
-WGL_SAMPLES_EXT: [const] int32        = 0x2042;
+WGL_SAMPLE_BUFFERS_EXT: [internal] int32 = 0x2041;
+WGL_SAMPLES_EXT: [internal] int32        = 0x2042;
 
-def HPBUFFEREXT__ { unused: [const] int32 }
+def HPBUFFEREXT__ { unused: [internal] int32 }
 def HPBUFFEREXT = HPBUFFEREXT__*;
 
-WGL_DRAW_TO_PBUFFER_EXT: [const] int32        = 0x202D;
-WGL_MAX_PBUFFER_PIXELS_EXT: [const] int32     = 0x202E;
-WGL_MAX_PBUFFER_WIDTH_EXT: [const] int32      = 0x202F;
-WGL_MAX_PBUFFER_HEIGHT_EXT: [const] int32     = 0x2030;
-WGL_OPTIMAL_PBUFFER_WIDTH_EXT: [const] int32  = 0x2031;
-WGL_OPTIMAL_PBUFFER_HEIGHT_EXT: [const] int32 = 0x2032;
-WGL_PBUFFER_LARGEST_EXT: [const] int32        = 0x2033;
-WGL_PBUFFER_WIDTH_EXT: [const] int32          = 0x2034;
-WGL_PBUFFER_HEIGHT_EXT: [const] int32         = 0x2035;
+WGL_DRAW_TO_PBUFFER_EXT: [internal] int32        = 0x202D;
+WGL_MAX_PBUFFER_PIXELS_EXT: [internal] int32     = 0x202E;
+WGL_MAX_PBUFFER_WIDTH_EXT: [internal] int32      = 0x202F;
+WGL_MAX_PBUFFER_HEIGHT_EXT: [internal] int32     = 0x2030;
+WGL_OPTIMAL_PBUFFER_WIDTH_EXT: [internal] int32  = 0x2031;
+WGL_OPTIMAL_PBUFFER_HEIGHT_EXT: [internal] int32 = 0x2032;
+WGL_PBUFFER_LARGEST_EXT: [internal] int32        = 0x2033;
+WGL_PBUFFER_WIDTH_EXT: [internal] int32          = 0x2034;
+WGL_PBUFFER_HEIGHT_EXT: [internal] int32         = 0x2035;
 
 def PFNWGLCREATEPBUFFEREXTPROC = (hDC: HDC, iPixelFormat: int32, iWidth: int32, iHeight: int32, piAttribList: int32*)(HPBUFFEREXT)*;
 def PFNWGLGETPBUFFERDCEXTPROC = (hPbuffer: HPBUFFEREXT)(HDC)*;
@@ -404,51 +404,51 @@ def PFNWGLQUERYPBUFFEREXTPROC = (hPbuffer: HPBUFFEREXT, iAttribute: int32, piVal
 @[c]wglDestroyPbufferEXT(hPbuffer: HPBUFFEREXT): BOOL;
 @[c]wglQueryPbufferEXT(hPbuffer: HPBUFFEREXT, iAttribute: int32, piValue: int32*): BOOL;
 
-WGL_NUMBER_PIXEL_FORMATS_EXT: [const] int32 = 0x2000;
-WGL_DRAW_TO_WINDOW_EXT: [const] int32       = 0x2001;
-WGL_DRAW_TO_BITMAP_EXT: [const] int32       = 0x2002;
-WGL_ACCELERATION_EXT: [const] int32         = 0x2003;
-WGL_NEED_PALETTE_EXT: [const] int32         = 0x2004;
-WGL_NEED_SYSTEM_PALETTE_EXT: [const] int32  = 0x2005;
-WGL_SWAP_LAYER_BUFFERS_EXT: [const] int32   = 0x2006;
-WGL_SWAP_METHOD_EXT: [const] int32          = 0x2007;
-WGL_NUMBER_OVERLAYS_EXT: [const] int32      = 0x2008;
-WGL_NUMBER_UNDERLAYS_EXT: [const] int32     = 0x2009;
-WGL_TRANSPARENT_EXT: [const] int32          = 0x200A;
-WGL_TRANSPARENT_VALUE_EXT: [const] int32    = 0x200B;
-WGL_SHARE_DEPTH_EXT: [const] int32          = 0x200C;
-WGL_SHARE_STENCIL_EXT: [const] int32        = 0x200D;
-WGL_SHARE_ACCUM_EXT: [const] int32          = 0x200E;
-WGL_SUPPORT_GDI_EXT: [const] int32          = 0x200F;
-WGL_SUPPORT_OPENGL_EXT: [const] int32       = 0x2010;
-WGL_DOUBLE_BUFFER_EXT: [const] int32        = 0x2011;
-WGL_STEREO_EXT: [const] int32               = 0x2012;
-WGL_PIXEL_TYPE_EXT: [const] int32           = 0x2013;
-WGL_COLOR_BITS_EXT: [const] int32           = 0x2014;
-WGL_RED_BITS_EXT: [const] int32             = 0x2015;
-WGL_RED_SHIFT_EXT: [const] int32            = 0x2016;
-WGL_GREEN_BITS_EXT: [const] int32           = 0x2017;
-WGL_GREEN_SHIFT_EXT: [const] int32          = 0x2018;
-WGL_BLUE_BITS_EXT: [const] int32            = 0x2019;
-WGL_BLUE_SHIFT_EXT: [const] int32           = 0x201A;
-WGL_ALPHA_BITS_EXT: [const] int32           = 0x201B;
-WGL_ALPHA_SHIFT_EXT: [const] int32          = 0x201C;
-WGL_ACCUM_BITS_EXT: [const] int32           = 0x201D;
-WGL_ACCUM_RED_BITS_EXT: [const] int32       = 0x201E;
-WGL_ACCUM_GREEN_BITS_EXT: [const] int32     = 0x201F;
-WGL_ACCUM_BLUE_BITS_EXT: [const] int32      = 0x2020;
-WGL_ACCUM_ALPHA_BITS_EXT: [const] int32     = 0x2021;
-WGL_DEPTH_BITS_EXT: [const] int32           = 0x2022;
-WGL_STENCIL_BITS_EXT: [const] int32         = 0x2023;
-WGL_AUX_BUFFERS_EXT: [const] int32          = 0x2024;
-WGL_NO_ACCELERATION_EXT: [const] int32      = 0x2025;
-WGL_GENERIC_ACCELERATION_EXT: [const] int32 = 0x2026;
-WGL_FULL_ACCELERATION_EXT: [const] int32    = 0x2027;
-WGL_SWAP_EXCHANGE_EXT: [const] int32        = 0x2028;
-WGL_SWAP_COPY_EXT: [const] int32            = 0x2029;
-WGL_SWAP_UNDEFINED_EXT: [const] int32       = 0x202A;
-WGL_TYPE_RGBA_EXT: [const] int32            = 0x202B;
-WGL_TYPE_COLORINDEX_EXT: [const] int32      = 0x202C;
+WGL_NUMBER_PIXEL_FORMATS_EXT: [internal] int32 = 0x2000;
+WGL_DRAW_TO_WINDOW_EXT: [internal] int32       = 0x2001;
+WGL_DRAW_TO_BITMAP_EXT: [internal] int32       = 0x2002;
+WGL_ACCELERATION_EXT: [internal] int32         = 0x2003;
+WGL_NEED_PALETTE_EXT: [internal] int32         = 0x2004;
+WGL_NEED_SYSTEM_PALETTE_EXT: [internal] int32  = 0x2005;
+WGL_SWAP_LAYER_BUFFERS_EXT: [internal] int32   = 0x2006;
+WGL_SWAP_METHOD_EXT: [internal] int32          = 0x2007;
+WGL_NUMBER_OVERLAYS_EXT: [internal] int32      = 0x2008;
+WGL_NUMBER_UNDERLAYS_EXT: [internal] int32     = 0x2009;
+WGL_TRANSPARENT_EXT: [internal] int32          = 0x200A;
+WGL_TRANSPARENT_VALUE_EXT: [internal] int32    = 0x200B;
+WGL_SHARE_DEPTH_EXT: [internal] int32          = 0x200C;
+WGL_SHARE_STENCIL_EXT: [internal] int32        = 0x200D;
+WGL_SHARE_ACCUM_EXT: [internal] int32          = 0x200E;
+WGL_SUPPORT_GDI_EXT: [internal] int32          = 0x200F;
+WGL_SUPPORT_OPENGL_EXT: [internal] int32       = 0x2010;
+WGL_DOUBLE_BUFFER_EXT: [internal] int32        = 0x2011;
+WGL_STEREO_EXT: [internal] int32               = 0x2012;
+WGL_PIXEL_TYPE_EXT: [internal] int32           = 0x2013;
+WGL_COLOR_BITS_EXT: [internal] int32           = 0x2014;
+WGL_RED_BITS_EXT: [internal] int32             = 0x2015;
+WGL_RED_SHIFT_EXT: [internal] int32            = 0x2016;
+WGL_GREEN_BITS_EXT: [internal] int32           = 0x2017;
+WGL_GREEN_SHIFT_EXT: [internal] int32          = 0x2018;
+WGL_BLUE_BITS_EXT: [internal] int32            = 0x2019;
+WGL_BLUE_SHIFT_EXT: [internal] int32           = 0x201A;
+WGL_ALPHA_BITS_EXT: [internal] int32           = 0x201B;
+WGL_ALPHA_SHIFT_EXT: [internal] int32          = 0x201C;
+WGL_ACCUM_BITS_EXT: [internal] int32           = 0x201D;
+WGL_ACCUM_RED_BITS_EXT: [internal] int32       = 0x201E;
+WGL_ACCUM_GREEN_BITS_EXT: [internal] int32     = 0x201F;
+WGL_ACCUM_BLUE_BITS_EXT: [internal] int32      = 0x2020;
+WGL_ACCUM_ALPHA_BITS_EXT: [internal] int32     = 0x2021;
+WGL_DEPTH_BITS_EXT: [internal] int32           = 0x2022;
+WGL_STENCIL_BITS_EXT: [internal] int32         = 0x2023;
+WGL_AUX_BUFFERS_EXT: [internal] int32          = 0x2024;
+WGL_NO_ACCELERATION_EXT: [internal] int32      = 0x2025;
+WGL_GENERIC_ACCELERATION_EXT: [internal] int32 = 0x2026;
+WGL_FULL_ACCELERATION_EXT: [internal] int32    = 0x2027;
+WGL_SWAP_EXCHANGE_EXT: [internal] int32        = 0x2028;
+WGL_SWAP_COPY_EXT: [internal] int32            = 0x2029;
+WGL_SWAP_UNDEFINED_EXT: [internal] int32       = 0x202A;
+WGL_TYPE_RGBA_EXT: [internal] int32            = 0x202B;
+WGL_TYPE_COLORINDEX_EXT: [internal] int32      = 0x202C;
 
 def PFNWGLGETPIXELFORMATATTRIBIVEXTPROC = (hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, piValues: int32*)(BOOL)*;
 def PFNWGLGETPIXELFORMATATTRIBFVEXTPROC = (hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, pfValues: FLOAT*)(BOOL)*;
@@ -458,7 +458,7 @@ def PFNWGLCHOOSEPIXELFORMATEXTPROC = (hdc: HDC, piAttribIList: int32*, pfAttribF
 @[c]wglGetPixelFormatAttribfvEXT(hdc: HDC, iPixelFormat: int32, iLayerPlane: int32, nAttributes: UINT, piAttributes: int32*, pfValues: FLOAT*): BOOL;
 @[c]wglChoosePixelFormatEXT(hdc: HDC, piAttribIList: int32*, pfAttribFList: FLOAT*, nMaxFormats: UINT, piFormats: int32*, nNumFormats: UINT*): BOOL;
 
-WGL_TYPE_RGBA_UNSIGNED_FLOAT_EXT: [const] int32 = 0x20A8;
+WGL_TYPE_RGBA_UNSIGNED_FLOAT_EXT: [internal] int32 = 0x20A8;
 
 def PFNWGLSWAPINTERVALEXTPROC = (interval: int32)(BOOL)*;
 def PFNWGLGETSWAPINTERVALEXTPROC = ()(int32)*;
@@ -466,10 +466,10 @@ def PFNWGLGETSWAPINTERVALEXTPROC = ()(int32)*;
 @[c]wglSwapIntervalEXT(interval: int32): BOOL;
 @[c]wglGetSwapIntervalEXT::int32;
 
-WGL_DIGITAL_VIDEO_CURSOR_ALPHA_FRAMEBUFFER_I3D: [const] int32 = 0x2050;
-WGL_DIGITAL_VIDEO_CURSOR_ALPHA_VALUE_I3D: [const] int32       = 0x2051;
-WGL_DIGITAL_VIDEO_CURSOR_INCLUDED_I3D: [const] int32          = 0x2052;
-WGL_DIGITAL_VIDEO_GAMMA_CORRECTED_I3D: [const] int32          = 0x2053;
+WGL_DIGITAL_VIDEO_CURSOR_ALPHA_FRAMEBUFFER_I3D: [internal] int32 = 0x2050;
+WGL_DIGITAL_VIDEO_CURSOR_ALPHA_VALUE_I3D: [internal] int32       = 0x2051;
+WGL_DIGITAL_VIDEO_CURSOR_INCLUDED_I3D: [internal] int32          = 0x2052;
+WGL_DIGITAL_VIDEO_GAMMA_CORRECTED_I3D: [internal] int32          = 0x2053;
 
 def PFNWGLGETDIGITALVIDEOPARAMETERSI3DPROC = (hDC: HDC, iAttribute: int32, piValue: int32*)(BOOL)*;
 def PFNWGLSETDIGITALVIDEOPARAMETERSI3DPROC = (hDC: HDC, iAttribute: int32, piValue: int32*)(BOOL)*;
@@ -477,8 +477,8 @@ def PFNWGLSETDIGITALVIDEOPARAMETERSI3DPROC = (hDC: HDC, iAttribute: int32, piVal
 @[c]wglGetDigitalVideoParametersI3D(hDC: HDC, iAttribute: int32, piValue: int32*): BOOL;
 @[c]wglSetDigitalVideoParametersI3D(hDC: HDC, iAttribute: int32, piValue: int32*): BOOL;
 
-WGL_GAMMA_TABLE_SIZE_I3D: [const] int32      = 0x204E;
-WGL_GAMMA_EXCLUDE_DESKTOP_I3D: [const] int32 = 0x204F;
+WGL_GAMMA_TABLE_SIZE_I3D: [internal] int32      = 0x204E;
+WGL_GAMMA_EXCLUDE_DESKTOP_I3D: [internal] int32 = 0x204F;
 
 def PFNWGLGETGAMMATABLEPARAMETERSI3DPROC = (hDC: HDC, iAttribute: int32, piValue: int32*)(BOOL)*;
 def PFNWGLSETGAMMATABLEPARAMETERSI3DPROC = (hDC: HDC, iAttribute: int32, piValue: int32*)(BOOL)*;
@@ -490,15 +490,15 @@ def PFNWGLSETGAMMATABLEI3DPROC = (hDC: HDC, iEntries: int32, puRed: USHORT*, puG
 @[c]wglGetGammaTableI3D(hDC: HDC, iEntries: int32, puRed: USHORT*, puGreen: USHORT*, puBlue: USHORT*): BOOL;
 @[c]wglSetGammaTableI3D(hDC: HDC, iEntries: int32, puRed: USHORT*, puGreen: USHORT*, puBlue: USHORT*): BOOL;
 
-WGL_GENLOCK_SOURCE_MULTIVIEW_I3D: [const] int32      = 0x2044;
-WGL_GENLOCK_SOURCE_EXTERNAL_SYNC_I3D: [const] int32  = 0x2045;
-WGL_GENLOCK_SOURCE_EXTERNAL_FIELD_I3D: [const] int32 = 0x2046;
-WGL_GENLOCK_SOURCE_EXTERNAL_TTL_I3D: [const] int32   = 0x2047;
-WGL_GENLOCK_SOURCE_DIGITAL_SYNC_I3D: [const] int32   = 0x2048;
-WGL_GENLOCK_SOURCE_DIGITAL_FIELD_I3D: [const] int32  = 0x2049;
-WGL_GENLOCK_SOURCE_EDGE_FALLING_I3D: [const] int32   = 0x204A;
-WGL_GENLOCK_SOURCE_EDGE_RISING_I3D: [const] int32    = 0x204B;
-WGL_GENLOCK_SOURCE_EDGE_BOTH_I3D: [const] int32      = 0x204C;
+WGL_GENLOCK_SOURCE_MULTIVIEW_I3D: [internal] int32      = 0x2044;
+WGL_GENLOCK_SOURCE_EXTERNAL_SYNC_I3D: [internal] int32  = 0x2045;
+WGL_GENLOCK_SOURCE_EXTERNAL_FIELD_I3D: [internal] int32 = 0x2046;
+WGL_GENLOCK_SOURCE_EXTERNAL_TTL_I3D: [internal] int32   = 0x2047;
+WGL_GENLOCK_SOURCE_DIGITAL_SYNC_I3D: [internal] int32   = 0x2048;
+WGL_GENLOCK_SOURCE_DIGITAL_FIELD_I3D: [internal] int32  = 0x2049;
+WGL_GENLOCK_SOURCE_EDGE_FALLING_I3D: [internal] int32   = 0x204A;
+WGL_GENLOCK_SOURCE_EDGE_RISING_I3D: [internal] int32    = 0x204B;
+WGL_GENLOCK_SOURCE_EDGE_BOTH_I3D: [internal] int32      = 0x204C;
 
 def PFNWGLENABLEGENLOCKI3DPROC = (hDC: HDC)(BOOL)*;
 def PFNWGLDISABLEGENLOCKI3DPROC = (hDC: HDC)(BOOL)*;
@@ -526,8 +526,8 @@ def PFNWGLQUERYGENLOCKMAXSOURCEDELAYI3DPROC = (hDC: HDC, uMaxLineDelay: UINT*, u
 @[c]wglGetGenlockSourceDelayI3D(hDC: HDC, uDelay: UINT*): BOOL;
 @[c]wglQueryGenlockMaxSourceDelayI3D(hDC: HDC, uMaxLineDelay: UINT*, uMaxPixelDelay: UINT*): BOOL;
 
-WGL_IMAGE_BUFFER_MIN_ACCESS_I3D: [const] int32 = 0x00000001;
-WGL_IMAGE_BUFFER_LOCK_I3D: [const] int32       = 0x00000002;
+WGL_IMAGE_BUFFER_MIN_ACCESS_I3D: [internal] int32 = 0x00000001;
+WGL_IMAGE_BUFFER_LOCK_I3D: [internal] int32       = 0x00000002;
 
 def PFNWGLCREATEIMAGEBUFFERI3DPROC = (hDC: HDC, dwSize: DWORD, uFlags: UINT)(LPVOID)*;
 def PFNWGLDESTROYIMAGEBUFFERI3DPROC = (hDC: HDC, pAddress: LPVOID)(BOOL)*;
@@ -559,9 +559,9 @@ def PFNWGLQUERYFRAMETRACKINGI3DPROC = (pFrameCount: DWORD*, pMissedFrames: DWORD
 @[c]wglEndFrameTrackingI3D::BOOL;
 @[c]wglQueryFrameTrackingI3D(pFrameCount: DWORD*, pMissedFrames: DWORD*, pLastMissedUsage: float*): BOOL;
 
-WGL_ACCESS_READ_ONLY_NV: [const] int32     = 0x00000000;
-WGL_ACCESS_READ_WRITE_NV: [const] int32    = 0x00000001;
-WGL_ACCESS_WRITE_DISCARD_NV: [const] int32 = 0x00000002;
+WGL_ACCESS_READ_ONLY_NV: [internal] int32     = 0x00000000;
+WGL_ACCESS_READ_WRITE_NV: [internal] int32    = 0x00000001;
+WGL_ACCESS_WRITE_DISCARD_NV: [internal] int32 = 0x00000002;
 
 def PFNWGLDXSETRESOURCESHAREHANDLENVPROC = (dxObject: void*, shareHandle: HANDLE)(BOOL)*;
 def PFNWGLDXOPENDEVICENVPROC = (dxDevice: void*)(HANDLE)*;
@@ -589,17 +589,17 @@ def PFNWGLDELAYBEFORESWAPNVPROC = (hDC: HDC, seconds: GLfloat)(BOOL)*;
 
 @[c]wglDelayBeforeSwapNV(hDC: HDC, seconds: GLfloat): BOOL;
 
-WGL_FLOAT_COMPONENTS_NV: [const] int32                     = 0x20B0;
-WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_R_NV: [const] int32    = 0x20B1;
-WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RG_NV: [const] int32   = 0x20B2;
-WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGB_NV: [const] int32  = 0x20B3;
-WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV: [const] int32 = 0x20B4;
-WGL_TEXTURE_FLOAT_R_NV: [const] int32                      = 0x20B5;
-WGL_TEXTURE_FLOAT_RG_NV: [const] int32                     = 0x20B6;
-WGL_TEXTURE_FLOAT_RGB_NV: [const] int32                    = 0x20B7;
-WGL_TEXTURE_FLOAT_RGBA_NV: [const] int32                   = 0x20B8;
+WGL_FLOAT_COMPONENTS_NV: [internal] int32                     = 0x20B0;
+WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_R_NV: [internal] int32    = 0x20B1;
+WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RG_NV: [internal] int32   = 0x20B2;
+WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGB_NV: [internal] int32  = 0x20B3;
+WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV: [internal] int32 = 0x20B4;
+WGL_TEXTURE_FLOAT_R_NV: [internal] int32                      = 0x20B5;
+WGL_TEXTURE_FLOAT_RG_NV: [internal] int32                     = 0x20B6;
+WGL_TEXTURE_FLOAT_RGB_NV: [internal] int32                    = 0x20B7;
+WGL_TEXTURE_FLOAT_RGBA_NV: [internal] int32                   = 0x20B8;
 
-def HGPUNV__ { unused: [const] int32 }
+def HGPUNV__ { unused: [internal] int32 }
 def HGPUNV = HGPUNV__*;
 
 def _GPU_DEVICE {
@@ -611,8 +611,8 @@ def _GPU_DEVICE {
 }
 def PGPU_DEVICE = _GPU_DEVICE*;
 
-ERROR_INCOMPATIBLE_AFFINITY_MASKS_NV: [const] int32 = 0x20D0;
-ERROR_MISSING_AFFINITY_MASK_NV: [const] int32       = 0x20D1;
+ERROR_INCOMPATIBLE_AFFINITY_MASKS_NV: [internal] int32 = 0x20D0;
+ERROR_MISSING_AFFINITY_MASK_NV: [internal] int32       = 0x20D1;
 
 def PFNWGLENUMGPUSNVPROC = (iGpuIndex: UINT, phGpu: HGPUNV*)(BOOL)*;
 def PFNWGLENUMGPUDEVICESNVPROC = (hGpu: HGPUNV, iDeviceIndex: UINT, lpGpuDevice: PGPU_DEVICE)(BOOL)*;
@@ -626,19 +626,19 @@ def PFNWGLDELETEDCNVPROC = (hdc: HDC)(BOOL)*;
 @[c]wglEnumGpusFromAffinityDCNV(hAffinityDC: HDC, iGpuIndex: UINT, hGpu: HGPUNV*): BOOL;
 @[c]wglDeleteDCNV(hdc: HDC): BOOL;
 
-WGL_CONTEXT_MULTIGPU_ATTRIB_NV: [const] int32                         = 0x20AA;
-WGL_CONTEXT_MULTIGPU_ATTRIB_SINGLE_NV: [const] int32                  = 0x20AB;
-WGL_CONTEXT_MULTIGPU_ATTRIB_AFR_NV: [const] int32                     = 0x20AC;
-WGL_CONTEXT_MULTIGPU_ATTRIB_MULTICAST_NV: [const] int32               = 0x20AD;
-WGL_CONTEXT_MULTIGPU_ATTRIB_MULTI_DISPLAY_MULTICAST_NV: [const] int32 = 0x20AE;
+WGL_CONTEXT_MULTIGPU_ATTRIB_NV: [internal] int32                         = 0x20AA;
+WGL_CONTEXT_MULTIGPU_ATTRIB_SINGLE_NV: [internal] int32                  = 0x20AB;
+WGL_CONTEXT_MULTIGPU_ATTRIB_AFR_NV: [internal] int32                     = 0x20AC;
+WGL_CONTEXT_MULTIGPU_ATTRIB_MULTICAST_NV: [internal] int32               = 0x20AD;
+WGL_CONTEXT_MULTIGPU_ATTRIB_MULTI_DISPLAY_MULTICAST_NV: [internal] int32 = 0x20AE;
 
-WGL_COVERAGE_SAMPLES_NV: [const] int32 = 0x2042;
-WGL_COLOR_SAMPLES_NV: [const] int32    = 0x20B9;
+WGL_COVERAGE_SAMPLES_NV: [internal] int32 = 0x2042;
+WGL_COLOR_SAMPLES_NV: [internal] int32    = 0x20B9;
 
-def HVIDEOOUTPUTDEVICENV__ { unused: [const] int32 }
+def HVIDEOOUTPUTDEVICENV__ { unused: [internal] int32 }
 def HVIDEOOUTPUTDEVICENV = HVIDEOOUTPUTDEVICENV__*;
 
-WGL_NUM_VIDEO_SLOTS_NV: [const] int32 = 0x20F0;
+WGL_NUM_VIDEO_SLOTS_NV: [internal] int32 = 0x20F0;
 
 def PFNWGLENUMERATEVIDEODEVICESNVPROC = (hDc: HDC, phDeviceList: HVIDEOOUTPUTDEVICENV*)(int32)*;
 def PFNWGLBINDVIDEODEVICENVPROC = (hDc: HDC, uVideoSlot: int32, hVideoDevice: HVIDEOOUTPUTDEVICENV, piAttribList: int32*)(BOOL)*;
@@ -648,15 +648,15 @@ def PFNWGLQUERYCURRENTCONTEXTNVPROC = (iAttribute: int32, piValue: int32*)(BOOL)
 @[c]wglBindVideoDeviceNV(hDc: HDC, uVideoSlot: int32, hVideoDevice: HVIDEOOUTPUTDEVICENV, piAttribList: int32*): BOOL;
 @[c]wglQueryCurrentContextNV(iAttribute: int32, piValue: int32*): BOOL;
 
-WGL_BIND_TO_TEXTURE_DEPTH_NV: [const] int32           = 0x20A3;
-WGL_BIND_TO_TEXTURE_RECTANGLE_DEPTH_NV: [const] int32 = 0x20A4;
-WGL_DEPTH_TEXTURE_FORMAT_NV: [const] int32            = 0x20A5;
-WGL_TEXTURE_DEPTH_COMPONENT_NV: [const] int32         = 0x20A6;
-WGL_DEPTH_COMPONENT_NV: [const] int32                 = 0x20A7;
+WGL_BIND_TO_TEXTURE_DEPTH_NV: [internal] int32           = 0x20A3;
+WGL_BIND_TO_TEXTURE_RECTANGLE_DEPTH_NV: [internal] int32 = 0x20A4;
+WGL_DEPTH_TEXTURE_FORMAT_NV: [internal] int32            = 0x20A5;
+WGL_TEXTURE_DEPTH_COMPONENT_NV: [internal] int32         = 0x20A6;
+WGL_DEPTH_COMPONENT_NV: [internal] int32                 = 0x20A7;
 
-WGL_BIND_TO_TEXTURE_RECTANGLE_RGB_NV: [const] int32  = 0x20A0;
-WGL_BIND_TO_TEXTURE_RECTANGLE_RGBA_NV: [const] int32 = 0x20A1;
-WGL_TEXTURE_RECTANGLE_NV: [const] int32              = 0x20A2;
+WGL_BIND_TO_TEXTURE_RECTANGLE_RGB_NV: [internal] int32  = 0x20A0;
+WGL_BIND_TO_TEXTURE_RECTANGLE_RGBA_NV: [internal] int32 = 0x20A1;
+WGL_TEXTURE_RECTANGLE_NV: [internal] int32              = 0x20A2;
 
 def PFNWGLJOINSWAPGROUPNVPROC = (hDC: HDC, group: GLuint)(BOOL)*;
 def PFNWGLBINDSWAPBARRIERNVPROC = (group: GLuint, barrier: GLuint)(BOOL)*;
@@ -678,11 +678,11 @@ def PFNWGLFREEMEMORYNVPROC = (pointer: void*)(VOID)*;
 @[c]wglAllocateMemoryNV(size: GLsizei, readfreq: GLfloat, writefreq: GLfloat, priority: GLfloat): void*;
 @[c]wglFreeMemoryNV(pointer: void*): void;
 
-def HVIDEOINPUTDEVICENV__ { unused: [const] int32 }
+def HVIDEOINPUTDEVICENV__ { unused: [internal] int32 }
 def HVIDEOINPUTDEVICENV = HVIDEOINPUTDEVICENV__*;
 
-WGL_UNIQUE_ID_NV: [const] int32               = 0x20CE;
-WGL_NUM_VIDEO_CAPTURE_SLOTS_NV: [const] int32 = 0x20CF;
+WGL_UNIQUE_ID_NV: [internal] int32               = 0x20CE;
+WGL_NUM_VIDEO_CAPTURE_SLOTS_NV: [internal] int32 = 0x20CF;
 
 def PFNWGLBINDVIDEOCAPTUREDEVICENVPROC = (uVideoSlot: UINT, hDevice: HVIDEOINPUTDEVICENV)(BOOL)*;
 def PFNWGLENUMERATEVIDEOCAPTUREDEVICESNVPROC = (hDc: HDC, phDeviceList: HVIDEOINPUTDEVICENV*)(UINT)*;
@@ -696,22 +696,22 @@ def PFNWGLRELEASEVIDEOCAPTUREDEVICENVPROC = (hDc: HDC, hDevice: HVIDEOINPUTDEVIC
 @[c]wglQueryVideoCaptureDeviceNV(hDc: HDC, hDevice: HVIDEOINPUTDEVICENV, iAttribute: int32, piValue: int32*): BOOL;
 @[c]wglReleaseVideoCaptureDeviceNV(hDc: HDC, hDevice: HVIDEOINPUTDEVICENV): BOOL;
 
-def HPVIDEODEV__ { unused: [const] int32 }
+def HPVIDEODEV__ { unused: [internal] int32 }
 def HPVIDEODEV = HPVIDEODEV__*;
 
-WGL_BIND_TO_VIDEO_RGB_NV: [const] int32           = 0x20C0;
-WGL_BIND_TO_VIDEO_RGBA_NV: [const] int32          = 0x20C1;
-WGL_BIND_TO_VIDEO_RGB_AND_DEPTH_NV: [const] int32 = 0x20C2;
-WGL_VIDEO_OUT_COLOR_NV: [const] int32             = 0x20C3;
-WGL_VIDEO_OUT_ALPHA_NV: [const] int32             = 0x20C4;
-WGL_VIDEO_OUT_DEPTH_NV: [const] int32             = 0x20C5;
-WGL_VIDEO_OUT_COLOR_AND_ALPHA_NV: [const] int32   = 0x20C6;
-WGL_VIDEO_OUT_COLOR_AND_DEPTH_NV: [const] int32   = 0x20C7;
-WGL_VIDEO_OUT_FRAME: [const] int32                = 0x20C8;
-WGL_VIDEO_OUT_FIELD_1: [const] int32              = 0x20C9;
-WGL_VIDEO_OUT_FIELD_2: [const] int32              = 0x20CA;
-WGL_VIDEO_OUT_STACKED_FIELDS_1_2: [const] int32   = 0x20CB;
-WGL_VIDEO_OUT_STACKED_FIELDS_2_1: [const] int32   = 0x20CC;
+WGL_BIND_TO_VIDEO_RGB_NV: [internal] int32           = 0x20C0;
+WGL_BIND_TO_VIDEO_RGBA_NV: [internal] int32          = 0x20C1;
+WGL_BIND_TO_VIDEO_RGB_AND_DEPTH_NV: [internal] int32 = 0x20C2;
+WGL_VIDEO_OUT_COLOR_NV: [internal] int32             = 0x20C3;
+WGL_VIDEO_OUT_ALPHA_NV: [internal] int32             = 0x20C4;
+WGL_VIDEO_OUT_DEPTH_NV: [internal] int32             = 0x20C5;
+WGL_VIDEO_OUT_COLOR_AND_ALPHA_NV: [internal] int32   = 0x20C6;
+WGL_VIDEO_OUT_COLOR_AND_DEPTH_NV: [internal] int32   = 0x20C7;
+WGL_VIDEO_OUT_FRAME: [internal] int32                = 0x20C8;
+WGL_VIDEO_OUT_FIELD_1: [internal] int32              = 0x20C9;
+WGL_VIDEO_OUT_FIELD_2: [internal] int32              = 0x20CA;
+WGL_VIDEO_OUT_STACKED_FIELDS_1_2: [internal] int32   = 0x20CB;
+WGL_VIDEO_OUT_STACKED_FIELDS_2_1: [internal] int32   = 0x20CC;
 
 def PFNWGLGETVIDEODEVICENVPROC = (hDC: HDC, numDevices: int32, hVideoDevice: HPVIDEODEV*)(BOOL)*;
 def PFNWGLRELEASEVIDEODEVICENVPROC = (hVideoDevice: HPVIDEODEV)(BOOL)*;

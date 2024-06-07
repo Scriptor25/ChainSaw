@@ -6,8 +6,8 @@ def fpos_t = int64;
 def size_t = int64;
 def va_list;
 
-EOF:  [const] int32 = -1;
-NULL: [const] void* =  0;
+EOF:  [internal] int32 = -1;
+NULL: [internal] void* =  0;
 
 ## Operations of files
 @[c]remove(filename: int8*): int32;

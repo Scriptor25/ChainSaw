@@ -2,7 +2,7 @@
 
 def size_t = int64;
 
-NULL: [const] void* = 0;
+NULL: [internal] void* = 0;
 
 @[c]memcpy(destination: void*, source: void*, num: size_t): void*;
 @[c]memmove(destination: void*, source: void*, num: size_t): void*;
