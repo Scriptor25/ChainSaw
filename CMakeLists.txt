@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(ChainSaw VERSION 1.0.0)
-add_subdirectory(PCG)
 add_subdirectory(LibChainSaw)
 add_subdirectory(ChainSawCLI)
 
