@@ -28,7 +28,7 @@ namespace csaw
         static Expect<LValuePtr> AllocateAndStore(Builder* builder, const TypePtr& type, const ValuePtr& value);
         static LValuePtr Direct(Builder* builder, const TypePtr& type, llvm::Value* pointer);
 
-        [[nodiscard]] Expect<RValuePtr> StoreValue(const ValuePtr& value) const;
+        [[nodiscard]] csaw::Expect<csaw::ValuePtr> StoreValue(const ValuePtr& value) const;
         [[nodiscard]] RValuePtr GetReference() const;
         [[nodiscard]] llvm::Value* GetPointer() const;
 

@@ -4,7 +4,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 {
     const auto left = Gen(expression.Left, nullptr);
     if (!left)
@@ -18,11 +18,17 @@ csaw::RValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 
     const auto lleft = std::dynamic_pointer_cast<LValue>(left);
     if (left->IsLValue())
+    {
         if (const auto result = FindBestAndCall(op, lleft, {right}))
             return result.Get();
+        else if (AssertStmt(result.Msg().empty(), expression, false, "Failed to call: %s", result.Msg().c_str()))
+            return nullptr;
+    }
 
     if (const auto result = FindBestAndCall(op, nullptr, {left, right}))
         return result.Get();
+    else if (AssertStmt(result.Msg().empty(), expression, false, "Failed to call: %s", result.Msg().c_str()))
+        return nullptr;
 
     if (op == "=")
     {

@@ -92,7 +92,11 @@ int main(const int argc, const char** argv, const char** env)
         return show_help();
 
     csaw::Builder builder(obfusecate);
-    csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr) { builder.Gen(ptr); };
+    csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr)
+    {
+        // std::cout << ptr << std::endl;
+        builder.Gen(ptr);
+    };
 
     int error = 0;
 

@@ -4,7 +4,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
 {
     const auto value = Gen(expression.Value, nullptr);
     if (!value)

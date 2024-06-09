@@ -5,7 +5,7 @@
 
 void csaw::Parser::ParseCompileDirective()
 {
-    const auto loc = m_Loc;
+    const auto loc = m_Token.Loc;
     const auto directive = Expect(TK_COMPILE_DIRECTIVE).Value;
 
     if (directive == "inc")

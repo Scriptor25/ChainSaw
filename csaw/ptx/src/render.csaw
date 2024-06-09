@@ -1,0 +1,28 @@
+\inc "ptx/render.csh"
+\inc "ptx/math/color.csh"
+\inc "ptx/math/ray.csh"
+\inc "ptx/math/vec3.csh"
+
+@send(pRay: Ray*, pScene: Scene*): Color {
+	unit_direction: Vec3 = normalize(pRay!direction);
+	a: Float = unit_direction.y() * 0.5 + 0.5;
+	ret (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0);
+}
+
+@render(pImage: Image*, pCamera: Camera*, pScene: Scene*): void {
+	
+	for (j: Int; j < pImage!height; ++j) {
+		for (i: Int; i < pImage!width; ++i) {
+			uv: Vec2;
+			uv[0] = i / (pImage!width - 1.0);
+			uv[1] = j / (pImage!height - 1.0);
+			
+			ray: Ray;
+			pCamera!getRay(&ray, uv);
+			
+			col: Color = send(&ray, pScene);
+			
+			pImage!set(i, j, col.pack(0));
+		}
+	}
+}

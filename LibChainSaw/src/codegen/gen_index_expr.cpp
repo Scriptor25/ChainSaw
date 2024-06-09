@@ -5,7 +5,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::LValuePtr csaw::Builder::Gen(const IndexExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const IndexExpression& expression)
 {
     const auto array = Gen(expression.Array, nullptr);
     if (!array)

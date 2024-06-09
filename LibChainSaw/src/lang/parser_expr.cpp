@@ -10,7 +10,7 @@ csaw::ExpressionPtr csaw::Parser::ParseExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseSelectExpression()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
     auto expr = ParseBinaryExpression();
 
     if (NextIfAt("?"))
@@ -32,11 +32,12 @@ csaw::ExpressionPtr csaw::Parser::ParseBinaryExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseLogicExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseCompareExpression();
 
     while (At("&") || At("|") || At("^"))
     {
+        const auto loc = m_Token.Loc;
+
         std::string op = Get().Value;
         if (At("=") || At(op))
             op += Get().Value;
@@ -55,11 +56,12 @@ csaw::ExpressionPtr csaw::Parser::ParseLogicExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseCompareExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseShiftExpression();
 
     while (At("=") || At("!"))
     {
+        const auto loc = m_Token.Loc;
+
         std::string op = Get().Value;
         if (At("="))
             op += Get().Value;
@@ -78,11 +80,12 @@ csaw::ExpressionPtr csaw::Parser::ParseCompareExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseShiftExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseSumExpression();
 
     while (At("<") || At(">"))
     {
+        const auto loc = m_Token.Loc;
+
         std::string op = Get().Value;
         while (At("=") || At(op))
             op += Get().Value;
@@ -101,11 +104,12 @@ csaw::ExpressionPtr csaw::Parser::ParseShiftExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseSumExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseProductExpression();
 
     while (At("+") || At("-"))
     {
+        const auto loc = m_Token.Loc;
+
         std::string op = Get().Value;
         if (At("=") || At(op))
             op += Get().Value;
@@ -129,11 +133,12 @@ csaw::ExpressionPtr csaw::Parser::ParseSumExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseProductExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseIndexExpression();
 
     while (At("*") || At("/") || At("%"))
     {
+        const auto loc = m_Token.Loc;
+
         std::string op = Get().Value;
         if (At("=") || At(op))
             op += Get().Value;
@@ -152,11 +157,12 @@ csaw::ExpressionPtr csaw::Parser::ParseProductExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseIndexExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseCallExpression();
 
     while (NextIfAt("["))
     {
+        const auto loc = m_Token.Loc;
+
         auto index = ParseExpression();
         Expect("]");
 
@@ -171,11 +177,12 @@ csaw::ExpressionPtr csaw::Parser::ParseIndexExpression()
 
 csaw::ExpressionPtr csaw::Parser::ParseCallExpression()
 {
-    auto loc = m_Token.Loc;
     auto expr = ParseMemberExpression();
 
     while (At("(") || At("$"))
     {
+        const auto loc = m_Token.Loc;
+
         std::vector<TypePtr> temp_args;
         if (NextIfAt("$"))
         {
@@ -220,11 +227,10 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
 {
     while (At(".") || At("!"))
     {
-        auto loc = m_Token.Loc;
+        const auto loc = m_Token.Loc;
 
-        auto deref = Get().Value == "!";
-
-        if (deref && NextIfAt("="))
+        if (const auto should_deref = Get().Value == "!";
+            should_deref && NextIfAt("="))
         {
             const auto right = ParseShiftExpression();
             expr = std::make_shared<BinaryExpression>(loc, "!=", expr, right);
@@ -232,7 +238,7 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
         else
         {
             std::string id = Expect(TK_IDENTIFIER | TK_STRING).Value;
-            expr = std::make_shared<MemberExpression>(loc, expr, id, deref);
+            expr = std::make_shared<MemberExpression>(loc, expr, id, should_deref);
         }
     }
 
@@ -241,7 +247,7 @@ csaw::ExpressionPtr csaw::Parser::ParseMemberExpression(ExpressionPtr expr)
 
 csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     if (AtEOF())
         ThrowError(m_Token.Loc, true, "Reached end of file");
@@ -265,14 +271,6 @@ csaw::ExpressionPtr csaw::Parser::ParsePrimaryExpression()
         auto expr = ParseExpression();
         Expect(")");
         return expr;
-    }
-
-    if (NextIfAt("?"))
-    {
-        Expect("[");
-        const auto type = ParseType();
-        Expect("]");
-        return std::make_shared<VarArgExpression>(loc, type);
     }
 
     if (NextIfAt("["))

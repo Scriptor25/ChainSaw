@@ -120,13 +120,6 @@ namespace csaw
         std::string Value;
     };
 
-    struct VarArgExpression : Expression
-    {
-        VarArgExpression(const SourceLoc& loc, const TypePtr& type);
-
-        TypePtr Type;
-    };
-
     struct UnaryExpression : Expression
     {
         UnaryExpression(const SourceLoc& loc, const std::string& op, const ExpressionPtr& value, bool rightop);

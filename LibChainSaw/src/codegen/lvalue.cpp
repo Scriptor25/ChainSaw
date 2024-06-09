@@ -32,21 +32,21 @@ csaw::LValuePtr csaw::LValue::Direct(Builder* builder, const TypePtr& type, llvm
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 
-csaw::Expect<csaw::RValuePtr> csaw::LValue::StoreValue(const ValuePtr& value) const
+csaw::Expect<csaw::ValuePtr> csaw::LValue::StoreValue(const ValuePtr& value) const
 {
     if (!value)
     {
         const auto type = m_Builder->Gen(m_Type);
         if (!type)
-            return Expect<RValuePtr>("Failed to generate type " + m_Type->Name + ": " + type.Msg());
+            return Expect<ValuePtr>("Failed to generate type " + m_Type->Name + ": " + type.Msg());
         const auto null_value = llvm::Constant::getNullValue(type.Get());
         m_Builder->GetBuilder().CreateStore(null_value, m_Pointer);
-        return RValue::Create(m_Builder, m_Type, null_value);
+        return {RValue::Create(m_Builder, m_Type, null_value)};
     }
 
     auto cast = m_Builder->Cast(value, m_Type);
     if (!cast)
-        return Expect<RValuePtr>("Failed to cast: " + cast.Msg());
+        return Expect<ValuePtr>("Failed to cast: " + cast.Msg());
     m_Builder->GetBuilder().CreateStore(cast.Get()->GetValue(), m_Pointer);
     return cast;
 }

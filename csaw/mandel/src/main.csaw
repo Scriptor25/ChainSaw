@@ -9,7 +9,7 @@
 @"=="(str1: int8*, str2: int8*): bool = strcmp(str1, str2) == 0;
 @"!="(str1: int8*, str2: int8*): bool = strcmp(str1, str2) != 0;
 
-@random::flt64 = rand() / (RAND_MAX + 1.0);
+@random::flt64 = (rand() % RAND_MAX) / (RAND_MAX - 1.0);
 
 @mandel(z0: complex, max: int32): int32 {
     z: complex = z0;
@@ -43,11 +43,11 @@ SAMPLES:  int32 = 100;
     scanf("%d", &height);
 
     printf("Rendering with xc=%f yc=%f size=%d width=%d height=%d\n", xc, yc, size, width, height);
+    printf("Continue? ([Y]|N) ");
 
-    submit: int8[2];
-    printf("Start? ([Y]|N) ");
-    scanf("%c%c", &submit[0], &submit[1]);
-    if (submit[1] == 'n' || submit[1] == 'N')
+    confirm: int8;
+    scanf("%c", &confirm);
+    if (confirm == 'n' || confirm == 'N')
         ret 0;
 
     out: image = image(width, height);

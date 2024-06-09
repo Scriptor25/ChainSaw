@@ -61,8 +61,6 @@ namespace csaw
         explicit Parser(const ParseData& data);
 
         int Read();
-        void PutBack(int c);
-        int Escape();
         Token& Next();
 
         [[nodiscard]] bool AtEOF() const, At(int type) const, At(const std::string& value) const;
@@ -103,8 +101,7 @@ namespace csaw
 
         ParseData m_Data;
 
-        size_t m_Col = 1;
-
+        int m_c = -1;
         SourceLoc m_Loc;
         Token m_Token;
     };

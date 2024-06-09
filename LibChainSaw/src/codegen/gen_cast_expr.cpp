@@ -2,7 +2,7 @@
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const CastExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const CastExpression& expression)
 {
     const auto value = Gen(expression.Value, expression.Type);
     if (!value)

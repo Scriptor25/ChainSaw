@@ -86,8 +86,3 @@ csaw::UnaryExpression::UnaryExpression(const SourceLoc& loc, const std::string& 
     : Expression(loc), Operator(op), Value(value), OpRight(rightop)
 {
 }
-
-csaw::VarArgExpression::VarArgExpression(const SourceLoc& loc, const TypePtr& type)
-    : Expression(loc), Type(type)
-{
-}

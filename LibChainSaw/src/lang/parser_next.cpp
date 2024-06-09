@@ -1,237 +1,317 @@
-#include <istream>
-#include <csaw/Error.hpp>
+#include <iostream>
 #include <csaw/Parser.hpp>
 
-#define NEXT_NORMAL       0
-#define NEXT_COMMENT_TYPE 1
-#define NEXT_COMMENT      2
-#define NEXT_LINE_COMMENT 3
-#define NEXT_COMP_DIR     4
-#define NEXT_STRING       5
-#define NEXT_CHAR         6
-#define NEXT_NON_DEC_TYPE 7
-#define NEXT_HEX          8
-#define NEXT_BIN          9
-#define NEXT_OCT         10
-#define NEXT_DEC         11
-#define NEXT_IDENT       12
+#define STATE_NORMAL 0
+#define STATE_DETERMINE_COMMENT_TYPE 1
+#define STATE_SINGLE_LINE_COMMENT 2
+#define STATE_MULTI_LINE_COMMENT 3
+#define STATE_STRING 4
+#define STATE_CHAR 5
+#define STATE_ID 6
+#define STATE_NON_DEC 7
+#define STATE_HEX 8
+#define STATE_BIN 9
+#define STATE_OCT 10
+#define STATE_DEC 11
+#define STATE_COMPILE_DIRECTIVE 12
 
 #define isid(c) (isalnum(c) || c == '_')
+#define isoct(c) ('0' <= c && c <= '7')
 
 int csaw::Parser::Read()
 {
-    m_Col = m_Loc.Column;
     ++m_Loc.Column;
-    return m_Data.Stream.get();
-}
-
-void csaw::Parser::PutBack(const int c)
-{
-    m_Data.Stream.putback(static_cast<char>(c));
-    --m_Loc.Column;
-    if (m_Loc.Column == 0)
-    {
-        m_Loc.Column = m_Col;
-        --m_Loc.Line;
-    }
+    return m_c = m_Data.Stream.get();
 }
 
 csaw::Token& csaw::Parser::Next()
 {
-    int state = NEXT_NORMAL;
-
-    std::string value;
-    bool flt = false;
+    int state = STATE_NORMAL;
 
     auto loc = m_Loc;
+    std::string value;
+    bool is_flt = false;
 
-    while (true)
+    while (m_c != EOF)
     {
-        int c = Read();
-        if (c == EOF)
-            return m_Token = {loc, TK_EOF, {}};
-
         switch (state)
         {
-        case NEXT_NORMAL:
-            switch (c)
+        case STATE_NORMAL:
+            if (m_c <= 0x20)
             {
-            case '\n':
-                m_Col = m_Loc.Column;
-                m_Loc.Column = 1;
-                ++m_Loc.Line;
-                continue;
-
-            case '#':
-                state = NEXT_COMMENT_TYPE;
-                continue;
-
-            case '\\':
-                state = NEXT_COMP_DIR;
-                continue;
-
-            case '"':
-                state = NEXT_STRING;
-                continue;
-
-            case '\'':
-                state = NEXT_CHAR;
-                continue;
-
-            case '0':
-                state = NEXT_NON_DEC_TYPE;
-                continue;
-
-            default:
+                if (m_c == '\n')
+                {
+                    m_Loc.Column = 0;
+                    ++m_Loc.Row;
+                }
                 break;
             }
-
-            if (c <= 0x20)
+            if (m_c == '0')
             {
                 loc = m_Loc;
-                continue;
+                value += static_cast<char>(m_c);
+                state = STATE_NON_DEC;
+                break;
             }
-
-            if (isdigit(c))
+            if (isdigit(m_c))
             {
-                state = NEXT_DEC;
-                value += static_cast<char>(c);
-                continue;
+                loc = m_Loc;
+                value += static_cast<char>(m_c);
+                state = STATE_DEC;
+                break;
             }
-
-            if (isid(c))
+            if (isid(m_c))
             {
-                state = NEXT_IDENT;
-                value += static_cast<char>(c);
-                continue;
+                loc = m_Loc;
+                value += static_cast<char>(m_c);
+                state = STATE_ID;
+                break;
             }
+            switch (m_c)
+            {
+            case '#':
+                state = STATE_DETERMINE_COMMENT_TYPE;
+                break;
 
-            return m_Token = {loc, TK_OPERATOR, std::string(1, static_cast<char>(c))};
+            case '"':
+                loc = m_Loc;
+                state = STATE_STRING;
+                break;
 
-        case NEXT_COMMENT_TYPE:
-            if (c == '#')
-                state = NEXT_LINE_COMMENT;
+            case '\'':
+                loc = m_Loc;
+                state = STATE_CHAR;
+                break;
+
+            case '\\':
+                loc = m_Loc;
+                state = STATE_COMPILE_DIRECTIVE;
+                break;
+
+            default:
+                loc = m_Loc;
+                value += static_cast<char>(m_c);
+                Read();
+                return m_Token = {loc, TK_OPERATOR, value};
+            }
+            break;
+
+        case STATE_DETERMINE_COMMENT_TYPE:
+            if (m_c == '#')
+            {
+                state = STATE_SINGLE_LINE_COMMENT;
+            }
             else
-                state = NEXT_COMMENT;
-            break;
-
-        case NEXT_COMMENT:
-            if (c == '\n')
             {
-                m_Col = m_Loc.Column;
-                m_Loc.Column = 1;
-                ++m_Loc.Line;
-            }
-            if (c == '#')
-                state = NEXT_NORMAL;
-            break;
-
-        case NEXT_LINE_COMMENT:
-            if (c == '\n')
-            {
-                state = NEXT_NORMAL;
-                m_Col = m_Loc.Column;
-                m_Loc.Column = 1;
-                ++m_Loc.Line;
+                state = STATE_MULTI_LINE_COMMENT;
             }
             break;
 
-        case NEXT_COMP_DIR:
-            if (!isid(c))
+        case STATE_SINGLE_LINE_COMMENT:
+            if (m_c == '\n')
             {
-                PutBack(c);
-                return m_Token = {loc, TK_COMPILE_DIRECTIVE, value};
+                m_Loc.Column = 0;
+                ++m_Loc.Row;
+                state = STATE_NORMAL;
             }
-
-            value += static_cast<char>(c);
             break;
 
-        case NEXT_STRING:
-            if (c == '"')
+        case STATE_MULTI_LINE_COMMENT:
+            if (m_c == '\n')
+            {
+                m_Loc.Column = 0;
+                ++m_Loc.Row;
+            }
+            else if (m_c == '#')
+            {
+                state = STATE_NORMAL;
+            }
+            break;
+
+        case STATE_STRING:
+            if (m_c == '"')
+            {
+                Read();
                 return m_Token = {loc, TK_STRING, value};
-            if (c == '\\')
-                c = Escape();
-            value += static_cast<char>(c);
+            }
+            if (m_c == '\n')
+            {
+                m_Loc.Column = 0;
+                ++m_Loc.Row;
+                break;
+            }
+            if (m_c == '\\')
+            {
+                Read();
+                switch (m_c)
+                {
+                case 'a':
+                    m_c = '\a';
+                    break;
+                case 'b':
+                    m_c = '\b';
+                    break;
+                case 'f':
+                    m_c = '\f';
+                    break;
+                case 'n':
+                    m_c = '\n';
+                    break;
+                case 'r':
+                    m_c = '\r';
+                    break;
+                case 't':
+                    m_c = '\t';
+                    break;
+                case 'v':
+                    m_c = '\v';
+                    break;
+                }
+            }
+            value += static_cast<char>(m_c);
             break;
 
-        case NEXT_CHAR:
-            if (c == '\'')
+        case STATE_CHAR:
+            if (m_c == '\'')
+            {
+                Read();
                 return m_Token = {loc, TK_CHAR, value};
-            if (c == '\\')
-                c = Escape();
-            value += static_cast<char>(c);
-            break;
-
-        case NEXT_NON_DEC_TYPE:
-            if (c == 'x' || c == 'X')
-                state = NEXT_HEX;
-            else if (c == 'b' || c == 'B')
-                state = NEXT_BIN;
-            else if (isdigit(c))
-                state = NEXT_OCT;
-            else
-            {
-                PutBack(c);
-                state = NEXT_DEC;
-                value += '0';
             }
-            break;
-
-        case NEXT_BIN:
-        case NEXT_OCT:
-        case NEXT_HEX:
-            if (!isxdigit(c))
+            if (m_c == '\n')
             {
-                PutBack(c);
-                return m_Token = {loc, state == NEXT_BIN ? TK_INT_BIN : state == NEXT_OCT ? TK_INT_OCT : TK_INT_HEX, value};
-            }
-            value += static_cast<char>(c);
-            break;
-
-        case NEXT_DEC:
-            if (c == '.')
-            {
-                if (flt)
-                    ThrowError(m_Loc, true, "Value already has a floating point");
-                flt = true;
-                value += static_cast<char>(c);
+                m_Loc.Column = 0;
+                ++m_Loc.Row;
                 break;
             }
-
-            if (c == 'e' || c == 'E')
+            if (m_c == '\\')
             {
-                if (flt)
-                    ThrowError(m_Loc, true, "Value already has a floating point");
-                flt = true;
-                value += static_cast<char>(c);
-                c = Read();
-                if (c == '-' || c == '+')
-                    value += static_cast<char>(c);
-                else PutBack(c);
-                break;
+                Read();
+                switch (m_c)
+                {
+                case 'a':
+                    m_c = '\a';
+                    break;
+                case 'b':
+                    m_c = '\b';
+                    break;
+                case 'f':
+                    m_c = '\f';
+                    break;
+                case 'n':
+                    m_c = '\n';
+                    break;
+                case 'r':
+                    m_c = '\r';
+                    break;
+                case 't':
+                    m_c = '\t';
+                    break;
+                case 'v':
+                    m_c = '\v';
+                    break;
+                }
             }
-
-            if (!isdigit(c))
-            {
-                PutBack(c);
-                return m_Token = {loc, flt ? TK_FLOAT : TK_INT_DEC, value};
-            }
-
-            value += static_cast<char>(c);
+            value += static_cast<char>(m_c);
             break;
 
-        case NEXT_IDENT:
-            if (!isid(c))
+        case STATE_ID:
+            if (!isid(m_c))
             {
-                PutBack(c);
                 return m_Token = {loc, TK_IDENTIFIER, value};
             }
-            value += static_cast<char>(c);
+            value += static_cast<char>(m_c);
             break;
 
-        default:
-            state = NEXT_NORMAL;
+        case STATE_NON_DEC:
+            if (m_c == 'x' || m_c == 'X')
+            {
+                value.clear();
+                state = STATE_HEX;
+            }
+            else if (m_c == 'b' || m_c == 'B')
+            {
+                value.clear();
+                state = STATE_BIN;
+            }
+            else if (isoct(m_c))
+            {
+                value += static_cast<char>(m_c);
+                state = STATE_OCT;
+            }
+            else if (m_c == '.')
+            {
+                value += static_cast<char>(m_c);
+                is_flt = true;
+                state = STATE_DEC;
+            }
+            else if (isdigit(m_c))
+            {
+                value += static_cast<char>(m_c);
+                state = STATE_DEC;
+            }
+            else
+            {
+                return m_Token = {loc, TK_INT_DEC, value};
+            }
+            break;
+
+        case STATE_HEX:
+            if (!isxdigit(m_c))
+            {
+                return m_Token = {loc, TK_INT_HEX, value};
+            }
+            value += static_cast<char>(m_c);
+            break;
+
+        case STATE_BIN:
+            if (m_c != '0' && m_c != '1')
+            {
+                return m_Token = {loc, TK_INT_BIN, value};
+            }
+            value += static_cast<char>(m_c);
+            break;
+
+        case STATE_OCT:
+            if (!isoct(m_c))
+            {
+                return m_Token = {loc, TK_INT_OCT, value};
+            }
+            value += static_cast<char>(m_c);
+            break;
+
+        case STATE_DEC:
+            if (m_c == 'e' || m_c == 'E')
+            {
+                value += static_cast<char>(m_c);
+                Read();
+                if (m_c == '-' || m_c == '+')
+                {
+                    value += static_cast<char>(m_c);
+                    Read();
+                }
+            }
+            if (m_c == '.')
+            {
+                is_flt = true;
+                value += static_cast<char>(m_c);
+                Read();
+            }
+            if (!isdigit(m_c))
+            {
+                return m_Token = {loc, is_flt ? TK_FLOAT : TK_INT_DEC, value};
+            }
+            value += static_cast<char>(m_c);
+            break;
+
+        case STATE_COMPILE_DIRECTIVE:
+            if (!isid(m_c))
+                return m_Token = {loc, TK_COMPILE_DIRECTIVE, value};
+            value += static_cast<char>(m_c);
             break;
         }
+
+        Read();
     }
+
+    return m_Token = {loc, TK_EOF};
 }

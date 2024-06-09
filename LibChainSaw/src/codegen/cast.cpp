@@ -4,37 +4,37 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type)
+csaw::Expect<csaw::ValuePtr> csaw::Builder::Cast(const ValuePtr& value, const TypePtr& type)
 {
     if (!value)
-        return Expect<RValuePtr>("Value is empty");
+        return Expect<ValuePtr>("Value is empty");
 
     if (!type)
-        return Expect<RValuePtr>("Type is empty");
+        return Expect<ValuePtr>("Type is empty");
 
     if (value->GetType() == type)
-        return value->GetRValue();
+        return value;
 
     const auto tty = Gen(type);
     if (!tty)
-        return Expect<RValuePtr>("Type is null: " + tty.Msg());
+        return Expect<ValuePtr>("Type is null: " + tty.Msg());
 
     const auto vty = Gen(value->GetType());
     if (!vty)
-        return Expect<RValuePtr>("Value type is null: " + vty.Msg());
+        return Expect<ValuePtr>("Value type is null: " + vty.Msg());
 
     if (vty.Get()->isPointerTy())
     {
         if (tty.Get()->isPointerTy())
         {
             const auto result = GetBuilder().CreatePointerCast(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
 
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreatePtrToInt(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
     }
 
@@ -43,19 +43,19 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         if (tty.Get()->isPointerTy())
         {
             const auto result = GetBuilder().CreateIntToPtr(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
 
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreateIntCast(value->GetValue(), tty.Get(), true);
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
             const auto result = GetBuilder().CreateSIToFP(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
     }
 
@@ -64,17 +64,17 @@ csaw::Expect<csaw::RValuePtr> csaw::Builder::Cast(const ValuePtr& value, const T
         if (tty.Get()->isIntegerTy())
         {
             const auto result = GetBuilder().CreateFPToSI(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
 
         if (tty.Get()->isFloatingPointTy())
         {
             const auto result = GetBuilder().CreateFPCast(value->GetValue(), tty.Get());
-            return RValue::Create(this, type, result);
+            return {RValue::Create(this, type, result)};
         }
     }
 
-    return Expect<RValuePtr>("Cast from " + value->GetType()->Name + " to " + type->Name + " is not implemented");
+    return Expect<ValuePtr>("Cast from " + value->GetType()->Name + " to " + type->Name + " is not implemented");
 }
 
 csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left, const RValuePtr& right)
@@ -96,6 +96,9 @@ csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left
     if (!rty)
         return Expect<RValuePair>("Right type is null: " + rty.Msg());
 
+    if (lty.Get() == rty.Get())
+        return {{left, right}};
+
     if (lty.Get()->isPointerTy())
     {
         if (rty.Get()->isIntegerTy())
@@ -107,6 +110,12 @@ csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left
 
     if (lty.Get()->isIntegerTy())
     {
+        if (rty.Get()->isPointerTy())
+        {
+            const auto value = GetBuilder().CreatePtrToInt(right->GetValue(), lty.Get());
+            return {{left, RValue::Create(this, left->GetType(), value)}};
+        }
+
         if (rty.Get()->isIntegerTy())
         {
             if (lty.Get()->getIntegerBitWidth() > rty.Get()->getIntegerBitWidth())

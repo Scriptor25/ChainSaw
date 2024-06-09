@@ -4,7 +4,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const SizeOfExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const SizeOfExpression& expression)
 {
     const auto type = Gen(expression.Type);
     if (AssertStmt(type, expression, false, "Failed to generate type %s: %s", expression.Type->Name, type.Msg().c_str()))

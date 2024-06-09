@@ -4,7 +4,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const ReferenceExpression& expression, const TypePtr& expected)
+csaw::ValuePtr csaw::Builder::Gen(const ReferenceExpression& expression, const TypePtr& expected)
 {
     const auto value = Gen(expression.Value, expected ? expected->AsPointer()->Base : nullptr);
     if (!value)

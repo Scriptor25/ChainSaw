@@ -3,7 +3,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const FloatExpression& expression, const TypePtr& expected)
+csaw::ValuePtr csaw::Builder::Gen(const FloatExpression& expression, const TypePtr& expected)
 {
     if (expected)
     {

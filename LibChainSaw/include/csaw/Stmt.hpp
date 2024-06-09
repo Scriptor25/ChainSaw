@@ -8,17 +8,9 @@ namespace csaw
     struct Statement
     {
         explicit Statement(const SourceLoc& loc);
-        virtual ~Statement() = default;
+        virtual ~Statement();
 
         SourceLoc Loc;
-    };
-
-    struct AliasStmt : Statement
-    {
-        AliasStmt(const SourceLoc& loc, const std::string& name, const TypePtr& origin);
-
-        std::string Name;
-        TypePtr Origin;
     };
 
     struct ScopeStatement : Statement

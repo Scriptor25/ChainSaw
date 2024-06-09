@@ -3,7 +3,7 @@
 #include <csaw/Expr.hpp>
 #include <csaw/Value.hpp>
 
-csaw::LValuePtr csaw::Builder::Gen(const DereferenceExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const DereferenceExpression& expression)
 {
     const auto value = Gen(expression.Value, nullptr);
     if (!value)

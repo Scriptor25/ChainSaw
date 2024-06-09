@@ -1,7 +1,6 @@
 #include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
-#include <csaw/Value.hpp>
 
 csaw::ValuePtr csaw::Builder::Gen(const ExpressionPtr& ptr, const TypePtr& expected)
 {

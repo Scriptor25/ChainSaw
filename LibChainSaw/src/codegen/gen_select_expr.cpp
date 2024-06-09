@@ -63,7 +63,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
                 ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
                 return nullptr;
             }
-            true_rvalue = cast.Get();
+            true_rvalue = cast.Get()->GetRValue();
         }
         else if (true_rvalue->GetType()->ParentOf(false_rvalue->GetType()))
         {
@@ -78,7 +78,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const Type
                 ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
                 return nullptr;
             }
-            false_rvalue = cast.Get();
+            false_rvalue = cast.Get()->GetRValue();
         }
         else
         {

@@ -49,7 +49,7 @@ namespace csaw
         void Gen(const StatementPtr& ptr);
         [[nodiscard]] Expect<llvm::Type*> Gen(const TypePtr& type) const;
 
-        Expect<RValuePtr> Cast(const ValuePtr& value, const TypePtr& type);
+        Expect<ValuePtr> Cast(const ValuePtr& value, const TypePtr& type);
         Expect<RValuePair> CastToBestOf(const RValuePtr& left, const RValuePtr& right);
 
     private:
@@ -76,21 +76,21 @@ namespace csaw
         void Gen(const WhileStatement& statement);
 
         ValuePtr Gen(const ExpressionPtr& ptr, const TypePtr& expected);
-        RValuePtr Gen(const BinaryExpression& expression);
+        ValuePtr Gen(const BinaryExpression& expression);
         ValuePtr Gen(const CallExpression& expression, const TypePtr& expected);
-        RValuePtr Gen(const CastExpression& expression);
-        RValuePtr Gen(const CharExpression& expression);
-        LValuePtr Gen(const DereferenceExpression& expression);
-        RValuePtr Gen(const FloatExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const CastExpression& expression);
+        ValuePtr Gen(const CharExpression& expression);
+        ValuePtr Gen(const DereferenceExpression& expression);
+        ValuePtr Gen(const FloatExpression& expression, const TypePtr& expected);
         ValuePtr Gen(const IdentifierExpression& expression, const TypePtr& expected);
-        LValuePtr Gen(const IndexExpression& expression);
-        RValuePtr Gen(const IntExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const IndexExpression& expression);
+        ValuePtr Gen(const IntExpression& expression, const TypePtr& expected);
         ValuePtr Gen(const MemberExpression& expression, const TypePtr& expected);
-        RValuePtr Gen(const ReferenceExpression& expression, const TypePtr& expected);
+        ValuePtr Gen(const ReferenceExpression& expression, const TypePtr& expected);
         ValuePtr Gen(const SelectExpression& expression, const TypePtr& expected);
-        RValuePtr Gen(const SizeOfExpression& expression);
-        RValuePtr Gen(const StringExpression& expression);
-        RValuePtr Gen(const UnaryExpression& expression);
+        ValuePtr Gen(const SizeOfExpression& expression);
+        ValuePtr Gen(const StringExpression& expression);
+        ValuePtr Gen(const UnaryExpression& expression);
 
         RValuePtr GenCmpEQ(const RValuePtr& left, const RValuePtr& right);
         RValuePtr GenCmpNE(const RValuePtr& left, const RValuePtr& right);
