@@ -4,7 +4,8 @@
 
 namespace csaw
 {
-    static int CSawError;
+    int GetError();
+    void SetError(int error);
 
     struct SourceLoc;
     void Tellv(const SourceLoc& loc, const char* format, va_list args);

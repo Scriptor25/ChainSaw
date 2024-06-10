@@ -11,7 +11,7 @@ int csaw::Parser::Parse(const ParseData& data)
     data.Processed.emplace_back(data.Filename);
     Parser parser(data);
 
-    CSawError = 0;
+    SetError(0);
 
     try
     {
@@ -26,10 +26,10 @@ int csaw::Parser::Parse(const ParseData& data)
     catch (const std::runtime_error& error)
     {
         std::cout << data.Filename << ": " << error.what() << std::endl;
-        return 1;
+        SetError(1);
     }
 
-    return CSawError;
+    return GetError();
 }
 
 csaw::Parser::Parser(const ParseData& data)

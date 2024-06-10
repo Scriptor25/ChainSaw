@@ -2,6 +2,18 @@
 #include <csaw/Error.hpp>
 #include <csaw/Parser.hpp>
 
+int CSawError;
+
+int csaw::GetError()
+{
+    return CSawError;
+}
+
+void csaw::SetError(const int error)
+{
+    CSawError = error;
+}
+
 void csaw::Tellv(const SourceLoc& loc, const char* format, va_list args)
 {
     std::cout << loc.ToString() << ": ";
@@ -21,7 +33,7 @@ void csaw::ThrowErrorv(const SourceLoc& loc, const bool is_severe, const char* f
 {
     Tellv(loc, format, args);
 
-    CSawError = 1;
+    CSawError |= 1;
     if (is_severe)
         throw std::runtime_error("Severe Error");
 }
