@@ -17,7 +17,7 @@ namespace csaw
 #ifdef __GNUG__
 #define TellStmt(_Statement, _Format, ...) csaw::Tell((_Statement).Loc, _Format __VA_OPT__(,) __VA_ARGS__)
 #define ThrowErrorStmt(_Statement, _IsSevere, _Format, ...) csaw::ThrowError((_Statement).Loc, _IsSevere, _Format __VA_OPT__(,) __VA_ARGS__)
-#define AssertStmt(_Assertion, _Statement, _IsSevere, _Format, ...) csaw::Assert((_Assertion), (_Statement).Loc, _IsSevere, _Format __VA_OPT__(,) __VA_ARGS__)
+#define AssertStmt(_Assertion, _Statement, _IsSevere, _Format, ...) csaw::Assert(!!(_Assertion), (_Statement).Loc, _IsSevere, _Format __VA_OPT__(,) __VA_ARGS__)
 #else
 #define TellStmt(_Statement, _Format, ...) csaw::Tell((_Statement).Loc, _Format, __VA_ARGS__)
 #define ThrowErrorStmt(_Statement, _IsSevere, _Format, ...) csaw::ThrowError((_Statement).Loc, _IsSevere, _Format, __VA_ARGS__)
