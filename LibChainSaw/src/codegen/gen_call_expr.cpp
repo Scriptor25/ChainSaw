@@ -1,134 +1,84 @@
 #include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>
-#include <csaw/Signature.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::Gen(const CallExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const CallExpression& expression, const TypePtr& expected)
 {
-    std::string name;
-    LValuePtr lobject;
-
-    if (const auto identifier_expression = std::dynamic_pointer_cast<IdentifierExpression>(expression.Callee))
+    LValuePtr lparent;
+    if (const auto mem_expr = std::dynamic_pointer_cast<MemberExpression>(expression.Callee))
     {
-        name = identifier_expression->Id;
-    }
-    else if (const auto member_expression = std::dynamic_pointer_cast<MemberExpression>(expression.Callee))
-    {
-        name = member_expression->Member;
-        const auto object = Gen(member_expression->Object);
-        if (!object)
+        const auto parent = Gen(mem_expr->Object, nullptr);
+        if (!parent)
             return nullptr;
 
-        if (object->IsLValue())
+        if (mem_expr->ShouldDeref)
         {
-            lobject = std::dynamic_pointer_cast<LValue>(object);
-            if (member_expression->ShouldDeref)
-            {
-                const auto deref = lobject->Dereference();
-                if (!deref)
-                {
-                    ThrowErrorStmt(expression, false, "Failed to dereference: %s", deref.Msg().c_str());
-                    return nullptr;
-                }
-                lobject = deref.Get();
-            }
+            const auto deref = parent->Dereference();
+            if (AssertStmt(deref, *mem_expr, false, "Failed to dereference: %s", deref.Msg().c_str()))
+                return nullptr;
+
+            lparent = deref.Get();
+        }
+        else if (parent->IsLValue())
+        {
+            lparent = std::dynamic_pointer_cast<LValue>(parent);
         }
         else
         {
-            if (member_expression->ShouldDeref)
-            {
-                const auto deref = object->GetRValue()->Dereference(this);
-                if (!deref)
-                {
-                    ThrowErrorStmt(expression, false, "Failed to dereference: %s", deref.Msg().c_str());
-                    return nullptr;
-                }
-                lobject = deref.Get();
-            }
-            else
-            {
-                const auto alloc = LValue::AllocateAndStore(this, object->GetType(), object->GetValue());
-                if (!alloc)
-                {
-                    ThrowErrorStmt(expression, false, "Failed to allocate: %s", alloc.Msg().c_str());
-                    return nullptr;
-                }
-                lobject = alloc.Get();
-            }
+            const auto alloc = LValue::AllocateAndStore(this, parent->GetType(), parent);
+            if (AssertStmt(alloc, *mem_expr, false, "Failed to allocate and store: %s", alloc.Msg().c_str()))
+                return nullptr;
+
+            lparent = alloc.Get();
         }
     }
-    else throw;
+
+    std::vector<TypePtr> arg_types;
+    auto symbols = GetSymbols();
+    for (const auto& arg : expression.Args)
+        arg_types.push_back(arg->GetType(symbols, false, {}, {}));
+
+    const auto callee_type = PointerType::Get(FunctionType::Get(arg_types, false, lparent ? lparent->GetType() : nullptr, expected ? expected : Type::GetVoid()));
+    const auto callee = Gen(expression.Callee, callee_type);
+    if (!callee)
+        return nullptr;
+
+    if (AssertStmt(callee->GetType()->IsFunctionPointer(), expression, false, "Callee is not a function pointer"))
+        return nullptr;
+
+    Signature signature;
+    if (!callee->IsLValue())
+        signature = m_Signatures[llvm::cast<llvm::Function>(callee->GetValue())];
+    else
+    {
+        const auto fnty = callee->GetType()->AsPointer()->Base->AsFunction();
+        signature.Args = fnty->Args;
+        signature.IsVarargs = fnty->IsVararg;
+        signature.Result = fnty->Result;
+    }
 
     std::vector<ValuePtr> args;
-    std::vector<TypePtr> arg_types;
-
     for (const auto& arg : expression.Args)
     {
-        const auto value = Gen(arg);
-        if (!value)
-            return nullptr;
-
+        const auto value = Gen(arg, nullptr);
+        if (!value) return nullptr;
         args.push_back(value);
-        arg_types.push_back(value->GetType());
     }
 
-    const auto [function, signature] = FindFunction(name, lobject ? lobject->GetType() : nullptr, arg_types);
-    if (!function)
+    if (signature.IsConstructor())
     {
-        std::string sig_name = name;
-        if (lobject)
-            sig_name += ':' + lobject->GetType()->Name;
+        const auto call = CreateCtorCall(callee, Type::Get(signature.Name), args);
+        if (AssertStmt(call, expression, false, "Failed to call constructor: %s", call.Msg().c_str()))
+            return nullptr;
 
-        std::string args_string;
-        for (size_t i = 0; i < arg_types.size(); ++i)
-        {
-            if (i > 0) args_string += ", ";
-            args_string += arg_types[i]->Name;
-        }
+        return call.Get();
+    }
 
-        ThrowErrorStmt(expression, false, "Failed to find function '@%s(%s)'", sig_name.c_str(), args_string.c_str());
+    const auto call = CreateCall(callee, lparent, args);
+    if (AssertStmt(call, expression, false, "Failed to call function: %s", call.Msg().c_str()))
         return nullptr;
-    }
 
-    std::vector<llvm::Value*> vargs;
-    LValuePtr lresult;
-    if (signature.IsConstructor())
-    {
-        const auto alloc = LValue::Allocate(this, Type::Get(signature.Name));
-        if (!alloc)
-        {
-            ThrowErrorStmt(expression, false, "Failed to allocate: %s", alloc.Msg().c_str());
-            return nullptr;
-        }
-
-        lresult = alloc.Get();
-        vargs.push_back(lresult->GetPointer());
-    }
-
-    if (lobject)
-        vargs.push_back(lobject->GetPointer());
-
-    size_t i = 0;
-    for (; i < signature.Args.size(); ++i)
-    {
-        const auto cast = Cast(args[i], signature.Args[i]);
-        if (!cast)
-        {
-            ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
-            return nullptr;
-        }
-
-        vargs.push_back(cast.Get()->GetValue());
-    }
-    for (; i < args.size(); ++i)
-        vargs.push_back(args[i]->GetValue());
-
-    const auto result = GetBuilder().CreateCall(function->getFunctionType(), function, vargs);
-
-    if (signature.IsConstructor())
-        return lresult->GetRValue();
-
-    return RValue::Create(signature.Result, result);
+    return call.Get();
 }

@@ -24,10 +24,10 @@ csaw::StatementPtr csaw::Parser::ParseStatement(const bool end)
 
 csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     Expect("def");
-    std::string name = Expect(TK_IDENTIFIER).Value;
+    const auto name = Expect(TK_IDENTIFIER).Value;
 
     if (NextIfAt(";"))
     {
@@ -63,7 +63,7 @@ csaw::DefStatementPtr csaw::Parser::ParseDefStatement()
 
 csaw::ForStatementPtr csaw::Parser::ParseForStatement()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     StatementPtr pre;
     ExpressionPtr condition;
@@ -157,33 +157,33 @@ csaw::FunctionStatementPtr csaw::Parser::ParseFunctionStatement()
 
 csaw::IfStatementPtr csaw::Parser::ParseIfStatement()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     Expect("if");
     Expect("(");
 
-    auto condition = ParseExpression();
+    const auto condition = ParseExpression();
 
     Expect(")");
 
-    auto _true = ParseStatement();
+    const auto _true = ParseStatement();
     if (!NextIfAt("else"))
         return std::make_shared<IfStatement>(loc, condition, _true, StatementPtr());
 
-    auto _false = ParseStatement();
+    const auto _false = ParseStatement();
     return std::make_shared<IfStatement>(loc, condition, _true, _false);
 }
 
 csaw::RetStatementPtr csaw::Parser::ParseRetStatement(const bool end)
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     Expect("ret");
 
     if (NextIfAt(";"))
         return std::make_shared<RetStatement>(loc, ExpressionPtr());
 
-    auto value = ParseExpression();
+    const auto value = ParseExpression();
     if (end) Expect(";");
 
     return std::make_shared<RetStatement>(loc, value);
@@ -191,7 +191,7 @@ csaw::RetStatementPtr csaw::Parser::ParseRetStatement(const bool end)
 
 csaw::ScopeStatementPtr csaw::Parser::ParseScopeStatement()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     Expect("{");
     std::vector<StatementPtr> content;
@@ -204,7 +204,7 @@ csaw::ScopeStatementPtr csaw::Parser::ParseScopeStatement()
 
 csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const ExpressionPtr& expr, const bool end)
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     if (const auto name = std::dynamic_pointer_cast<IdentifierExpression>(expr))
     {
@@ -233,7 +233,7 @@ csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const Expression
         }
 
         Expect("=");
-        auto value = ParseExpression();
+        const auto value = ParseExpression();
 
         if (end) Expect(";");
         return std::make_shared<VariableStatement>(loc, name->Id, mods, type, value);
@@ -244,13 +244,13 @@ csaw::VariableStatementPtr csaw::Parser::ParseVariableStatement(const Expression
 
 csaw::WhileStatementPtr csaw::Parser::ParseWhileStatement()
 {
-    auto loc = m_Token.Loc;
+    const auto loc = m_Token.Loc;
 
     Expect("while");
     Expect("(");
-    auto condition = ParseExpression();
+    const auto condition = ParseExpression();
     Expect(")");
 
-    auto body = ParseStatement();
+    const auto body = ParseStatement();
     return std::make_shared<WhileStatement>(loc, condition, body);
 }

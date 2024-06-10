@@ -75,7 +75,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
 {
     out << '@';
 
-    const auto is_str = std::ranges::find_if(statement.Name.begin(), statement.Name.end(), [](const char c) { return isalnum(c) || c == '_'; }) != statement.Name.end();
+    const auto is_str = std::ranges::find_if(statement.Name.begin(), statement.Name.end(), [](const char c) { return !isalnum(c) && c != '_'; }) != statement.Name.end();
     if (is_str) out << '"';
     out << statement.Name;
     if (is_str) out << '"';
@@ -101,7 +101,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const FunctionStatement& state
 
     if (statement.Result)
     {
-        const auto has_args = statement.Args.empty() && !statement.IsVarArgs;
+        const auto has_args = !statement.Args.empty() || statement.IsVarArgs;
         out << (has_args ? ": " : statement.Parent ? ":" : "::") << statement.Result;
     }
 
@@ -142,7 +142,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const DefStatement& statement)
     if (statement.Elements.empty())
         return out << ';';
 
-    depth++;
+    ++depth;
     const auto sp = spaces();
     out << " {" << '\n';
     size_t i = 0;
@@ -151,7 +151,7 @@ std::ostream& csaw::operator<<(std::ostream& out, const DefStatement& statement)
         if (i++ > 0) out << ",\n";
         out << sp << name << ": " << type;
     }
-    depth--;
+    --depth;
     return out << spaces() << "\n}";
 }
 

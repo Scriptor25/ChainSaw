@@ -35,52 +35,8 @@ int csaw::Parser::Parse(const ParseData& data)
 csaw::Parser::Parser(const ParseData& data)
     : m_Data(data), m_Loc{data.Filename, 1, 1}
 {
+    m_c = m_Data.Stream.get();
     Next();
-}
-
-int csaw::Parser::Escape()
-{
-    int c = m_Data.Stream.get();
-    ++m_Loc.Column;
-
-    switch (c)
-    {
-    case 'a': return '\a';
-    case 'b': return '\b';
-    case 'f': return '\f';
-    case 'n': return '\n';
-    case 'r': return '\r';
-    case 't': return '\t';
-    case 'v': return '\v';
-    default: break;
-    }
-
-    if (isdigit(c)) // nnn (oct)
-    {
-        std::string value;
-        value += static_cast<char>(c);
-        c = m_Data.Stream.get();
-        ++m_Loc.Column;
-        value += static_cast<char>(c);
-        c = m_Data.Stream.get();
-        ++m_Loc.Column;
-        value += static_cast<char>(c);
-        return std::stoi(value, nullptr, 8);
-    }
-
-    if (c == 'x') // hh (hex)
-    {
-        std::string value;
-        c = m_Data.Stream.get();
-        ++m_Loc.Column;
-        value += static_cast<char>(c);
-        c = m_Data.Stream.get();
-        ++m_Loc.Column;
-        value += static_cast<char>(c);
-        return std::stoi(value, nullptr, 16);
-    }
-
-    return c;
 }
 
 bool csaw::Parser::AtEOF() const

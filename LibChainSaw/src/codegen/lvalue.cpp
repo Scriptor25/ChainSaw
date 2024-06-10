@@ -2,12 +2,6 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-llvm::Value* csaw::Value::GetBoolValue(const Builder* builder) const
-{
-    const auto value = GetValue();
-    return builder->GetBuilder().CreateIsNotNull(value);
-}
-
 csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const TypePtr& type)
 {
     const auto ty = builder->Gen(type);
@@ -21,10 +15,15 @@ csaw::Expect<csaw::LValuePtr> csaw::LValue::Allocate(Builder* builder, const Typ
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 
-csaw::Expect<csaw::LValuePtr> csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, llvm::Value* value)
+csaw::Expect<csaw::LValuePtr> csaw::LValue::AllocateAndStore(Builder* builder, const TypePtr& type, const ValuePtr& value)
 {
-    const auto lvalue = Allocate(builder, type);
-    if (lvalue) lvalue.Get()->StoreValue(value);
+    auto lvalue = Allocate(builder, type);
+    if (!lvalue)
+        return Expect<LValuePtr>("Failed to allocate: " + lvalue.Msg());
+
+    if (const auto store = lvalue.Get()->StoreValue(value); !store)
+        return Expect<LValuePtr>("Failed to store: " + store.Msg());
+
     return lvalue;
 }
 
@@ -33,24 +32,28 @@ csaw::LValuePtr csaw::LValue::Direct(Builder* builder, const TypePtr& type, llvm
     return std::shared_ptr<LValue>(new LValue(builder, type, pointer));
 }
 
-void csaw::LValue::StoreValue(llvm::Value* value) const
+csaw::Expect<csaw::ValuePtr> csaw::LValue::StoreValue(const ValuePtr& value) const
 {
-    m_Builder->GetBuilder().CreateStore(value, m_Pointer);
+    if (!value)
+    {
+        const auto type = m_Builder->Gen(m_Type);
+        if (!type)
+            return Expect<ValuePtr>("Failed to generate type " + m_Type->Name + ": " + type.Msg());
+        const auto null_value = llvm::Constant::getNullValue(type.Get());
+        m_Builder->GetBuilder().CreateStore(null_value, m_Pointer);
+        return {RValue::Create(m_Builder, m_Type, null_value)};
+    }
+
+    auto cast = m_Builder->Cast(value, m_Type);
+    if (!cast)
+        return Expect<ValuePtr>("Failed to cast: " + cast.Msg());
+    m_Builder->GetBuilder().CreateStore(cast.Get()->GetValue(), m_Pointer);
+    return cast;
 }
 
 csaw::RValuePtr csaw::LValue::GetReference() const
 {
-    return RValue::Create(PointerType::Get(m_Type), m_Pointer);
-}
-
-csaw::Expect<csaw::LValuePtr> csaw::LValue::Dereference() const
-{
-    if (!m_Type->IsPointer())
-        return Expect<LValuePtr>("Value type is non-pointer");
-
-    const auto type = m_Type->AsPointer()->Base;
-    const auto pointer = GetValue();
-    return std::shared_ptr<LValue>(new LValue(m_Builder, type, pointer));
+    return RValue::Create(m_Builder, PointerType::Get(m_Type), m_Pointer);
 }
 
 llvm::Value* csaw::LValue::GetPointer() const
@@ -76,7 +79,22 @@ bool csaw::LValue::IsLValue() const
 
 csaw::RValuePtr csaw::LValue::GetRValue() const
 {
-    return RValue::Create(m_Type, GetValue());
+    return RValue::Create(m_Builder, m_Type, GetValue());
+}
+
+csaw::Expect<csaw::LValuePtr> csaw::LValue::Dereference() const
+{
+    if (!m_Type->IsPointer())
+        return Expect<LValuePtr>("Value type is non-pointer");
+
+    const auto type = m_Type->AsPointer()->Base;
+    const auto pointer = GetValue();
+    return std::shared_ptr<LValue>(new LValue(m_Builder, type, pointer));
+}
+
+llvm::Value* csaw::LValue::GetBoolValue() const
+{
+    return m_Builder->GetBuilder().CreateIsNotNull(GetValue());
 }
 
 csaw::LValue::LValue(Builder* builder, const TypePtr& type, llvm::Value* pointer)

@@ -1,0 +1,4 @@
+\inc "ptx/common.csh"
+\inc "std/string.csh"
+
+@"=="(pStr1: int8*, pStr2: int8*): int1 = strcmp(pStr1, pStr2) == 0;

@@ -5,7 +5,6 @@
 #include <csaw/Stmt.hpp>
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
-#include <llvm/IR/Verifier.h>
 
 void csaw::Builder::Gen(const StatementPtr& ptr)
 {
@@ -31,7 +30,7 @@ void csaw::Builder::Gen(const StatementPtr& ptr)
 
     if (const auto p = std::dynamic_pointer_cast<Expression>(ptr))
     {
-        (void)Gen(p);
+        (void)Gen(p, nullptr);
         return;
     }
 
@@ -88,7 +87,7 @@ void csaw::Builder::Gen(const ForStatement& statement)
     const auto br_inst = GetBuilder().CreateBr(hdr_block);
     GetBuilder().SetInsertPoint(hdr_block);
 
-    const auto condition = statement.Condition ? Gen(statement.Condition) : RValue::Create(Type::GetInt1(), GetBuilder().getInt1(true));
+    const auto condition = statement.Condition ? Gen(statement.Condition, Type::GetInt1()) : RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true));
     if (!condition)
     {
         br_inst->eraseFromParent();
@@ -97,7 +96,7 @@ void csaw::Builder::Gen(const ForStatement& statement)
         return;
     }
 
-    GetBuilder().CreateCondBr(condition->GetBoolValue(this), loop_block, end_block);
+    GetBuilder().CreateCondBr(condition->GetBoolValue(), loop_block, end_block);
 
     loop_block->insertInto(parent);
     GetBuilder().SetInsertPoint(loop_block);
@@ -122,13 +121,13 @@ void csaw::Builder::Gen(const IfStatement& statement)
     const auto end_block = llvm::BasicBlock::Create(GetContext(), "end");
     auto false_block = statement.False ? llvm::BasicBlock::Create(GetContext(), "false") : end_block;
 
-    const auto condition = Gen(statement.Condition);
+    const auto condition = Gen(statement.Condition, Type::GetInt1());
     if (!condition)
         return;
 
     bool need_end = false;
 
-    GetBuilder().CreateCondBr(condition->GetBoolValue(this), true_block, false_block);
+    GetBuilder().CreateCondBr(condition->GetBoolValue(), true_block, false_block);
 
     true_block->insertInto(parent);
     GetBuilder().SetInsertPoint(true_block);
@@ -171,7 +170,7 @@ void csaw::Builder::Gen(const RetStatement& statement)
 
     const auto type = m_Signatures[GetBuilder().GetInsertBlock()->getParent()].Result;
 
-    const auto value = Gen(statement.Value);
+    const auto value = Gen(statement.Value, type);
     if (!value)
         return;
 
@@ -202,7 +201,7 @@ void csaw::Builder::Gen(const WhileStatement& statement)
     const auto br_inst = GetBuilder().CreateBr(hdr_block);
 
     GetBuilder().SetInsertPoint(hdr_block);
-    const auto condition = Gen(statement.Condition);
+    const auto condition = Gen(statement.Condition, Type::GetInt1());
     if (!condition)
     {
         br_inst->eraseFromParent();
@@ -210,7 +209,7 @@ void csaw::Builder::Gen(const WhileStatement& statement)
         GetBuilder().SetInsertPoint(bkp_block);
         return;
     }
-    GetBuilder().CreateCondBr(condition->GetBoolValue(this), loop_block, end_block);
+    GetBuilder().CreateCondBr(condition->GetBoolValue(), loop_block, end_block);
 
     loop_block->insertInto(parent);
     GetBuilder().SetInsertPoint(loop_block);

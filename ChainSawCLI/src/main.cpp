@@ -4,6 +4,7 @@
 #include <string>
 #include <csaw/Builder.hpp>
 #include <csaw/ChainSaw.hpp>
+#include <csaw/Expr.hpp>
 #include <csaw/Parser.hpp>
 
 static const std::string NAME = "csaw";
@@ -92,7 +93,11 @@ int main(const int argc, const char** argv, const char** env)
         return show_help();
 
     csaw::Builder builder(obfusecate);
-    csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr) { builder.Gen(ptr); };
+    csaw::ParseCallback callback = [&builder](const csaw::StatementPtr& ptr)
+    {
+        // std::cout << ptr << std::endl;
+        builder.Gen(ptr);
+    };
 
     int error = 0;
 

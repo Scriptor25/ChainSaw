@@ -1,4 +1,4 @@
-CSAW = csaw
+CSAW = ../../install/bin/csaw
 GCC  = gcc
 
 STDDIR = ../std/include
@@ -11,7 +11,7 @@ GCC_FLAGS  =
 
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
-TARGET = $(OBJDIR)/mandel.exe
+TARGET = $(OBJDIR)/mandel
 SRCS   = $(call rwildcard, $(SRCDIR), *.csaw)
 OBJS   = $(patsubst $(SRCDIR)/%.csaw, $(OBJDIR)/%.o, $(SRCS))
 

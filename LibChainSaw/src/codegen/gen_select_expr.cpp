@@ -4,9 +4,9 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
+csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression, const TypePtr& expected)
 {
-    const auto condition = Gen(expression.Condition);
+    const auto condition = Gen(expression.Condition, Type::GetInt1());
     if (!condition)
         return nullptr;
 
@@ -17,10 +17,10 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     auto false_block = llvm::BasicBlock::Create(GetContext(), "false");
     const auto end_block = llvm::BasicBlock::Create(GetContext(), "end");
 
-    const auto br_inst = GetBuilder().CreateCondBr(condition->GetBoolValue(this), true_block, false_block);
+    const auto br_inst = GetBuilder().CreateCondBr(condition->GetBoolValue(), true_block, false_block);
 
     GetBuilder().SetInsertPoint(true_block);
-    const auto true_value = Gen(expression.True);
+    const auto true_value = Gen(expression.True, expected);
     if (!true_value)
     {
         br_inst->eraseFromParent();
@@ -34,9 +34,10 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
 
     false_block->insertInto(parent);
     GetBuilder().SetInsertPoint(false_block);
-    const auto false_value = Gen(expression.False);
+    const auto false_value = Gen(expression.False, expected);
     if (!false_value)
     {
+        br_inst->eraseFromParent();
         true_block->eraseFromParent();
         false_block->eraseFromParent();
         GetBuilder().SetInsertPoint(bkp_block);
@@ -55,13 +56,14 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
             const auto cast = Cast(true_rvalue, false_rvalue->GetType());
             if (!cast)
             {
+                br_inst->eraseFromParent();
                 true_block->eraseFromParent();
                 false_block->eraseFromParent();
                 GetBuilder().SetInsertPoint(bkp_block);
                 ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
                 return nullptr;
             }
-            true_rvalue = cast.Get();
+            true_rvalue = cast.Get()->GetRValue();
         }
         else if (true_rvalue->GetType()->ParentOf(false_rvalue->GetType()))
         {
@@ -69,16 +71,18 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
             const auto cast = Cast(false_rvalue, true_rvalue->GetType());
             if (!cast)
             {
+                br_inst->eraseFromParent();
                 true_block->eraseFromParent();
                 false_block->eraseFromParent();
                 GetBuilder().SetInsertPoint(bkp_block);
                 ThrowErrorStmt(expression, false, "Failed to cast: %s", cast.Msg().c_str());
                 return nullptr;
             }
-            false_rvalue = cast.Get();
+            false_rvalue = cast.Get()->GetRValue();
         }
         else
         {
+            br_inst->eraseFromParent();
             true_block->eraseFromParent();
             false_block->eraseFromParent();
             GetBuilder().SetInsertPoint(bkp_block);
@@ -100,6 +104,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     {
         if (true_rvalue->GetType() != false_rvalue->GetType())
         {
+            br_inst->eraseFromParent();
             true_block->eraseFromParent();
             false_block->eraseFromParent();
             end_block->eraseFromParent();
@@ -120,6 +125,7 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     const auto type = Gen(true_rvalue->GetType());
     if (!type)
     {
+        br_inst->eraseFromParent();
         true_block->eraseFromParent();
         false_block->eraseFromParent();
         end_block->eraseFromParent();
@@ -131,5 +137,5 @@ csaw::ValuePtr csaw::Builder::Gen(const SelectExpression& expression)
     const auto phi = GetBuilder().CreatePHI(type.Get(), 2);
     phi->addIncoming(true_rvalue->GetValue(), true_block);
     phi->addIncoming(false_rvalue->GetValue(), false_block);
-    return RValue::Create(true_rvalue->GetType(), phi);
+    return RValue::Create(this, true_rvalue->GetType(), phi);
 }

@@ -7,6 +7,8 @@ namespace csaw
 {
     struct Signature
     {
+        bool operator==(const Signature& other) const;
+
         [[nodiscard]] std::string Mangle(bool obfusecate) const;
         [[nodiscard]] bool IsConstructor() const;
 

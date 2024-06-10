@@ -7,10 +7,7 @@ csaw::Statement::Statement(const SourceLoc& loc)
 {
 }
 
-csaw::AliasStmt::AliasStmt(const SourceLoc& loc, const std::string& name, const TypePtr& origin)
-    : Statement(loc), Name(name), Origin(origin)
-{
-}
+csaw::Statement::~Statement() = default;
 
 csaw::ScopeStatement::ScopeStatement(const SourceLoc& loc, const std::vector<StatementPtr>& content)
     : Statement(loc), Body(content)

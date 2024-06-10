@@ -1,0 +1,22 @@
+\inc "ptx/camera.csh"
+\inc "ptx/math/ray.csh"
+\inc "ptx/math/vec2.csh"
+
+@Camera(eye: Point3, target: Point3, up: Vec3, fov: Float, aspect: Float, near: Float, far: Float) {
+	me!origin = eye;
+	
+	me!proj.perspective(fov, aspect, near, far);
+	me!view.lookAt(eye, target, up);
+	me!projInv.perspectiveInv(fov, aspect, near, far);
+	me!viewInv.lookAtInv(eye, target, up);
+}
+
+@getRay:Camera(pDst: Ray*, sample: Vec2): void {
+	pDst!origin = me!origin;
+	
+	target: Vec4;
+	target = me!projInv * Vec4(sample.x() * 2 - 1, sample.y() * 2 - 1, 1.0, 1.0);
+	target = me!viewInv * Vec4(normalize(target.xyz() / target.w()), 0.0);
+	
+	pDst!direction = target.xyz();
+}

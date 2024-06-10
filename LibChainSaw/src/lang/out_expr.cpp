@@ -32,8 +32,6 @@ std::ostream& csaw::operator<<(std::ostream& out, const ExpressionPtr& ptr)
         return out << *expr;
     if (const auto expr = std::dynamic_pointer_cast<UnaryExpression>(ptr))
         return out << *expr;
-    if (const auto expr = std::dynamic_pointer_cast<VarArgExpression>(ptr))
-        return out << *expr;
 
     ThrowErrorStmt(*ptr, false, "Outstream is not implemented for this expression");
     return out;
@@ -63,7 +61,29 @@ std::ostream& csaw::operator<<(std::ostream& out, const CastExpression& expressi
 
 std::ostream& csaw::operator<<(std::ostream& out, const CharExpression& expression)
 {
-    return out << '\'' << expression.Value << '\'';
+    std::string value;
+    switch (expression.Value)
+    {
+    case '\a': value += "\\a";
+        break;
+    case '\b': value += "\\b";
+        break;
+    case '\f': value += "\\f";
+        break;
+    case '\n': value += "\\n";
+        break;
+    case '\r': value += "\\r";
+        break;
+    case '\t': value += "\\t";
+        break;
+    case '\v': value += "\\v";
+        break;
+
+    default: value += expression.Value;
+        break;
+    }
+
+    return out << '\'' << value << '\'';
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const DereferenceExpression& expression)
@@ -142,9 +162,4 @@ std::ostream& csaw::operator<<(std::ostream& out, const UnaryExpression& express
     out << expression.Value;
     if (expression.OpRight) out << expression.Operator;
     return out;
-}
-
-std::ostream& csaw::operator<<(std::ostream& out, const VarArgExpression& expression)
-{
-    return out << "?[" << expression.Type << ']';
 }

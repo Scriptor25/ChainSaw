@@ -3,6 +3,6 @@
 errno: int32;
 
 ## Constants
-EDOM:   [const] int32 = 1;
-ERANGE: [const] int32 = 2;
-EILSEQ: [const] int32 = 3;
+EDOM:   [internal] int32 = 1;
+ERANGE: [internal] int32 = 2;
+EILSEQ: [internal] int32 = 3;

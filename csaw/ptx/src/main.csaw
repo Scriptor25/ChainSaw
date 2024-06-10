@@ -1,0 +1,67 @@
+\inc "ptx/common.csh"
+\inc "ptx/render.csh"
+\inc "std/stdlib.csh"
+
+@[c]printf(pFormat: int8*, ?): int32;
+@[c]puts(pStr: int8*): int32;
+
+@version::void = printf("%s - ChainSaw Pathtracer [version %s]\n", EXE_NAME, VERSION_STRNG);
+
+@help::void {
+	version();
+	puts("");
+	puts("USAGE");
+	printf("\t%s [options] <filename>\n", EXE_NAME);
+	puts("");
+	puts("OPTIONS");
+	puts("\t--help,    -h    display help text");
+	puts("\t--version, -v    display version info");
+}
+
+@randomInt(min: int32, max: int32): int32 = min + (max - min) * ((rand() % RAND_MAX) / (RAND_MAX - 1.0));
+
+@[c]main(argc: int32, ppArgv: int8**, ppEnv: int8**): int32 {
+	
+	if (argc <= 1) {
+		help();
+		ret 0;
+	}
+	
+	pFilename: int8*;
+	
+	for (a: int32 = 1; a < argc; ++a) {
+		pArg: int8* = ppArgv[a];
+		
+		if (pArg == "-h" || pArg == "--help") {
+			help();
+			ret 0;
+		}
+		else if (pArg == "-v" || pArg == "--version") {
+			version();
+			ret 0;
+		}
+		else {
+			if (pFilename) {
+				puts("Please specify at most one filename. See '--help' for more information.");
+				ret 1;
+			}
+			
+			pFilename = pArg;
+		}
+	}
+	
+	if (!pFilename) {
+		puts("Please specify a filename. See '--help' for more information.");
+		ret 1;
+	}
+	
+	camera: Camera;
+	scene: Scene;
+	
+	image: Image = Image(200, 200);
+	render(&image, &camera, &scene);
+	image.write(pFilename);
+	image.free();
+	
+	ret 0;
+}

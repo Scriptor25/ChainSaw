@@ -3,13 +3,13 @@
 
 csaw::Arg csaw::Parser::ParseArg()
 {
-    std::string name = Expect(TK_IDENTIFIER).Value;
+    auto name = Expect(TK_IDENTIFIER).Value;
 
     TypePtr type;
     if (!NextIfAt(":"))
     {
         type = ParseType(Type::Get(name));
-        name = "";
+        name.clear();
     }
     else type = ParseType();
 
@@ -42,7 +42,7 @@ csaw::TypePtr csaw::Parser::ParseType()
         const auto result = ParseType();
         Expect(")");
 
-        return ParseType(FunctionType::Get(args, is_vararg, result));
+        return ParseType(FunctionType::Get(args, is_vararg, nullptr, result));
     }
 
     const auto name = Expect(TK_IDENTIFIER).Value;

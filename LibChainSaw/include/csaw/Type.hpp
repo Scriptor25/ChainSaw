@@ -7,6 +7,7 @@
 namespace csaw
 {
     struct Type
+            : std::enable_shared_from_this<Type>
     {
         static TypePtr Get(const std::string& name);
         static TypePtr GetVoid();
@@ -33,14 +34,15 @@ namespace csaw
         [[nodiscard]] bool IsStruct() const;
         [[nodiscard]] bool IsFunction() const;
         [[nodiscard]] bool IsTemplate() const;
+        bool IsFunctionPointer();
 
-        [[nodiscard]] const PointerType* AsPointer() const;
-        [[nodiscard]] const ArrayType* AsArray() const;
-        [[nodiscard]] const StructType* AsStruct() const;
-        [[nodiscard]] const FunctionType* AsFunction() const;
-        [[nodiscard]] const TemplateType* AsTemplate() const;
+        PointerTypePtr AsPointer();
+        ArrayTypePtr AsArray();
+        StructTypePtr AsStruct();
+        FunctionTypePtr AsFunction();
+        TemplateTypePtr AsTemplate();
 
-        [[nodiscard]] bool ParentOf(const TypePtr& type) const;
+        bool ParentOf(const TypePtr& type);
 
         std::string Name;
         int Info;
@@ -79,12 +81,13 @@ namespace csaw
 
     struct FunctionType : Type
     {
-        static FunctionTypePtr Get(const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+        static FunctionTypePtr Get(const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& parent, const TypePtr& result);
 
-        FunctionType(const std::string& name, const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& result);
+        FunctionType(const std::string& name, const std::vector<TypePtr>& args, bool is_vararg, const TypePtr& parent, const TypePtr& result);
 
         std::vector<TypePtr> Args;
         bool IsVararg;
+        TypePtr Parent;
         TypePtr Result;
     };
 

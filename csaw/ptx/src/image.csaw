@@ -1,0 +1,32 @@
+\inc "ptx/image.csh"
+\inc "std/stdio.csh"
+\inc "std/stdlib.csh"
+
+@Image(width: int32, height: int32) {
+	me!width = width;
+	me!height = height;
+	me!pBuffer = malloc(width * height * $(int32));
+}
+
+@set:Image(x: int32, y: int32, color: int32): void
+ = me!pBuffer[x + y * me!width] = color;
+
+@write:Image(pFilename: int8*): int32 {
+	if (!pFilename)
+		ret IMAGE_WRITE_FILENAME_NULL;
+	
+	pStream: FILE* = fopen(pFilename, "wb");
+	if (!pStream)
+		ret IMAGE_WRITE_STREAM_NULL;
+	
+	fprintf(pStream, "P6\n%d %d\n255\n", me!width, me!height);
+	for (i: int32; i < me!width * me!height; ++i) {
+		c: int32 = me!pBuffer[i];
+		fprintf(pStream, "%c%c%c", (c >> 16) & 0xff, (c >> 8) & 0xff, c & 0xff);
+	}
+	
+	fclose(pStream);
+	ret IMAGE_WRITE_SUCCESS;
+}
+
+@free:Image:void = free(me!pBuffer);

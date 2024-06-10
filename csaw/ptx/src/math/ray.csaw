@@ -1,0 +1,13 @@
+\inc "ptx/math/ray.csh"
+
+@Ray(ray: Ray) {
+	me!origin = ray.origin;
+	me!direction = ray.direction;
+}
+
+@Ray(origin: Point3, direction: Vec3) {
+	me!origin = origin;
+	me!direction = direction;
+}
+
+@at:Ray(t: Float): Point3 = me!origin + t * me!direction;
