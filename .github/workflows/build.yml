@@ -1,26 +1,19 @@
 name: Build ChainSawCLI with flake.nix
 
 on:
+  pull_request:
+  push:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        system: [ x86_64-linux ]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Nix
-        uses: cachix/install-nix-action@v16
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
         with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
           nix_path: nixpkgs=channel:nixos-unstable
-          extra_nix_config: experimental-features = nix-command flakes
-
-      - name: Build flake.nix
-        run:
-          nix build .#packages.${{ matrix.system }}.default
+      - run: nix build
+      - run: nix flake check
