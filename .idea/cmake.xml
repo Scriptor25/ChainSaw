@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CMakeSharedSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug - Visual Studio" ENABLED="true" GENERATION_DIR="build" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot; -Thost=x64 -DCMAKE_INSTALL_PREFIX:PATH=C:/Users/FelixSchreiber/Documents/Projects/C++/ChainSaw/install" />
+      <configuration PROFILE_NAME="Debug - Visual Studio" ENABLED="true" GENERATION_DIR="build" CONFIG_NAME="RelWithDebInfo" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot; -Thost=x64 -DCMAKE_INSTALL_PREFIX:PATH=C:/Users/FelixSchreiber/Documents/Projects/C++/ChainSaw/install" />
       <configuration PROFILE_NAME="Release - Visual Studio" ENABLED="true" GENERATION_DIR="build" CONFIG_NAME="Release" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G &quot;Visual Studio 17 2022&quot; -Thost=x64 -DCMAKE_INSTALL_PREFIX:PATH=C:/Users/FelixSchreiber/Documents/Projects/C++/ChainSaw/install" />
     </configurations>
   </component>

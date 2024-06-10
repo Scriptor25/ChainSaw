@@ -30,9 +30,8 @@ void csaw::Parser::ParseCompileDirective()
         if (!stream.is_open())
             return ThrowError(loc, true, "Failed to open include file '%s'", filename.c_str());
 
-        int err = CSawError;
-        err |= Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed});
-        CSawError = err;
+        const int err = GetError();
+        SetError(err | Parse({filepath.string(), stream, m_Data.Callback, m_Data.IncludePaths, m_Data.Processed}));
 
         stream.close();
         return;
