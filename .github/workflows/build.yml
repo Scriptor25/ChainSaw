@@ -1,0 +1,38 @@
+name: Build ChainSawCLI with flake.nix
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+        system: [ x86_64-linux, x86_64-windows ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Nix
+        if: matrix.os == 'ubuntu-latest'
+        uses: cachix/install-nix-action@v16
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: experimental-features = nix-command flakes
+
+      - name: Install Nix on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          curl https://nixos.org/nix/install | sh
+          . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+
+      - name: Build using flake.nix
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            nix build .#packages.x86_64-windows.default
+          else
+            nix build .#packages.x86_64-linux.default
+          fi
