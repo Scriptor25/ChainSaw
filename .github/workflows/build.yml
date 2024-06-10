@@ -1,9 +1,6 @@
 name: Build ChainSawCLI with flake.nix
 
 on:
-  pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
