@@ -1,6 +1,7 @@
 \inc "ptx/render.csh"
 \inc "ptx/math/color.csh"
 \inc "ptx/math/ray.csh"
+\inc "ptx/math/vec2.csh"
 \inc "ptx/math/vec3.csh"
 
 @send(pRay: Ray*, pScene: Scene*): Color {

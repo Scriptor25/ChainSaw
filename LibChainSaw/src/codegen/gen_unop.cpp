@@ -2,7 +2,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value)
+csaw::ValuePtr csaw::Builder::GenNeg(const ValuePtr& value)
 {
     const auto vty = Gen(value->GetType()).Get();
 
@@ -21,13 +21,13 @@ csaw::RValuePtr csaw::Builder::GenNeg(const RValuePtr& value)
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenNot(const RValuePtr& value)
+csaw::ValuePtr csaw::Builder::GenNot(const ValuePtr& value)
 {
     const auto result = GetBuilder().CreateNot(value->GetBoolValue());
     return RValue::Create(this, value->GetType(), result);
 }
 
-csaw::RValuePtr csaw::Builder::GenInv(const RValuePtr& value)
+csaw::ValuePtr csaw::Builder::GenInv(const ValuePtr& value)
 {
     const auto vty = Gen(value->GetType()).Get();
 
@@ -40,7 +40,7 @@ csaw::RValuePtr csaw::Builder::GenInv(const RValuePtr& value)
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value)
+csaw::ValuePtr csaw::Builder::GenInc(const ValuePtr& value)
 {
     const auto vty = Gen(value->GetType()).Get();
 
@@ -65,7 +65,7 @@ csaw::RValuePtr csaw::Builder::GenInc(const RValuePtr& value)
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenDec(const RValuePtr& value)
+csaw::ValuePtr csaw::Builder::GenDec(const ValuePtr& value)
 {
     const auto vty = Gen(value->GetType()).Get();
 

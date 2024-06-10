@@ -1,0 +1,28 @@
+\inc "ptx/math/vec3.csh"
+\inc "std/math.csh"
+
+@Vec3(t: Float) = me!e[0] = me!e[1] = me!e[2] = t;
+
+@Vec3(v: Vec3) {
+	me!e[0] = v.e[0];
+	me!e[1] = v.e[1];
+	me!e[2] = v.e[2];
+}
+
+@Vec3(x: Float, y: Float, z: Float) {
+	me!e[0] = x;
+	me!e[1] = y;
+	me!e[2] = z;
+}
+
+@x:Vec3:Float = me!e[0];
+@y:Vec3:Float = me!e[1];
+@z:Vec3:Float = me!e[2];
+
+@"[]":Vec3(i: Int): Float* = &me!e[i];
+
+@length(v: Vec3): Float = sqrt(v.x() * v.x() + v.y() * v.y() + v.z() * v.z());
+@normalize(v: Vec3): Vec3 = v / length(v);
+
+@"*"(t: Float, v: Vec3): Vec3 = Vec3(t * v.x(), t * v.y(), t * v.z());
+@"/"(v: Vec3, t: Float): Vec3 = (1 / t) * v;

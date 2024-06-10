@@ -1,0 +1,22 @@
+\inc "ptx/math/point3.csh"
+\inc "ptx/math/vec3.csh"
+
+@Point3(p: Point3) {
+	me!e[0] = p.e[0];
+	me!e[1] = p.e[1];
+	me!e[2] = p.e[2];
+}
+
+@Point3(x: Float, y: Float, z: Float) {
+	me!e[0] = x;
+	me!e[1] = y;
+	me!e[2] = z;
+}
+
+@x:Point3:Float = me!e[0];
+@y:Point3:Float = me!e[1];
+@z:Point3:Float = me!e[2];
+
+@"[]":Point3(i: Int): Float* = &me!e[i];
+
+@"+"(p: Point3, v: Vec3): Point3 = Point3(p.x() + v.x(), p.y() + v.y(), p.z() + v.z());

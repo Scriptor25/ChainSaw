@@ -2,7 +2,6 @@
 
 def Point3 { e: Float[3] }
 
-@Point3;
 @Point3(p: Point3);
 @Point3(x: Float, y: Float, z: Float);
 
@@ -11,3 +10,5 @@ def Point3 { e: Float[3] }
 @z:Point3:Float;
 
 @"[]":Point3(i: Int): Float*;
+
+@"+"(p: Point3, v: Vec3): Point3;

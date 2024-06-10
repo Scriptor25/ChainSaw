@@ -1,0 +1,44 @@
+\inc "ptx/math/color.csh"
+\inc "std/math.csh"
+
+@Color(t: Float) = me!e[0] = me!e[1] = me!e[2] = t;
+
+@Color(c: Color) {
+	me!e[0] = c.e[0];
+	me!e[1] = c.e[1];
+	me!e[2] = c.e[2];
+}
+
+@Color(r: Float, g: Float, b: Float) {
+	me!e[0] = r;
+	me!e[1] = g;
+	me!e[2] = b;
+}
+
+@r:Color:Float = me!e[0];
+@g:Color:Float = me!e[1];
+@b:Color:Float = me!e[2];
+
+@pack:Color(gamma: int1): int32 {
+	
+	r: Float = me!r();
+	g: Float = me!g();
+	b: Float = me!b();
+	
+	if (gamma) {
+		r = sqrt(r);
+		g = sqrt(g);
+		b = sqrt(b);
+	}
+	
+	ir: Int = r * 255.999;
+	ig: Int = g * 255.999;
+	ib: Int = b * 255.999;
+	
+	ret (0xff << 24) | ((ir & 0xff) << 16) | ((ig & 0xff) << 8) | (ib & 0xff);
+}
+
+@"[]":Color(i: Int): Float* = &me!e[i];
+
+@"+"(a: Color, b: Color): Color = Color(a.r() + b.r(), a.g() + b.g(), a.b() + b.b());
+@"*"(t: Float, c: Color): Color = Color(t * c.r(), t * c.g(), t * c.b());

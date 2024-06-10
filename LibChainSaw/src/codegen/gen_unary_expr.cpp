@@ -11,42 +11,49 @@ csaw::ValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
         return nullptr;
 
     const auto op = expression.Operator;
-    const auto lvalue = std::dynamic_pointer_cast<LValue>(value);
+    auto lvalue = std::dynamic_pointer_cast<LValue>(value);
 
     if (expression.OpRight) // get and op (@(++):vec3(unused: int1): vec3 ...)
     {
-        if (value->IsLValue())
-            if (const auto result = FindBestAndCall(op, lvalue, {RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
-                return result.Get();
+        if (!value->IsLValue())
+        {
+            const auto alloc = LValue::AllocateAndStore(this, value->GetType(), value);
+            if (AssertStmt(alloc, expression, "Failed to allocate and store: %s", alloc.Msg().c_str()))
+                return nullptr;
+            lvalue = alloc.Get();
+        }
 
-        if (const auto result = FindBestAndCall(op, nullptr, {value, RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
+        if (const auto result = FindBestAndCall(op, lvalue, {RValue::Create(this, Type::GetInt1(), GetBuilder().getInt1(true))}))
             return result.Get();
     }
     else // op and get (@(++):vec3:vec3 ...)
     {
-        if (value->IsLValue())
-            if (const auto result = FindBestAndCall(op, lvalue, {}))
-                return result.Get();
+        if (!value->IsLValue())
+        {
+            const auto alloc = LValue::AllocateAndStore(this, value->GetType(), value);
+            if (AssertStmt(alloc, expression, "Failed to allocate and store: %s", alloc.Msg().c_str()))
+                return nullptr;
+            lvalue = alloc.Get();
+        }
 
-        if (const auto result = FindBestAndCall(op, nullptr, {value}))
+        if (const auto result = FindBestAndCall(op, lvalue, {}))
             return result.Get();
     }
 
-    const auto rvalue = value->GetRValue();
     bool assign = false;
 
-    RValuePtr result;
-    if (op == "-") result = GenNeg(rvalue);
-    else if (op == "!") result = GenNot(rvalue);
-    else if (op == "~") result = GenInv(rvalue);
+    ValuePtr result;
+    if (op == "-") result = GenNeg(value);
+    else if (op == "!") result = GenNot(value);
+    else if (op == "~") result = GenInv(value);
     else if (op == "++")
     {
-        result = GenInc(rvalue);
+        result = GenInc(value);
         assign = true;
     }
     else if (op == "--")
     {
-        result = GenDec(rvalue);
+        result = GenDec(value);
         assign = true;
     }
 
@@ -68,7 +75,7 @@ csaw::ValuePtr csaw::Builder::Gen(const UnaryExpression& expression)
             AssertStmt(store, expression, false, "Failed to store: %s", store.Msg().c_str()))
             return nullptr;
 
-        if (expression.OpRight) result = rvalue;
+        if (expression.OpRight) result = value;
     }
 
     return result;

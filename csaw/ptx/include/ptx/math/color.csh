@@ -2,7 +2,6 @@
 
 def Color { e: Float[3] }
 
-@Color;
 @Color(t: Float);
 @Color(c: Color);
 @Color(r: Float, g: Float, b: Float);

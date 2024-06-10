@@ -21,7 +21,7 @@ namespace csaw
         llvm::Function* Global = nullptr;
     };
 
-    typedef std::pair<RValuePtr, RValuePtr> RValuePair;
+    typedef std::pair<ValuePtr, ValuePtr> ValuePair;
 
     class Builder
     {
@@ -50,7 +50,9 @@ namespace csaw
         [[nodiscard]] Expect<llvm::Type*> Gen(const TypePtr& type) const;
 
         Expect<ValuePtr> Cast(const ValuePtr& value, const TypePtr& type);
-        Expect<RValuePair> CastToBestOf(const RValuePtr& left, const RValuePtr& right);
+        Expect<ValuePair> CastToBestOf(const ValuePtr& left, const ValuePtr& right);
+
+        std::map<std::string, std::vector<TypePtr>> GetSymbols();
 
     private:
         llvm::Function* FindFunctionBySignature(const Signature& sig);
@@ -92,30 +94,30 @@ namespace csaw
         ValuePtr Gen(const StringExpression& expression);
         ValuePtr Gen(const UnaryExpression& expression);
 
-        RValuePtr GenCmpEQ(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenCmpNE(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenCmpLE(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenCmpGE(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenAnd(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenLogicalAnd(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenOr(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenLogicalOr(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenXor(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenCmpLT(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenCmpGT(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenShl(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenAShr(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenLShr(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenAdd(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenSub(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenMul(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenDiv(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenRem(const RValuePtr& left, const RValuePtr& right);
-        RValuePtr GenNeg(const RValuePtr& value);
-        RValuePtr GenNot(const RValuePtr& value);
-        RValuePtr GenInv(const RValuePtr& value);
-        RValuePtr GenInc(const RValuePtr& value);
-        RValuePtr GenDec(const RValuePtr& value);
+        ValuePtr GenCmpEQ(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenCmpNE(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenCmpLE(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenCmpGE(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenAnd(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenLogicalAnd(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenOr(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenLogicalOr(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenXor(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenCmpLT(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenCmpGT(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenShl(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenAShr(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenLShr(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenAdd(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenSub(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenMul(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenDiv(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenRem(const ValuePtr& left, const ValuePtr& right);
+        ValuePtr GenNeg(const ValuePtr& value);
+        ValuePtr GenNot(const ValuePtr& value);
+        ValuePtr GenInv(const ValuePtr& value);
+        ValuePtr GenInc(const ValuePtr& value);
+        ValuePtr GenDec(const ValuePtr& value);
 
         bool m_Obfusecate;
         std::map<std::string, ModuleData> m_Modules;

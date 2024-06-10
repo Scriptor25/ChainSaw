@@ -27,7 +27,7 @@ static std::map<std::string, csaw::TypePtr> Types = {
 
 std::ostream& csaw::operator<<(std::ostream& out, const TypePtr& ptr)
 {
-    return out << ptr->Name;
+    return out << (ptr ? ptr->Name : "null");
 }
 
 std::ostream& csaw::operator<<(std::ostream& out, const Arg& arg)

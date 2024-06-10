@@ -77,24 +77,24 @@ csaw::Expect<csaw::ValuePtr> csaw::Builder::Cast(const ValuePtr& value, const Ty
     return Expect<ValuePtr>("Cast from " + value->GetType()->Name + " to " + type->Name + " is not implemented");
 }
 
-csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left, const RValuePtr& right)
+csaw::Expect<csaw::ValuePair> csaw::Builder::CastToBestOf(const ValuePtr& left, const ValuePtr& right)
 {
     if (!left)
-        return Expect<RValuePair>("Left value is empty");
+        return Expect<ValuePair>("Left value is empty");
 
     if (!right)
-        return Expect<RValuePair>("Right value is empty");
+        return Expect<ValuePair>("Right value is empty");
 
     if (left->GetType() == right->GetType())
         return {{left, right}};
 
     const auto lty = Gen(left->GetType());
     if (!lty)
-        return Expect<RValuePair>("Left type is null: " + lty.Msg());
+        return Expect<ValuePair>("Left type is null: " + lty.Msg());
 
     const auto rty = Gen(right->GetType());
     if (!rty)
-        return Expect<RValuePair>("Right type is null: " + rty.Msg());
+        return Expect<ValuePair>("Right type is null: " + rty.Msg());
 
     if (lty.Get() == rty.Get())
         return {{left, right}};
@@ -157,5 +157,5 @@ csaw::Expect<csaw::RValuePair> csaw::Builder::CastToBestOf(const RValuePtr& left
         }
     }
 
-    return Expect<RValuePair>("Implicit casting between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
+    return Expect<ValuePair>("Implicit casting between " + left->GetType()->Name + " and " + right->GetType()->Name + " is not implemented");
 }

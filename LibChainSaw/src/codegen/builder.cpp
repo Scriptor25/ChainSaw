@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include <csaw/Builder.hpp>
+#include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -258,6 +259,16 @@ llvm::AllocaInst* csaw::Builder::CreateAlloca(llvm::Type* type, llvm::Value* arr
     const auto inst = GetBuilder().CreateAlloca(type, array_size);
     GetBuilder().SetInsertPoint(block);
     return inst;
+}
+
+std::map<std::string, std::vector<csaw::TypePtr>> csaw::Builder::GetSymbols()
+{
+    std::map<std::string, std::vector<TypePtr>> symbols;
+    for (const auto& [name, value] : m_Values)
+        symbols[name].push_back(value->GetType());
+    for (const auto& [function, signature] : m_Signatures)
+        symbols[signature.Name].push_back(PointerType::Get(signature.GetFunctionType()));
+    return symbols;
 }
 
 void csaw::Builder::PushScopeStack()

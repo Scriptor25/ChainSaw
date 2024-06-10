@@ -13,4 +13,6 @@ def Vec4 { e: Float[4] }
 @z:Vec4:Float;
 @w:Vec4:Float;
 
+@xyz:Vec4:Vec3;
+
 @"[]":Vec4(i: Int): Float*;

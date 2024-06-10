@@ -1,0 +1,18 @@
+\inc "ptx/math/vec2.csh"
+
+@Vec2(t: Float) = me!e[0] = me!e[1] = t;
+
+@Vec2(v: Vec2) {
+	me!e[0] = v.e[0];
+	me!e[1] = v.e[1];
+}
+
+@Vec2(x: Float, y: Float) {
+	me!e[0] = x;
+	me!e[1] = y;
+}
+
+@x:Vec2:Float = me!e[0];
+@y:Vec2:Float = me!e[1];
+
+@"[]":Vec2(i: Int): Float* = &me!e[i];

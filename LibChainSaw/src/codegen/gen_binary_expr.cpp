@@ -7,12 +7,10 @@
 csaw::ValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
 {
     const auto left = Gen(expression.Left, nullptr);
-    if (!left)
-        return nullptr;
+    if (!left) return nullptr;
 
     const auto right = Gen(expression.Right, nullptr);
-    if (!right)
-        return nullptr;
+    if (!right) return nullptr;
 
     auto op = expression.Operator;
 
@@ -42,13 +40,13 @@ csaw::ValuePtr csaw::Builder::Gen(const BinaryExpression& expression)
         return lleft->GetRValue();
     }
 
-    const auto best_cast = CastToBestOf(left->GetRValue(), right->GetRValue());
+    const auto best_cast = CastToBestOf(left, right);
     if (AssertStmt(best_cast, expression, false, "Failed to cast: %s", best_cast.Msg().c_str()))
         return nullptr;
 
     const auto& [lhs, rhs] = best_cast.Get();
 
-    RValuePtr value;
+    ValuePtr value;
     if (op == "==") value = GenCmpEQ(lhs, rhs);
     else if (op == "!=") value = GenCmpNE(lhs, rhs);
     else if (op == "<=") value = GenCmpLE(lhs, rhs);

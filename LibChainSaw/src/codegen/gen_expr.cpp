@@ -1,3 +1,4 @@
+#include <iostream>
 #include <csaw/Builder.hpp>
 #include <csaw/Error.hpp>
 #include <csaw/Expr.hpp>

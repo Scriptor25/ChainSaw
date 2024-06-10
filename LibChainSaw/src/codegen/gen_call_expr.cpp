@@ -35,18 +35,10 @@ csaw::ValuePtr csaw::Builder::Gen(const CallExpression& expression, const TypePt
         }
     }
 
-    std::vector<ValuePtr> args;
     std::vector<TypePtr> arg_types;
-
+    auto symbols = GetSymbols();
     for (const auto& arg : expression.Args)
-    {
-        const auto value = Gen(arg, nullptr);
-        if (!value)
-            return nullptr;
-
-        args.push_back(value);
-        arg_types.push_back(value->GetType());
-    }
+        arg_types.push_back(arg->GetType(symbols, false, {}, {}));
 
     const auto callee_type = PointerType::Get(FunctionType::Get(arg_types, false, lparent ? lparent->GetType() : nullptr, expected ? expected : Type::GetVoid()));
     const auto callee = Gen(expression.Callee, callee_type);
@@ -65,6 +57,14 @@ csaw::ValuePtr csaw::Builder::Gen(const CallExpression& expression, const TypePt
         signature.Args = fnty->Args;
         signature.IsVarargs = fnty->IsVararg;
         signature.Result = fnty->Result;
+    }
+
+    std::vector<ValuePtr> args;
+    for (const auto& arg : expression.Args)
+    {
+        const auto value = Gen(arg, nullptr);
+        if (!value) return nullptr;
+        args.push_back(value);
     }
 
     if (signature.IsConstructor())

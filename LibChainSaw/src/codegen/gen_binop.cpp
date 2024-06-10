@@ -2,7 +2,7 @@
 #include <csaw/Type.hpp>
 #include <csaw/Value.hpp>
 
-csaw::RValuePtr csaw::Builder::GenCmpEQ(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpEQ(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -21,7 +21,7 @@ csaw::RValuePtr csaw::Builder::GenCmpEQ(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenCmpNE(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpNE(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -40,7 +40,7 @@ csaw::RValuePtr csaw::Builder::GenCmpNE(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenCmpLE(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpLE(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -59,7 +59,7 @@ csaw::RValuePtr csaw::Builder::GenCmpLE(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenCmpGE(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpGE(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -78,7 +78,7 @@ csaw::RValuePtr csaw::Builder::GenCmpGE(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenAnd(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenAnd(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -91,13 +91,13 @@ csaw::RValuePtr csaw::Builder::GenAnd(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenLogicalAnd(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenLogicalAnd(const ValuePtr& left, const ValuePtr& right)
 {
     const auto value = GetBuilder().CreateLogicalAnd(left->GetBoolValue(), right->GetBoolValue());
     return RValue::Create(this, Type::GetInt1(), value);
 }
 
-csaw::RValuePtr csaw::Builder::GenOr(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenOr(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -110,13 +110,13 @@ csaw::RValuePtr csaw::Builder::GenOr(const RValuePtr& left, const RValuePtr& rig
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenLogicalOr(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenLogicalOr(const ValuePtr& left, const ValuePtr& right)
 {
     const auto value = GetBuilder().CreateLogicalOr(left->GetBoolValue(), right->GetBoolValue());
     return RValue::Create(this, Type::GetInt1(), value);
 }
 
-csaw::RValuePtr csaw::Builder::GenXor(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenXor(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -129,7 +129,7 @@ csaw::RValuePtr csaw::Builder::GenXor(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenCmpLT(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpLT(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -148,7 +148,7 @@ csaw::RValuePtr csaw::Builder::GenCmpLT(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenCmpGT(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenCmpGT(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -167,7 +167,7 @@ csaw::RValuePtr csaw::Builder::GenCmpGT(const RValuePtr& left, const RValuePtr& 
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenShl(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenShl(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -180,7 +180,7 @@ csaw::RValuePtr csaw::Builder::GenShl(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenAShr(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenAShr(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -193,7 +193,7 @@ csaw::RValuePtr csaw::Builder::GenAShr(const RValuePtr& left, const RValuePtr& r
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenLShr(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenLShr(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -206,7 +206,7 @@ csaw::RValuePtr csaw::Builder::GenLShr(const RValuePtr& left, const RValuePtr& r
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenAdd(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenAdd(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -225,7 +225,7 @@ csaw::RValuePtr csaw::Builder::GenAdd(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenSub(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenSub(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -244,7 +244,7 @@ csaw::RValuePtr csaw::Builder::GenSub(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenMul(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenMul(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -263,7 +263,7 @@ csaw::RValuePtr csaw::Builder::GenMul(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenDiv(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenDiv(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
@@ -282,7 +282,7 @@ csaw::RValuePtr csaw::Builder::GenDiv(const RValuePtr& left, const RValuePtr& ri
     return nullptr;
 }
 
-csaw::RValuePtr csaw::Builder::GenRem(const RValuePtr& left, const RValuePtr& right)
+csaw::ValuePtr csaw::Builder::GenRem(const ValuePtr& left, const ValuePtr& right)
 {
     const auto ty = Gen(left->GetType()).Get();
 
