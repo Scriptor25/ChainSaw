@@ -1,4 +1,4 @@
-CSAW = ../../install/bin/csaw
+CSAW = ../../build/ChainSawCLI/csaw
 GCC  = gcc
 
 STDDIR = ../std/include
