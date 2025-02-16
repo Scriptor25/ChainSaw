@@ -121,7 +121,7 @@ int main(const int argc, const char** argv, const char** env)
     if (!output_file.empty())
     {
         if (!error)
-            error |= builder.OutputModules(output_file, llvm::CGFT_ObjectFile);
+            error |= builder.OutputModules(output_file, llvm::CodeGenFileType::ObjectFile);
         else std::cout << "Skip output because of error" << std::endl;
     }
 
